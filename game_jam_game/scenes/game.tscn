@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://cwbv2y4y74b4t"]
+
+[ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
+[ext_resource type="Script" uid="uid://dybehstmvi6ea" path="res://scripts/player.gd" id="2_u5sy4"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2o6t"]
+distance = 256.0
+
+[node name="Game" type="Node2D"]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(4, 249)
+shape = SubResource("WorldBoundaryShape2D_e2o6t")
+
+[node name="Player" parent="." instance=ExtResource("1_uwrxv")]
+unique_name_in_owner = true
+position = Vector2(4, -19)
+script = ExtResource("2_u5sy4")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+position = Vector2(35, -158)
+position_smoothing_enabled = true
