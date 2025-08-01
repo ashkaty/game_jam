@@ -1,5 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=5 format=3 uid="uid://cwbv2y4y74b4t"]
 
+[ext_resource type="Texture2D" uid="uid://cyyglchwcsbb4" path="res://icon.svg" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="Script" uid="uid://dybehstmvi6ea" path="res://scripts/player.gd" id="2_u5sy4"]
 
@@ -9,6 +10,11 @@ distance = 256.0
 [node name="Game" type="Node2D"]
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D"]
+position = Vector2(1226, 4293)
+scale = Vector2(67.1406, 67.1406)
+texture = ExtResource("1_lnu2h")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
 position = Vector2(4, 249)
