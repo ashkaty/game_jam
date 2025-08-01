@@ -10,15 +10,13 @@ extends State
 @export var deceleration: float
 
 var sword_anim: AnimationPlayer
+var hitbox: HitBox
 
 
 
 func enter() -> void:
-	super()
-	
-	
-	
-	#var sword_hitbox = parent.get_node("Sword/Sprite/Hitbox")  as Area2D
+        super()
+        hitbox = parent.get_node("AnimatedSprite2D/Sword/Sprite2D/HitBox") as HitBox
 
 func process_input(_event: InputEvent) -> State:
 	sword_anim = parent.get_node("AnimatedSprite2D/Sword/AnimationPlayer") as AnimationPlayer
@@ -26,14 +24,17 @@ func process_input(_event: InputEvent) -> State:
 		# … then look at what the player is holding **right now**.
 	if Input.is_action_pressed("up"):
 		sword_anim.play("up_ward_swing")
+                hitbox.attack_dir = "up"
 		print("Playing Upward Swing Animation")
 		return idle_state
 	elif Input.is_action_pressed("crouch"):	# or "down"
 		sword_anim.play("down_ward_swing")
+                hitbox.attack_dir = "down"
 		print("Playing Downward Swing Animation")
 		return crouch_state
 	else:
 		sword_anim.play("swing")
+                hitbox.attack_dir = "side"
 		print("Playing Swing Animation")
 		return idle_state
 
