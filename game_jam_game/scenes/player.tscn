@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scenes/land.gd" id="7_fjrip"]
 [ext_resource type="Script" uid="uid://c35ujxap2j06r" path="res://scripts/ground_attack.gd" id="8_qwkas"]
 [ext_resource type="Script" path="res://scripts/air_attack.gd" id="9_air_attack"]
+[ext_resource type="Script" path="res://scripts/crouch.gd" id="10_crouch"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_g2els"]
 atlas = ExtResource("1_3vyb7")
@@ -25,7 +26,7 @@ region = Rect2(384, 0, 384, 341)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fjrip"]
 atlas = ExtResource("1_3vyb7")
-region = Rect2(768, 0, 384, 341)
+region = Rect2(0, 682, 384, 341)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_tuyoq"]
 atlas = ExtResource("1_3vyb7")
@@ -51,8 +52,20 @@ region = Rect2(768, 341, 384, 341)
 atlas = ExtResource("1_3vyb7")
 region = Rect2(384, 682, 384, 341)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouch"]
+atlas = ExtResource("1_3vyb7")
+region = Rect2(768, 0, 384, 341)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_feb5d"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_crouch")
+}],
+"loop": true,
+"name": &"crouch",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_g2els")
@@ -135,12 +148,13 @@ shape = SubResource("RectangleShape2D_fc0e3")
 script = ExtResource("2_tuyoq")
 starting_state = NodePath("idle")
 
-[node name="idle" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "jump_state", "move_state", "attack_state")]
+[node name="idle" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "jump_state", "move_state", "attack_state", "crouch_state")]
 script = ExtResource("3_fjrip")
 fall_state = NodePath("../fall")
 jump_state = NodePath("../jump")
 move_state = NodePath("../move")
 attack_state = NodePath("../ground_attack")
+crouch_state = NodePath("../crouch")
 animation_name = "idle"
 
 [node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "land_state", "move_state", "idle_state", "air_attack_state")]
@@ -150,6 +164,7 @@ land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
 air_attack_state = NodePath("../air_attack")
+
 short_hop_force = 1500.0
 long_hop_force = 2500.0
 short_gravity_scale = 5.0
@@ -159,24 +174,26 @@ air_friction = 0.0
 max_air_speed = 1600.0
 animation_name = "jump"
 
-[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state", "air_attack_state")]
+[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state", "air_attack_state", "crouch_state")]
 script = ExtResource("5_ur7pv")
 land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
 air_attack_state = NodePath("../air_attack")
+crouch_state = NodePath("../crouch")
 fall_gravity_scale = 4.035
 air_accel = 2000.0
 air_friction = 0.0
 max_air_speed = 1600.0
 animation_name = "fall"
 
-[node name="move" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "jump_state", "attack_state")]
+[node name="move" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "jump_state", "attack_state", "crouch_state")]
 script = ExtResource("6_y4r1p")
 fall_state = NodePath("../fall")
 idle_state = NodePath("../idle")
 jump_state = NodePath("../jump")
 attack_state = NodePath("../ground_attack")
+crouch_state = NodePath("../crouch")
 max_speed = 1600.0
 acceleration = 6400.0
 deceleration = 12800.0
@@ -206,6 +223,12 @@ move_state = NodePath("../move")
 air_attack_gravity_scale = 1.5
 air_attack_horizontal_damping = 0.8
 animation_name = "swing"
+
+[node name="crouch" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state")]
+script = ExtResource("10_crouch")
+idle_state = NodePath("../idle")
+move_state = NodePath("../move")
+fall_state = NodePath("../fall")
 
 [connection signal="animation_finished" from="AnimatedSprite2D/Sword/AnimationPlayer" to="state_machine/ground_attack" method="_on_animation_player_animation_finished"]
 [connection signal="animation_finished" from="AnimatedSprite2D/Sword/AnimationPlayer" to="state_machine/air_attack" method="_on_animation_player_animation_finished"]

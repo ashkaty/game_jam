@@ -5,6 +5,7 @@ extends State
 @export var idle_state: State
 @export var jump_state: State
 @export var attack_state: State
+@export var crouch_state: State
 # -- Tunable movement parameters ------------------------------------------------
 @export var max_speed: float = 200.0               # Units per second (top horizontal speed)
 @export var acceleration: float = 800.0            # Units per second² when pressing a direction
@@ -13,11 +14,13 @@ extends State
 # ------------------------------------------------------------------------------
 
 
-func process_input(event: InputEvent) -> State:
+func process_input(_event: InputEvent) -> State:
 	if Input.is_action_just_pressed("jump") and parent.is_on_floor():
 		return jump_state
 	if Input.is_action_just_pressed('attack'):
 		return attack_state
+	if Input.is_action_just_pressed('crouch'):
+		return crouch_state
 	return null
 
 func process_physics(delta: float) -> State:

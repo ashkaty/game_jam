@@ -6,6 +6,7 @@ extends State
 @export var idle_state: State
 @export var air_attack_state: State
 
+
 # ── Jump variants ───────────────────────────────────────────────
 @export var short_hop_force: float			= 750.0		# initial impulse
 @export var long_hop_force: float			= 950.0		# extra impulse if held

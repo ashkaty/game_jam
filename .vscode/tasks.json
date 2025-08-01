@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Godot Game",
+			"type": "shell",
+			"command": "godot",
+			"args": [
+				"--path",
+				".",
+				"--headless"
+			],
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

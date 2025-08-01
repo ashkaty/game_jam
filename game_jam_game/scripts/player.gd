@@ -5,6 +5,7 @@ extends CharacterBody2D
 
 @onready var animations: AnimatedSprite2D = $AnimatedSprite2D
 @onready var sword: Node2D = $AnimatedSprite2D/Sword
+@onready var camera: Camera2D = $Camera2D
 
 @onready var state_machine: Node = $state_machine
 var last_flip_h: bool = false

@@ -4,6 +4,7 @@ extends State
 @export var move_state: State
 @export var idle_state: State
 @export var air_attack_state: State
+@export var crouch_state: State
 
 # ---- Tunables --------------------------------------------------------
 @export var fall_gravity_scale: float = 2.6
@@ -16,6 +17,8 @@ extends State
 func process_input(_event: InputEvent) -> State:
 	if Input.is_action_just_pressed('attack'):
 		return air_attack_state
+	if Input.is_action_just_pressed('crouch'):
+		return crouch_state
 	return null
 
 func process_physics(delta: float) -> State:
