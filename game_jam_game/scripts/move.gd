@@ -6,10 +6,14 @@ var fall_state: State
 var idle_state: State
 @export
 var jump_state: State
+@export 
+var attack_state: State
 
 func process_input(event: InputEvent) -> State:
 	if Input.is_action_just_pressed('jump') and parent.is_on_floor():
 		return jump_state
+	if Input.is_action_just_pressed('attack'):
+		return attack_state
 	return null
 
 func process_physics(delta: float) -> State:

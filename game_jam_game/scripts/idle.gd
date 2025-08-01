@@ -7,6 +7,8 @@ var fall_state: State
 var jump_state: State
 @export
 var move_state: State
+@export 
+var attack_state: State
 
 func enter() -> void:
 	super()
@@ -17,6 +19,8 @@ func process_input(event: InputEvent) -> State:
 		return jump_state
 	if Input.is_action_just_pressed('move_left') or Input.is_action_just_pressed('move_right'):
 		return move_state
+	if Input.is_action_just_pressed('attack'):
+		return attack_state
 	return null
 
 func process_physics(delta: float) -> State:

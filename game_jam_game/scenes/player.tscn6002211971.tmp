@@ -167,10 +167,5 @@ idle_state = NodePath("../idle")
 move_state = NodePath("../move")
 fall_state = NodePath("../fall")
 jump_state = NodePath("../jump")
-deceleration = 100.0
 animation_name = "swing"
 metadata/_custom_type_script = "uid://be2h8sxopel4k"
-
-[connection signal="animation_finished" from="AnimatedSprite2D/Sword/AnimationPlayer" to="state_machine/ground_attack" method="_on_animation_player_animation_finished"]
-
-[editable path="AnimatedSprite2D/Sword"]
