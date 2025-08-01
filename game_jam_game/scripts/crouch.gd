@@ -3,7 +3,7 @@ extends State
 @export var idle_state: State
 @export var move_state: State
 @export var fall_state: State
-
+@export var ground_attack_state: State
 # ---- Tunables --------------------------------------------------------
 @export var crouch_fall_gravity_scale: float = 4.0  # Faster fall when crouching
 @export var camera_offset_y: float = 40.0  # How much to move camera down
@@ -44,6 +44,8 @@ func exit() -> void:
 
 func process_input(_event: InputEvent) -> State:
 	# Exit crouch when key is released
+	if Input.is_action_pressed("attack"):
+		return ground_attack_state
 	if Input.is_action_just_released('crouch'):
 		if parent.is_on_floor():
 			# Check if we should go to move or idle
