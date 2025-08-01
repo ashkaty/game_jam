@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=4 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=12 format=4 uid="uid://cwbv2y4y74b4t"]
 
 [ext_resource type="PackedScene" uid="uid://cp5l4kktdyj4y" path="res://scenes/test_dummy.tscn" id="1_p57ef"]
 [ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://q44iosxd057y" path="res://assets/sprites/world_tileset.png" id="5_iywne"]
 [ext_resource type="PackedScene" path="res://scenes/simple_cassette_ui.tscn" id="6_simple_cassette"]
 [ext_resource type="Script" uid="uid://mex3itl4qovj" path="res://scripts/game_manager.gd" id="7_game"]
+[ext_resource type="Script" uid="uid://dkrqctvyafve4" path="res://scripts/damage_particle_manager.gd" id="8_damage_particle_manager"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2o6t"]
 distance = 256.0
@@ -143,6 +144,9 @@ sources/1 = SubResource("TileSetAtlasSource_p57ef")
 
 [node name="Game" type="Node2D"]
 script = ExtResource("7_game")
+
+[node name="DamageParticleManager" type="Node" parent="."]
+script = ExtResource("8_damage_particle_manager")
 
 [node name="TestDummy" parent="." instance=ExtResource("1_p57ef")]
 position = Vector2(700, 0)
