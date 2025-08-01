@@ -1,11 +1,10 @@
-[gd_scene load_steps=0 format=4 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=10 format=4 uid="uid://cwbv2y4y74b4t"]
 
-
-[ext_resource type="Texture2D" uid="uid://cyyglchwcsbb4" path="res://icon.svg" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://cp5l4kktdyj4y" path="res://scenes/test_dummy.tscn" id="1_p57ef"]
 [ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="Script" uid="uid://dybehstmvi6ea" path="res://scripts/player.gd" id="2_u5sy4"]
 [ext_resource type="Texture2D" uid="uid://dpb0kysm7pg57" path="res://assets/sprites/grid.jpg" id="4_lbhrr"]
+[ext_resource type="PackedScene" uid="uid://bqebe3jk28qtu" path="res://scenes/punching_bag.tscn" id="4_p57ef"]
 [ext_resource type="Texture2D" uid="uid://q44iosxd057y" path="res://assets/sprites/world_tileset.png" id="5_iywne"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2o6t"]
@@ -162,6 +161,7 @@ position = Vector2(35, -158)
 offset = Vector2(0, -573.325)
 zoom = Vector2(0.36, 0.36)
 position_smoothing_enabled = true
+drag_top_margin = 1.0
 
 [node name="Background" type="StaticBody2D" parent="."]
 z_index = -4
@@ -181,3 +181,5 @@ physics_interpolation_mode = 1
 scale = Vector2(17.555, 17.555)
 tile_map_data = PackedByteArray("AAD9/wAAAQAAAAAAAAD+/wAAAQAAAAAAAAD//wAAAQAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAQAAAAAAAAACAAAAAQAAAAAAAAADAAAAAQAAAAAAAAAEAP7/AQAAAAAAAAAFAP7/AQAAAAAAAAAGAP7/AQAAAAAAAAAHAP7/AQAAAAAAAAAIAP7/AQAAAAAAAAAJAP7/AQAAAAAAAAAKAP7/AQAAAAAAAAALAP7/AQAAAAAAAAAMAP7/AQAAAAAAAAANAP7/AQAAAAAAAAAOAP7/AQAAAAAAAAAPAP7/AQAAAAAAAAAQAP7/AQAAAAAAAAARAP7/AQAAAAAAAAAGAPz/AQAAAAAAAAAHAPz/AQAAAAAAAAAIAPz/AQAAAAAAAAAOAPz/AQAAAAAAAAAPAPz/AQAAAAAAAAAQAPz/AQAAAAAAAAAKAPr/AQAAAAAAAAALAPr/AQAAAAAAAAAMAPr/AQAAAAAAAAAEAAAAAQAAAAAAAAAFAAAAAQAAAAAAAAAGAAAAAQAAAAAAAAAHAAAAAQAAAAAAAAAIAAAAAQAAAAAAAAAJAAAAAQAAAAAAAAAKAAAAAQAAAAAAAAALAAAAAQAAAAAAAAAMAAAAAQAAAAAAAAANAAAAAQAAAAAAAAAOAAAAAQAAAAAAAAAPAAAAAQAAAAAAAAAQAAAAAQAAAAAAAAARAAAAAQAAAAAAAAASAAAAAQAAAAAAAAATAAAAAQAAAAAAAAAUAAAAAQAAAAAAAAD8/wAAAQAAAAAAAAD7/wAAAQAAAAAAAAD6/wAAAQAAAAAAAAD5/wAAAQAAAAAAAAD4/wAAAQAAAAAAAAD3/wAAAQAAAAAAAAD2/wAAAQAAAAAAAAD1/wAAAQAAAAAAAAD0/wAAAQAAAAAAAADz/wAAAQAAAAAAAADy/wAAAQAAAAAAAAAVAAAAAQAAAAAAAAAWAAAAAQAAAAAAAAAXAAAAAQAAAAAAAAAYAAAAAQAAAAAAAAAZAAAAAQAAAAAAAAAaAAAAAQAAAAAAAAAbAAAAAQAAAAAAAAAcAAAAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_u5sy4")
+
+[node name="CharacterBody2D" parent="." instance=ExtResource("4_p57ef")]

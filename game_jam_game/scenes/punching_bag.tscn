@@ -1,0 +1,91 @@
+[gd_scene load_steps=11 format=3 uid="uid://bqebe3jk28qtu"]
+
+[ext_resource type="Script" uid="uid://phvcwnbty7hf" path="res://scenes/punching_bag.gd" id="1_drm4u"]
+[ext_resource type="Script" uid="uid://d341eysla0hdt" path="res://scripts/hit_hurt_boxes/hurtbox.gd" id="3_8cb5e"]
+[ext_resource type="Texture2D" uid="uid://438fynowu56s" path="res://assets/sprites/mario.png" id="3_m4gd1"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0btni"]
+radius = 10.7958
+height = 21.9376
+
+[sub_resource type="Animation" id="Animation_0btni"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_amttc"]
+resource_name = "hurt"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1, 0.15),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.174533, 0.174533, 0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_2xesr"]
+_data = {
+&"RESET": SubResource("Animation_0btni"),
+&"hurt": SubResource("Animation_amttc")
+}
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8cb5e"]
+atlas = ExtResource("3_m4gd1")
+region = Rect2(48, 0, 16, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_lvyww"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8cb5e")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_drm4u"]
+size = Vector2(161, 371.5)
+
+[node name="CharacterBody2D" type="CharacterBody2D"]
+collision_layer = 3
+script = ExtResource("1_drm4u")
+
+[node name="HurtBox" type="Area2D" parent="."]
+script = ExtResource("3_8cb5e")
+metadata/_custom_type_script = "uid://d341eysla0hdt"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
+position = Vector2(-23, -212)
+scale = Vector2(9.07759, 19.3275)
+shape = SubResource("CapsuleShape2D_0btni")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_2xesr")
+}
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-26, -215)
+scale = Vector2(13.9375, 13.3125)
+sprite_frames = SubResource("SpriteFrames_lvyww")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-26.5, -201.25)
+shape = SubResource("RectangleShape2D_drm4u")
