@@ -17,6 +17,21 @@ func _on_area_entered(hitbox: HitBox) -> void:
 	if owner.has_method("take_damage"):
 		owner.take_damage(hitbox.damage)
 		
-	if owner.has_method("apply_knockback"):
-		var dir: Vector2 = (owner.global_position - hitbox.global_position).normalized()
-		owner.apply_knockback(dir * hitbox.knockback_multiplier)
+       if owner.has_method("apply_knockback"):
+               var horiz_dir := sign(owner.global_position.x - hitbox.global_position.x)
+               if horiz_dir == 0:
+                       horiz_dir = 1 # default knock right if overlapping
+
+               var dir: Vector2
+               match hitbox.attack_dir:
+                       "up":
+                               dir = Vector2(horiz_dir * 0.2, -1)
+                       "down":
+                               dir = Vector2(horiz_dir * 0.2, 1)
+                       "side":
+                               dir = Vector2(horiz_dir, -0.2)
+                       _:
+                               dir = Vector2(horiz_dir, -0.5)
+
+               dir = dir.normalized()
+               owner.apply_knockback(dir * hitbox.knockback_multiplier)

@@ -1,6 +1,6 @@
 [gd_scene load_steps=11 format=3 uid="uid://bqebe3jk28qtu"]
 
-[ext_resource type="Script" uid="uid://phvcwnbty7hf" path="res://scenes/punching_bag.gd" id="1_drm4u"]
+[ext_resource type="Script" uid="uid://cktagk2sar8ok" path="res://scripts/punching_bag.gd" id="1_drm4u"]
 [ext_resource type="Script" uid="uid://d341eysla0hdt" path="res://scripts/hit_hurt_boxes/hurtbox.gd" id="3_8cb5e"]
 [ext_resource type="Texture2D" uid="uid://438fynowu56s" path="res://assets/sprites/mario.png" id="3_m4gd1"]
 

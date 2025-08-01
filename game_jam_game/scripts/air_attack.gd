@@ -10,15 +10,18 @@ extends State
 
 var sword_anim: AnimationPlayer
 var initial_horizontal_velocity: float
+var hitbox: HitBox
 
 func enter() -> void:
-	super()
+        super()
 	
 	
 	
-	# Store initial horizontal velocity and apply damping
-	initial_horizontal_velocity = parent.velocity.x
-	parent.velocity.x *= air_attack_horizontal_damping
+        hitbox = parent.get_node("AnimatedSprite2D/Sword/Sprite2D/HitBox") as HitBox
+
+        # Store initial horizontal velocity and apply damping
+        initial_horizontal_velocity = parent.velocity.x
+        parent.velocity.x *= air_attack_horizontal_damping
 	
 
 	
@@ -27,14 +30,17 @@ func process_input(_event: InputEvent):
 	sword_anim = parent.get_node("AnimatedSprite2D/Sword/AnimationPlayer") as AnimationPlayer
 	if Input.is_action_pressed("up"):
 		sword_anim.play("up_ward_swing")
+                hitbox.attack_dir = "up"
 		print("Playing Upward Air Attack Animation")
 		return idle_state
 	elif Input.is_action_pressed("crouch"):	# or "down"
 		sword_anim.play("down_ward_swing")
+                hitbox.attack_dir = "down"
 		print("Playing Downward Air Attak Animation")
 		return idle_state
 	else:
 		sword_anim.play("swing")
+                hitbox.attack_dir = "side"
 		print("Playing Attack Animation")
 		return idle_state
 
