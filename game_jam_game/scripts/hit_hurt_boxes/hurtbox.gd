@@ -16,3 +16,7 @@ func _on_area_entered(hitbox: HitBox) -> void:
 	
 	if owner.has_method("take_damage"):
 		owner.take_damage(hitbox.damage)
+		
+	if owner.has_method("apply_knockback"):
+		var dir: Vector2 = (owner.global_position - hitbox.global_position).normalized()
+		owner.apply_knockback(dir * hitbox.knockback_multiplier)
