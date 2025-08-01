@@ -4,6 +4,8 @@ extends Area2D
 
 @export
 var damage := 10
+@export 
+var knockback_multiplier: float = 200.0
 
 func _init() -> void:
 	collision_layer = 4
