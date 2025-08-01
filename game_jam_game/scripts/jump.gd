@@ -18,10 +18,12 @@ extends State
 @export var air_accel: float				= 600.0
 @export var air_friction: float				= 300.0
 @export var max_air_speed: float			= 220.0
+@export var sword_offset_y: float			= -20.0		# How much to move sword up during jump
 # ────────────────────────────────────────────────────────────────
 
 var _hold_time := 0.0
 var _is_long := false
+var original_sword_position: Vector2
 
 func enter() -> void:
 	super()
@@ -29,6 +31,17 @@ func enter() -> void:
 	parent.velocity.x *= inherit_ground_vel_mult			# carry runway speed
 	_hold_time = 0.0
 	_is_long = false
+	
+	# Store original sword position and move it up slightly during jump
+	if parent.sword:
+		original_sword_position = parent.sword.position
+		parent.sword.position = original_sword_position + Vector2(0, sword_offset_y)
+
+func exit() -> void:
+	# Reset sword position when exiting jump, but let player handle direction
+	if parent.sword:
+		parent.sword.position.y = original_sword_position.y  # Reset Y position only
+		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 func process_input(_event: InputEvent) -> State:
 	if Input.is_action_just_pressed('attack'):

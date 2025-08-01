@@ -6,8 +6,9 @@ extends State
 
 # ---- Tunables --------------------------------------------------------
 @export var crouch_fall_gravity_scale: float = 4.0  # Faster fall when crouching
-@export var camera_offset_y: float = 20.0  # How much to move camera down
+@export var camera_offset_y: float = 40.0  # How much to move camera down
 @export var camera_transition_speed: float = 8.0  # Speed of camera transition
+@export var camera_pan_delay: float = 0.1  # Seconds to wait before camera starts panning down
 @export var sword_offset_y: float = 30.0  # How much to move sword down when crouching
 
 # ----------------------------------------------------------------------
@@ -15,9 +16,11 @@ extends State
 var original_camera_offset: Vector2
 var target_camera_offset: Vector2
 var original_sword_position: Vector2
+var crouch_timer: float = 0.0
 
 func enter() -> void:
 	parent.animations.play("crouch")
+	crouch_timer = 0.0  # Reset timer when entering crouch
 	# Store original camera offset and set target
 	if parent.camera:
 		original_camera_offset = parent.camera.offset
@@ -80,7 +83,10 @@ func process_physics(delta: float) -> State:
 	return null
 
 func process_frame(delta: float) -> State:
-	# Smoothly move camera to crouch position
-	if parent.camera:
+	# Update crouch timer
+	crouch_timer += delta
+	
+	# Only start panning camera down after the delay
+	if parent.camera and crouch_timer >= camera_pan_delay:
 		parent.camera.offset = parent.camera.offset.move_toward(target_camera_offset, camera_transition_speed * delta * 60)
 	return null

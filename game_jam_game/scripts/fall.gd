@@ -12,7 +12,23 @@ extends State
 @export var air_accel: float          = 600.0
 @export var air_friction: float       = 300.0
 @export var max_air_speed: float      = 220.0
+@export var sword_offset_y: float     = -15.0  # How much to move sword up during fall
 # ----------------------------------------------------------------------
+
+var original_sword_position: Vector2
+
+func enter() -> void:
+	super()
+	# Store original sword position and move it up slightly during fall
+	if parent.sword:
+		original_sword_position = parent.sword.position
+		parent.sword.position = original_sword_position + Vector2(0, sword_offset_y)
+
+func exit() -> void:
+	# Reset sword position when exiting fall, but let player handle direction
+	if parent.sword:
+		parent.sword.position.y = original_sword_position.y  # Reset Y position only
+		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 func process_input(_event: InputEvent) -> State:
 	if Input.is_action_just_pressed('attack'):
