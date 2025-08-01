@@ -1,5 +1,5 @@
-[gd_scene load_steps=8 format=4 uid="uid://cwbv2y4y74b4t"]
-[gd_scene load_steps=10 format=4 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=0 format=4 uid="uid://cwbv2y4y74b4t"]
+
 
 [ext_resource type="Texture2D" uid="uid://cyyglchwcsbb4" path="res://icon.svg" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://cp5l4kktdyj4y" path="res://scenes/test_dummy.tscn" id="1_p57ef"]
