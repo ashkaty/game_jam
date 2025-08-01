@@ -42,7 +42,7 @@ func process_physics(delta: float) -> State:
 
 	if axis != 0:
 		parent.velocity.x = move_toward(parent.velocity.x, target, air_accel * delta)
-		parent.animations.flip_h = parent.velocity.x < 0
+		parent.animations.flip_h = axis < 0
 	else:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, air_friction * delta)
 
