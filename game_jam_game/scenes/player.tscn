@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://b8rgk3cx1kycy" path="res://scripts/jump.gd" id="4_smehm"]
 [ext_resource type="Script" uid="uid://cda5gl0l7rwdn" path="res://scripts/fall.gd" id="5_ur7pv"]
 [ext_resource type="Script" uid="uid://d3n6iy57oyjda" path="res://scripts/move.gd" id="6_y4r1p"]
-[ext_resource type="Script" uid="uid://c1iecqttbiqua" path="res://scenes/land.gd" id="7_fjrip"]
+[ext_resource type="Script" path="res://scenes/land.gd" id="7_fjrip"]
 [ext_resource type="Script" uid="uid://c35ujxap2j06r" path="res://scripts/ground_attack.gd" id="8_qwkas"]
 [ext_resource type="Script" uid="uid://placeholder" path="res://scripts/air_attack.gd" id="9_air_attack"]
 [ext_resource type="Script" uid="uid://cmi6yhkd03cmy" path="res://scripts/crouch.gd" id="10_crouch"]

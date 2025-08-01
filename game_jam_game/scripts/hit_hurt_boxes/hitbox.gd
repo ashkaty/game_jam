@@ -9,13 +9,16 @@ var knockback_multiplier: float = 200.0
 
 @onready var collision_shape_2d: CollisionShape2D = $CollisionShape2D
 
-func _init() -> void:
+func _ready() -> void:
 	collision_layer = 4
 	collision_mask = 0
-	#collision_shape_2d.disabled() = true
-	#
-#func to_enable() -> void:
-	#collision_shape_2d.disabled = false
-#
-#func to_disable() -> void:
-	#collision_shape_2d.disabled = true
+	collision_shape_2d.disabled = true
+	
+
+func _on_animation_player_animation_started(anim_name: StringName) -> void:
+	print("animation start")
+	collision_shape_2d.disabled = false
+
+
+func _on_animation_player_animation_finished(anim_name: StringName) -> void:
+	collision_shape_2d.disabled = true
