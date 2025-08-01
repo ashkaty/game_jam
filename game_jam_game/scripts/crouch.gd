@@ -8,10 +8,13 @@ extends State
 @export var crouch_fall_gravity_scale: float = 4.0  # Faster fall when crouching
 @export var camera_offset_y: float = 20.0  # How much to move camera down
 @export var camera_transition_speed: float = 8.0  # Speed of camera transition
+@export var sword_offset_y: float = 30.0  # How much to move sword down when crouching
+
 # ----------------------------------------------------------------------
 
 var original_camera_offset: Vector2
 var target_camera_offset: Vector2
+var original_sword_position: Vector2
 
 func enter() -> void:
 	parent.animations.play("crouch")
@@ -19,11 +22,20 @@ func enter() -> void:
 	if parent.camera:
 		original_camera_offset = parent.camera.offset
 		target_camera_offset = original_camera_offset + Vector2(0, camera_offset_y)
+	# Store original sword position and move it down slightly
+	if parent.sword:
+		original_sword_position = parent.sword.position
+		parent.sword.position = original_sword_position + Vector2(0, sword_offset_y)
 
 func exit() -> void:
 	# Reset camera offset when exiting crouch
 	if parent.camera:
 		parent.camera.offset = original_camera_offset
+
+	# Reset sword position when exiting crouch
+	if parent.sword:
+		parent.sword.position = original_sword_position
+
 
 func process_input(_event: InputEvent) -> State:
 	# Exit crouch when key is released
