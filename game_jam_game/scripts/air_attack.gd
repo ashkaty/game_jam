@@ -14,14 +14,29 @@ var initial_horizontal_velocity: float
 func enter() -> void:
 	super()
 	
-	sword_anim = parent.get_node("AnimatedSprite2D/Sword/AnimationPlayer") as AnimationPlayer
+	
 	
 	# Store initial horizontal velocity and apply damping
 	initial_horizontal_velocity = parent.velocity.x
 	parent.velocity.x *= air_attack_horizontal_damping
 	
-	sword_anim.play("swing")
-	print("Playing Air Attack Animation")
+
+	
+
+func process_input(_event: InputEvent):
+	sword_anim = parent.get_node("AnimatedSprite2D/Sword/AnimationPlayer") as AnimationPlayer
+	if Input.is_action_pressed("up"):
+		sword_anim.play("up_ward_swing")
+		print("Playing Upward Air Attack Animation")
+		return idle_state
+	elif Input.is_action_pressed("crouch"):	# or "down"
+		sword_anim.play("down_ward_swing")
+		print("Playing Downward Air Attak Animation")
+		return idle_state
+	else:
+		sword_anim.play("swing")
+		print("Playing Attack Animation")
+		return idle_state
 
 func process_physics(delta: float) -> State:
 	# Apply reduced gravity during air attack
@@ -39,16 +54,16 @@ func process_physics(delta: float) -> State:
 	
 	return null
 
-func _on_animation_player_animation_finished(_anim_name: StringName) -> void:
-	print("Air Attack Animation Finished")
-	
-	# Check if we're on the ground or still in air
-	if parent.is_on_floor():
-		# We landed during or after the attack
-		if Input.get_axis("move_left", "move_right") != 0:
-			parent.state_machine.change_state(move_state)
-		else:
-			parent.state_machine.change_state(idle_state)
-	else:
-		# Still in air, return to falling
-		parent.state_machine.change_state(fall_state)
+#func _on_animation_player_animation_finished(_anim_name: StringName) -> void:
+	#print("Air Attack Animation Finished")
+	#
+	## Check if we're on the ground or still in air
+	#if parent.is_on_floor():
+		## We landed during or after the attack
+		#if Input.get_axis("move_left", "move_right") != 0:
+			#parent.state_machine.change_state(move_state)
+		#else:
+			#parent.state_machine.change_state(idle_state)
+	#else:
+		## Still in air, return to falling
+		#parent.state_machine.change_state(fall_state)

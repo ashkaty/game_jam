@@ -1,6 +1,7 @@
-[gd_scene load_steps=9 format=4 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=10 format=4 uid="uid://cwbv2y4y74b4t"]
 
 [ext_resource type="Texture2D" uid="uid://cyyglchwcsbb4" path="res://icon.svg" id="1_lnu2h"]
+[ext_resource type="PackedScene" uid="uid://cp5l4kktdyj4y" path="res://scenes/test_dummy.tscn" id="1_p57ef"]
 [ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="Script" uid="uid://dybehstmvi6ea" path="res://scripts/player.gd" id="2_u5sy4"]
 [ext_resource type="Texture2D" uid="uid://dpb0kysm7pg57" path="res://assets/sprites/grid.jpg" id="4_lbhrr"]
@@ -140,6 +141,9 @@ physics_layer_0/collision_layer = 1
 sources/1 = SubResource("TileSetAtlasSource_p57ef")
 
 [node name="Game" type="Node2D"]
+
+[node name="TestDummy" parent="." instance=ExtResource("1_p57ef")]
+position = Vector2(700, 0)
 
 [node name="WorldBorder" type="StaticBody2D" parent="."]
 
