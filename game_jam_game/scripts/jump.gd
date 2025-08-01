@@ -11,12 +11,12 @@ extends State
 @export var short_hop_force: float			= 750.0		# initial impulse
 @export var long_hop_force: float			= 950.0		# extra impulse if held
 @export var long_hop_threshold: float		= 0.15		# sec key must be held
-@export var short_gravity_scale: float		= 2.0
-@export var long_gravity_scale: float		= 1.0
+@export var short_gravity_scale: float		= 10.0
+@export var long_gravity_scale: float		= 10.0
 # ── Shared air control ──────────────────────────────────────────
 @export var inherit_ground_vel_mult: float	= 1.0
 @export var air_accel: float				= 600.0
-@export var air_friction: float				= 300.0
+@export var air_friction: float				= 200.0
 @export var max_air_speed: float			= 220.0
 @export var sword_offset_y: float			= -20.0		# How much to move sword up during jump
 # ────────────────────────────────────────────────────────────────
@@ -27,10 +27,15 @@ var original_sword_position: Vector2
 
 func enter() -> void:
 	super()
+	print("JUMP STATE ENTERED")
 	parent.velocity.y = -short_hop_force				# start with short hop
 	parent.velocity.x *= inherit_ground_vel_mult			# carry runway speed
 	_hold_time = 0.0
 	_is_long = false
+	
+	# Consume coyote time when jumping
+	parent.coyote_timer = 0.0
+	parent.coyote_available = false
 	
 	# Store original sword position and move it up slightly during jump
 	if parent.sword:

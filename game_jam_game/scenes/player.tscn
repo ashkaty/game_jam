@@ -177,11 +177,12 @@ air_friction = 0.0
 max_air_speed = 1600.0
 animation_name = "jump"
 
-[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state", "air_attack_state", "crouch_state")]
+[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state", "jump_state", "air_attack_state", "crouch_state")]
 script = ExtResource("5_ur7pv")
 land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
+jump_state = NodePath("../jump")
 air_attack_state = NodePath("../air_attack")
 crouch_state = NodePath("../crouch")
 fall_gravity_scale = 4.035
