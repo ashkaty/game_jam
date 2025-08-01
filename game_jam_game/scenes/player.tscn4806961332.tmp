@@ -112,7 +112,6 @@ size = Vector2(111, 253)
 [node name="CharacterBody2D" type="CharacterBody2D"]
 z_index = -1
 collision_layer = 2
-floor_snap_length = 8.1
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(54, -149)
@@ -136,41 +135,18 @@ jump_state = NodePath("../jump")
 move_state = NodePath("../move")
 animation_name = "idle"
 
-[node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "land_state", "move_state", "idle_state")]
+[node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "move_state", "idle_state")]
 script = ExtResource("4_smehm")
 fall_state = NodePath("../fall")
-land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
-short_hop_force = 1500.0
-long_hop_force = 2500.0
-short_gravity_scale = 5.0
-long_gravity_scale = 4.0
-air_accel = 2000.0
-air_friction = 0.0
-max_air_speed = 1600.0
+jump_force = 1800.0
 animation_name = "jump"
 
-[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state")]
+[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("move_state", "idle_state")]
 script = ExtResource("5_ur7pv")
-land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
-fall_gravity_scale = 4.035
-air_accel = 2000.0
-air_friction = 0.0
-max_air_speed = 1600.0
-animation_name = "fall"
-
-[node name="fall2" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state")]
-script = ExtResource("5_ur7pv")
-land_state = NodePath("../land")
-move_state = NodePath("../move")
-idle_state = NodePath("../idle")
-fall_gravity_scale = 4.035
-terminal_velocity = 1600.0
-air_accel = 2000.0
-max_air_speed = 1600.0
 animation_name = "fall"
 
 [node name="move" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "jump_state")]
@@ -180,11 +156,8 @@ idle_state = NodePath("../idle")
 jump_state = NodePath("../jump")
 max_speed = 1600.0
 acceleration = 6400.0
-deceleration = 12800.0
+deceleration = 128.0
 
-[node name="land" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state")]
+[node name="land" type="Node" parent="state_machine"]
 script = ExtResource("7_fjrip")
-idle_state = NodePath("../idle")
-move_state = NodePath("../move")
-idle_transition_vel = 1.0
 metadata/_custom_type_script = "uid://be2h8sxopel4k"

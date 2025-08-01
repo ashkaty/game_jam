@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://bl8edr7x4e5q5"]
 
-[ext_resource type="Texture2D" uid="uid://wp8xpyghsalx" path="res://sprites/basic.svg" id="1_n355p"]
+[ext_resource type="Texture2D" uid="uid://wp8xpyghsalx" path="res://assets/sprites/basic.svg" id="1_n355p"]
 [ext_resource type="Script" uid="uid://fs22cvuxn1cb" path="res://scripts/hit_hurt_boxes/hitbox.gd" id="2_s4ec8"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_k5whp"]

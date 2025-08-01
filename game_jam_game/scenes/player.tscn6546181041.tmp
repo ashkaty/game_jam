@@ -142,13 +142,8 @@ fall_state = NodePath("../fall")
 land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
-short_hop_force = 1500.0
-long_hop_force = 2500.0
-short_gravity_scale = 5.0
-long_gravity_scale = 4.0
-air_accel = 2000.0
-air_friction = 0.0
-max_air_speed = 1600.0
+jump_force = 1800.0
+air_accel = 4000.0
 animation_name = "jump"
 
 [node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state")]
@@ -156,21 +151,6 @@ script = ExtResource("5_ur7pv")
 land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
-fall_gravity_scale = 4.035
-air_accel = 2000.0
-air_friction = 0.0
-max_air_speed = 1600.0
-animation_name = "fall"
-
-[node name="fall2" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state")]
-script = ExtResource("5_ur7pv")
-land_state = NodePath("../land")
-move_state = NodePath("../move")
-idle_state = NodePath("../idle")
-fall_gravity_scale = 4.035
-terminal_velocity = 1600.0
-air_accel = 2000.0
-max_air_speed = 1600.0
 animation_name = "fall"
 
 [node name="move" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "jump_state")]
