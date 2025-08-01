@@ -4,7 +4,7 @@ extends State
 @export var fall_state: State
 @export var idle_state: State
 @export var jump_state: State
-
+@export var attack_state: State
 # -- Tunable movement parameters ------------------------------------------------
 @export var max_speed: float = 200.0               # Units per second (top horizontal speed)
 @export var acceleration: float = 800.0            # Units per second² when pressing a direction
