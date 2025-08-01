@@ -1,10 +1,12 @@
-[gd_scene load_steps=9 format=4 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=11 format=4 uid="uid://cwbv2y4y74b4t"]
 
 [ext_resource type="PackedScene" uid="uid://cp5l4kktdyj4y" path="res://scenes/test_dummy.tscn" id="1_p57ef"]
 [ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="Script" uid="uid://dybehstmvi6ea" path="res://scripts/player.gd" id="2_u5sy4"]
 [ext_resource type="Texture2D" uid="uid://dpb0kysm7pg57" path="res://assets/sprites/grid.jpg" id="4_lbhrr"]
 [ext_resource type="Texture2D" uid="uid://q44iosxd057y" path="res://assets/sprites/world_tileset.png" id="5_iywne"]
+[ext_resource type="PackedScene" path="res://scenes/simple_cassette_ui.tscn" id="6_simple_cassette"]
+[ext_resource type="Script" uid="uid://mex3itl4qovj" path="res://scripts/game_manager.gd" id="7_game"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2o6t"]
 distance = 256.0
@@ -140,6 +142,7 @@ physics_layer_0/collision_layer = 1
 sources/1 = SubResource("TileSetAtlasSource_p57ef")
 
 [node name="Game" type="Node2D"]
+script = ExtResource("7_game")
 
 [node name="TestDummy" parent="." instance=ExtResource("1_p57ef")]
 position = Vector2(700, 0)
@@ -179,3 +182,9 @@ physics_interpolation_mode = 1
 scale = Vector2(17.555, 17.555)
 tile_map_data = PackedByteArray("AAD9/wAAAQAAAAAAAAD+/wAAAQAAAAAAAAD//wAAAQAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAQAAAAAAAAACAAAAAQAAAAAAAAADAAAAAQAAAAAAAAAEAP7/AQAAAAAAAAAFAP7/AQAAAAAAAAAGAP7/AQAAAAAAAAAHAP7/AQAAAAAAAAAIAP7/AQAAAAAAAAAJAP7/AQAAAAAAAAAKAP7/AQAAAAAAAAALAP7/AQAAAAAAAAAMAP7/AQAAAAAAAAANAP7/AQAAAAAAAAAOAP7/AQAAAAAAAAAPAP7/AQAAAAAAAAAQAP7/AQAAAAAAAAARAP7/AQAAAAAAAAAGAPz/AQAAAAAAAAAHAPz/AQAAAAAAAAAIAPz/AQAAAAAAAAAOAPz/AQAAAAAAAAAPAPz/AQAAAAAAAAAQAPz/AQAAAAAAAAAKAPr/AQAAAAAAAAALAPr/AQAAAAAAAAAMAPr/AQAAAAAAAAAEAAAAAQAAAAAAAAAFAAAAAQAAAAAAAAAGAAAAAQAAAAAAAAAHAAAAAQAAAAAAAAAIAAAAAQAAAAAAAAAJAAAAAQAAAAAAAAAKAAAAAQAAAAAAAAALAAAAAQAAAAAAAAAMAAAAAQAAAAAAAAANAAAAAQAAAAAAAAAOAAAAAQAAAAAAAAAPAAAAAQAAAAAAAAAQAAAAAQAAAAAAAAARAAAAAQAAAAAAAAASAAAAAQAAAAAAAAATAAAAAQAAAAAAAAAUAAAAAQAAAAAAAAD8/wAAAQAAAAAAAAD7/wAAAQAAAAAAAAD6/wAAAQAAAAAAAAD5/wAAAQAAAAAAAAD4/wAAAQAAAAAAAAD3/wAAAQAAAAAAAAD2/wAAAQAAAAAAAAD1/wAAAQAAAAAAAAD0/wAAAQAAAAAAAADz/wAAAQAAAAAAAADy/wAAAQAAAAAAAAAVAAAAAQAAAAAAAAAWAAAAAQAAAAAAAAAXAAAAAQAAAAAAAAAYAAAAAQAAAAAAAAAZAAAAAQAAAAAAAAAaAAAAAQAAAAAAAAAbAAAAAQAAAAAAAAAcAAAAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_u5sy4")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="SimpleCassetteUI" parent="UI" instance=ExtResource("6_simple_cassette")]
+grow_horizontal = 0
+grow_vertical = 0

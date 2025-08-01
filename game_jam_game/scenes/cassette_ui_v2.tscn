@@ -1,0 +1,176 @@
+[gd_scene load_steps=4 format=4 uid="uid://c4d5e6f7g8iai"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/cassette_ui_v2.png" id="1_cassette_v2"]
+[ext_resource type="FontFile" path="res://assets/fonts/Jersey15-Regular.ttf" id="2_font"]
+[ext_resource type="Script" path="res://scripts/cassette_ui_v2.gd" id="3_script"]
+
+[node name="CassetteUIV2" type="Control"]
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -150.0
+offset_right = 320.0
+offset_bottom = -20.0
+script = ExtResource("3_script")
+
+[node name="Background" type="NinePatchRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("1_cassette_v2")
+
+[node name="MainContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 25.0
+offset_top = 20.0
+offset_right = -25.0
+offset_bottom = -20.0
+
+[node name="LeftPanel" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PlayerTitle" type="Label" parent="MainContainer/LeftPanel"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+text = "PLAYER"
+horizontal_alignment = 1
+
+[node name="PlayerStats" type="VBoxContainer" parent="MainContainer/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HealthBar" type="VBoxContainer" parent="MainContainer/LeftPanel/PlayerStats"]
+layout_mode = 2
+
+[node name="HealthLabel" type="Label" parent="MainContainer/LeftPanel/PlayerStats/HealthBar"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+text = "HEALTH"
+
+[node name="HealthProgress" type="ProgressBar" parent="MainContainer/LeftPanel/PlayerStats/HealthBar"]
+layout_mode = 2
+theme_override_colors/fill = Color(1, 0.2, 0.2, 1)
+value = 100.0
+show_percentage = false
+
+[node name="HealthText" type="Label" parent="MainContainer/LeftPanel/PlayerStats/HealthBar"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 8
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "100/100"
+horizontal_alignment = 1
+
+[node name="ScoreSection" type="VBoxContainer" parent="MainContainer/LeftPanel/PlayerStats"]
+layout_mode = 2
+
+[node name="ScoreLabel" type="Label" parent="MainContainer/LeftPanel/PlayerStats/ScoreSection"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
+text = "SCORE"
+
+[node name="ScoreValue" type="Label" parent="MainContainer/LeftPanel/PlayerStats/ScoreSection"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+text = "0"
+horizontal_alignment = 1
+
+[node name="RightPanel" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusTitle" type="Label" parent="MainContainer/RightPanel"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+text = "STATUS"
+horizontal_alignment = 1
+
+[node name="StatusInfo" type="VBoxContainer" parent="MainContainer/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LevelSection" type="VBoxContainer" parent="MainContainer/RightPanel/StatusInfo"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="MainContainer/RightPanel/StatusInfo/LevelSection"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.3, 0.7, 1, 1)
+text = "LEVEL"
+
+[node name="LevelValue" type="Label" parent="MainContainer/RightPanel/StatusInfo/LevelSection"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+text = "1"
+horizontal_alignment = 1
+
+[node name="ExpSection" type="VBoxContainer" parent="MainContainer/RightPanel/StatusInfo"]
+layout_mode = 2
+
+[node name="ExpLabel" type="Label" parent="MainContainer/RightPanel/StatusInfo/ExpSection"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 1, 0.3, 1)
+text = "EXP"
+
+[node name="ExpProgress" type="ProgressBar" parent="MainContainer/RightPanel/StatusInfo/ExpSection"]
+layout_mode = 2
+theme_override_colors/fill = Color(1, 1, 0.2, 1)
+max_value = 100.0
+show_percentage = false
+
+[node name="ExpText" type="Label" parent="MainContainer/RightPanel/StatusInfo/ExpSection"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 8
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "0/100"
+horizontal_alignment = 1
+
+[node name="Controls" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -80.0
+offset_top = -25.0
+offset_right = -5.0
+offset_bottom = -5.0
+
+[node name="ToggleHint" type="Label" parent="Controls"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 8
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "TAB"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Controls"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 10
+text = "×"
+flat = true
