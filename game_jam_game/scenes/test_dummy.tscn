@@ -1,0 +1,67 @@
+[gd_scene load_steps=8 format=3 uid="uid://cp5l4kktdyj4y"]
+
+[ext_resource type="Script" uid="uid://bp8t0dsnmnsey" path="res://test_dummy.gd" id="1_amttc"]
+[ext_resource type="Texture2D" uid="uid://bpw34xbosqccj" path="res://assets/sprites/dummy_asset.png" id="1_gionw"]
+[ext_resource type="Script" uid="uid://d341eysla0hdt" path="res://scripts/hit_hurt_boxes/hurtbox.gd" id="2_amttc"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0btni"]
+radius = 10.7958
+height = 21.9376
+
+[sub_resource type="Animation" id="Animation_amttc"]
+resource_name = "hurt"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1, 0.15),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.174533, 0.174533, 0.0]
+}
+
+[sub_resource type="Animation" id="Animation_0btni"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_2xesr"]
+_data = {
+&"RESET": SubResource("Animation_0btni"),
+&"hurt": SubResource("Animation_amttc")
+}
+
+[node name="TestDummy" type="Node2D"]
+script = ExtResource("1_amttc")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-26, -188)
+texture = ExtResource("1_gionw")
+
+[node name="HurtBox" type="Area2D" parent="."]
+script = ExtResource("2_amttc")
+metadata/_custom_type_script = "uid://d341eysla0hdt"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
+position = Vector2(-23, -212)
+scale = Vector2(9.07759, 19.3275)
+shape = SubResource("CapsuleShape2D_0btni")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_2xesr")
+}
