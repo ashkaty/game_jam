@@ -3,6 +3,7 @@ extends State
 @export var land_state: State
 @export var move_state: State
 @export var idle_state: State
+@export var jump_state: State
 @export var air_attack_state: State
 @export var crouch_state: State
 
@@ -19,6 +20,7 @@ var original_sword_position: Vector2
 
 func enter() -> void:
 	super()
+	print("Entering fall state")
 	# Store original sword position and move it up slightly during fall
 	if parent.sword:
 		original_sword_position = parent.sword.position
@@ -31,6 +33,11 @@ func exit() -> void:
 		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 func process_input(_event: InputEvent) -> State:
+	if Input.is_action_just_pressed("jump"):
+		if parent.can_coyote_jump():
+			print("Coyote jump from fall state!")
+			return jump_state
+			
 	if Input.is_action_just_pressed('attack'):
 		return air_attack_state
 	if Input.is_action_just_pressed('crouch'):
