@@ -19,11 +19,18 @@ extends State
 @export var air_friction: float				= 200.0
 @export var max_air_speed: float			= 220.0
 @export var sword_offset_y: float			= -20.0		# How much to move sword up during jump
+
+# Head bonk enhanced air control
+@export var head_bonk_air_control_boost: float = 1.5  # Extra air control after head bonk
+var head_bonk_enhanced_control: bool = false
+var head_bonk_control_duration: float = 0.5  # How long enhanced control lasts
+var head_bonk_control_timer: float = 0.0
 # ────────────────────────────────────────────────────────────────
 
 var _hold_time := 0.0
 var _is_long := false
 var original_sword_position: Vector2
+var jump_start_time: float = 0.0  # Track when jump started for head bonk timing
 
 func enter() -> void:
 	super()
@@ -32,6 +39,10 @@ func enter() -> void:
 	parent.velocity.x *= inherit_ground_vel_mult			# carry runway speed
 	_hold_time = 0.0
 	_is_long = false
+	jump_start_time = parent.total_time
+	
+	# Mark that player jumped off ground (this will disable coyote time)
+	parent.mark_jumped_off_ground()
 	
 	# Consume coyote time when jumping
 	parent.coyote_timer = 0.0
@@ -64,9 +75,19 @@ func process_physics(delta: float) -> State:
 	# Horizontal air control
 	var axis := Input.get_axis("move_left", "move_right")
 	var target := axis * max_air_speed
+	
+	# Enhanced air control if we recently head bonked
+	var current_air_accel = air_accel
+	if head_bonk_enhanced_control:
+		head_bonk_control_timer -= delta
+		current_air_accel *= head_bonk_air_control_boost
+		
+		if head_bonk_control_timer <= 0.0:
+			head_bonk_enhanced_control = false
+			print("Enhanced air control expired")
 
 	if axis != 0:
-		parent.velocity.x = move_toward(parent.velocity.x, target, air_accel * delta)
+		parent.velocity.x = move_toward(parent.velocity.x, target, current_air_accel * delta)
 		parent.animations.flip_h = axis < 0
 	else:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, air_friction * delta)
@@ -78,9 +99,24 @@ func process_physics(delta: float) -> State:
 	parent.velocity.y += gravity * g_scale * delta
 
 	parent.move_and_slide()
+	
+	# Check for head bonk (ceiling collision while moving up)
+	# Only check during the early part of the jump for authentic feel
+	var time_since_jump_start = parent.total_time - jump_start_time
+	
+	if time_since_jump_start <= parent.head_bonk_grace_period and parent.velocity.y < 0:
+		if parent.check_and_handle_head_bonk():
+			# Head bonk occurred - enable enhanced air control and transition to fall state
+			head_bonk_enhanced_control = true
+			head_bonk_control_timer = head_bonk_control_duration
+			print("Enhanced air control activated after head bonk!")
+			return fall_state
 
 	# State transitions
 	if parent.velocity.y > 0:
+		# Pass enhanced control to fall state if active
+		if head_bonk_enhanced_control:
+			fall_state.receive_enhanced_control(head_bonk_control_timer, head_bonk_air_control_boost)
 		return fall_state
 	if parent.is_on_floor():
 		return land_state

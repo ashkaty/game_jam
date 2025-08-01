@@ -16,8 +16,11 @@ extends State
 
 func process_input(_event: InputEvent) -> State:
 	if Input.is_action_just_pressed("jump"):
-		if parent.can_coyote_jump():
-			print("Coyote jump from move state!")
+		if parent.can_jump():
+			if parent.can_ground_jump():
+				print("Normal ground jump from move state!")
+			else:
+				print("Coyote jump from move state!")
 			return jump_state
 	if Input.is_action_just_pressed('attack'):
 		return attack_state

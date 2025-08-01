@@ -18,8 +18,11 @@ func enter() -> void:
 
 func process_input(_event: InputEvent) -> State:
 	if Input.is_action_just_pressed('jump'):
-		if parent.can_coyote_jump():
-			print("Coyote jump from idle state!")
+		if parent.can_jump():
+			if parent.can_ground_jump():
+				print("Normal ground jump from idle state!")
+			else:
+				print("Coyote jump from idle state!")
 			return jump_state
 	if Input.is_action_just_pressed('move_left') or Input.is_action_just_pressed('move_right'):
 		return move_state
