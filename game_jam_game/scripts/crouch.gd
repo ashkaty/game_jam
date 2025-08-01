@@ -55,6 +55,8 @@ func process_input(_event: InputEvent) -> State:
 			else:
 				return idle_state
 		else:
+			# If we release crouch while in air, go to fall state
+			# The fall state will handle normal falling mechanics
 			return fall_state
 	return null
 
