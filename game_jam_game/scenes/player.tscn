@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://b15t68w17acxb"]
+[gd_scene load_steps=26 format=3 uid="uid://b15t68w17acxb"]
 
 [ext_resource type="Texture2D" uid="uid://hh6utf025oib" path="res://assets/sprites/example_sprites.png" id="1_3vyb7"]
 [ext_resource type="PackedScene" uid="uid://bl8edr7x4e5q5" path="res://scenes/sword.tscn" id="2_smehm"]
@@ -7,10 +7,15 @@
 [ext_resource type="Script" uid="uid://b8rgk3cx1kycy" path="res://scripts/jump.gd" id="4_smehm"]
 [ext_resource type="Script" uid="uid://cda5gl0l7rwdn" path="res://scripts/fall.gd" id="5_ur7pv"]
 [ext_resource type="Script" uid="uid://d3n6iy57oyjda" path="res://scripts/move.gd" id="6_y4r1p"]
-[ext_resource type="Script" path="res://scenes/land.gd" id="7_fjrip"]
+[ext_resource type="Script" uid="uid://c1iecqttbiqua" path="res://scenes/land.gd" id="7_fjrip"]
 [ext_resource type="Script" uid="uid://c35ujxap2j06r" path="res://scripts/ground_attack.gd" id="8_qwkas"]
-[ext_resource type="Script" path="res://scripts/air_attack.gd" id="9_air_attack"]
-[ext_resource type="Script" path="res://scripts/crouch.gd" id="10_crouch"]
+[ext_resource type="Script" uid="uid://placeholder" path="res://scripts/air_attack.gd" id="9_air_attack"]
+[ext_resource type="Script" uid="uid://cmi6yhkd03cmy" path="res://scripts/crouch.gd" id="10_crouch"]
+[ext_resource type="Script" uid="uid://be2h8sxopel4k" path="res://scripts/state_machine/state.gd" id="12_3v2ag"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crouch"]
+atlas = ExtResource("1_3vyb7")
+region = Rect2(768, 0, 384, 341)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_g2els"]
 atlas = ExtResource("1_3vyb7")
@@ -51,10 +56,6 @@ region = Rect2(768, 341, 384, 341)
 [sub_resource type="AtlasTexture" id="AtlasTexture_3v2ag"]
 atlas = ExtResource("1_3vyb7")
 region = Rect2(384, 682, 384, 341)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_crouch"]
-atlas = ExtResource("1_3vyb7")
-region = Rect2(768, 0, 384, 341)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_feb5d"]
 animations = [{
@@ -140,6 +141,9 @@ frame_progress = 0.242861
 [node name="Sword" parent="AnimatedSprite2D" instance=ExtResource("2_smehm")]
 position = Vector2(86, -3)
 
+[node name="Sprite2D" parent="AnimatedSprite2D/Sword" index="0"]
+position = Vector2(2, -8)
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(4.5, -129.5)
 shape = SubResource("RectangleShape2D_fc0e3")
@@ -164,7 +168,6 @@ land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
 air_attack_state = NodePath("../air_attack")
-
 short_hop_force = 1500.0
 long_hop_force = 2500.0
 short_gravity_scale = 5.0
@@ -211,7 +214,7 @@ idle_state = NodePath("../idle")
 move_state = NodePath("../move")
 fall_state = NodePath("../fall")
 jump_state = NodePath("../jump")
-deceleration = 100.0
+deceleration = 50.0
 animation_name = "swing"
 metadata/_custom_type_script = "uid://be2h8sxopel4k"
 
@@ -220,15 +223,18 @@ script = ExtResource("9_air_attack")
 fall_state = NodePath("../fall")
 idle_state = NodePath("../idle")
 move_state = NodePath("../move")
-air_attack_gravity_scale = 1.5
-air_attack_horizontal_damping = 0.8
 animation_name = "swing"
 
-[node name="crouch" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state")]
+[node name="crouch" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state", "ground_attack_state")]
 script = ExtResource("10_crouch")
 idle_state = NodePath("../idle")
 move_state = NodePath("../move")
 fall_state = NodePath("../fall")
+ground_attack_state = NodePath("../ground_attack")
+
+[node name="State" type="Node" parent="state_machine"]
+script = ExtResource("12_3v2ag")
+metadata/_custom_type_script = "uid://be2h8sxopel4k"
 
 [connection signal="animation_finished" from="AnimatedSprite2D/Sword/AnimationPlayer" to="state_machine/ground_attack" method="_on_animation_player_animation_finished"]
 [connection signal="animation_finished" from="AnimatedSprite2D/Sword/AnimationPlayer" to="state_machine/air_attack" method="_on_animation_player_animation_finished"]
