@@ -34,7 +34,9 @@ func exit() -> void:
 
 	# Reset sword position when exiting crouch
 	if parent.sword:
-		parent.sword.position = original_sword_position
+		# Instead of restoring stored position, reset to base position and let player update logic handle direction
+		parent.sword.position.y = original_sword_position.y  # Reset Y position only
+		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 
 func process_input(_event: InputEvent) -> State:
