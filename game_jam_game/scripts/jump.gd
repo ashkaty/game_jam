@@ -4,6 +4,7 @@ extends State
 @export var land_state: State
 @export var move_state: State
 @export var idle_state: State
+@export var air_attack_state: State
 
 # ── Jump variants ───────────────────────────────────────────────
 @export var short_hop_force: float			= 750.0		# initial impulse
@@ -27,6 +28,11 @@ func enter() -> void:
 	parent.velocity.x *= inherit_ground_vel_mult			# carry runway speed
 	_hold_time = 0.0
 	_is_long = false
+
+func process_input(_event: InputEvent) -> State:
+	if Input.is_action_just_pressed('attack'):
+		return air_attack_state
+	return null
 
 func process_physics(delta: float) -> State:
 	# Track how long the jump key is held

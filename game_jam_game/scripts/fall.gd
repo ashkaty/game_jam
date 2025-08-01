@@ -3,6 +3,7 @@ extends State
 @export var land_state: State
 @export var move_state: State
 @export var idle_state: State
+@export var air_attack_state: State
 
 # ---- Tunables --------------------------------------------------------
 @export var fall_gravity_scale: float = 2.6
@@ -11,6 +12,11 @@ extends State
 @export var air_friction: float       = 300.0
 @export var max_air_speed: float      = 220.0
 # ----------------------------------------------------------------------
+
+func process_input(_event: InputEvent) -> State:
+	if Input.is_action_just_pressed('attack'):
+		return air_attack_state
+	return null
 
 func process_physics(delta: float) -> State:
 	# Gravity with clamp

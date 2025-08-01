@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://d3n6iy57oyjda" path="res://scripts/move.gd" id="6_y4r1p"]
 [ext_resource type="Script" path="res://scenes/land.gd" id="7_fjrip"]
 [ext_resource type="Script" uid="uid://c35ujxap2j06r" path="res://scripts/ground_attack.gd" id="8_qwkas"]
+[ext_resource type="Script" path="res://scripts/air_attack.gd" id="9_air_attack"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_g2els"]
 atlas = ExtResource("1_3vyb7")
@@ -142,12 +143,13 @@ move_state = NodePath("../move")
 attack_state = NodePath("../ground_attack")
 animation_name = "idle"
 
-[node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "land_state", "move_state", "idle_state")]
+[node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "land_state", "move_state", "idle_state", "air_attack_state")]
 script = ExtResource("4_smehm")
 fall_state = NodePath("../fall")
 land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
+air_attack_state = NodePath("../air_attack")
 short_hop_force = 1500.0
 long_hop_force = 2500.0
 short_gravity_scale = 5.0
@@ -157,11 +159,12 @@ air_friction = 0.0
 max_air_speed = 1600.0
 animation_name = "jump"
 
-[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state")]
+[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state", "air_attack_state")]
 script = ExtResource("5_ur7pv")
 land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
+air_attack_state = NodePath("../air_attack")
 fall_gravity_scale = 4.035
 air_accel = 2000.0
 air_friction = 0.0
@@ -195,6 +198,16 @@ deceleration = 100.0
 animation_name = "swing"
 metadata/_custom_type_script = "uid://be2h8sxopel4k"
 
+[node name="air_attack" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "move_state")]
+script = ExtResource("9_air_attack")
+fall_state = NodePath("../fall")
+idle_state = NodePath("../idle")
+move_state = NodePath("../move")
+air_attack_gravity_scale = 1.5
+air_attack_horizontal_damping = 0.8
+animation_name = "swing"
+
 [connection signal="animation_finished" from="AnimatedSprite2D/Sword/AnimationPlayer" to="state_machine/ground_attack" method="_on_animation_player_animation_finished"]
+[connection signal="animation_finished" from="AnimatedSprite2D/Sword/AnimationPlayer" to="state_machine/air_attack" method="_on_animation_player_animation_finished"]
 
 [editable path="AnimatedSprite2D/Sword"]
