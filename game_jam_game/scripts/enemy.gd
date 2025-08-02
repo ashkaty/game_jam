@@ -3,8 +3,12 @@ extends CharacterBody2D
 @onready var animation_player := $AnimationPlayer
 @onready var sprite := $Sprite2D
 
-# Physics variables (same as test_dummy for consistency)
-@export var gravity: float = 980.0  # Standard gravity
+# Physics variables (matching player physics system)
+var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")  # Base gravity from project settings
+@export var fall_gravity_scale: float = 20.0  # Same as player's fall state
+@export var fast_fall_gravity_scale: float = 35.0  # Same as player's fast fall
+@export var terminal_velocity: float = 3000.0  # Same as player's terminal velocity
+@export var fast_fall_terminal_velocity: float = 5000.0  # Same as player's fast fall terminal velocity
 @export var friction: float = 0.95   # Ground friction for sliding (increased from 0.8)
 @export var air_friction: float = 0.98  # Air resistance
 
@@ -22,25 +26,34 @@ extends CharacterBody2D
 var current_health: int = 2
 
 # Enemy invincibility system (similar to player)
-@export var spawn_invincibility_duration: float = 0.5  # Brief invincibility on spawn
+@export var spawn_invincibility_duration: float = 1  # Brief invincibility on spawn
 var spawn_invincibility_timer: float = 0.0
 var is_spawn_invincible: bool = false
 
 # Movement variables
 @export var move_speed: float = 300.0  # Increased from 100.0 for faster, more challenging enemies
-@export var patrol_range: float = 1000.0  # How far the enemy patrols (increased from 200.0)
-@export var chase_range: float = 1000.0   # How far the enemy will chase the player
-@export var return_to_patrol_range: float = 400.0  # Distance at which enemy stops chasing and returns
+@export var patrol_range: float = 2000.0  # How far the enemy patrols (increased from 1000.0)
+@export var chase_range: float = 2500.0   # How far the enemy will chase the player (increased from 1000.0)
+@export var return_to_patrol_range: float = 800.0  # Distance at which enemy stops chasing and returns (increased from 400.0)
+
+
+# Jump variables
+@export var jump_velocity: float = -800.0  # Much higher jump - twice as high as player short jump
+@export var jump_cooldown: float = 0.8  # Reduced from 1.0 for more frequent jumping
+@export var jump_threshold_height: float = 120.0  # Increased from 80.0 to handle taller obstacles
+@export var can_jump_gaps: bool = true  # Whether enemy can jump small gaps
+@export var max_jump_gap_width: float = 150.0  # Maximum gap width the enemy will attempt to jump
+var jump_timer: float = 0.0  # Timer for jump cooldown
 
 # Line of sight detection variables
-@export var sight_range: float = 300.0   # How far the enemy can see the player (reduced from 5000)
+@export var sight_range: float = 150000.0   # How far the enemy can see the player (increased from 300.0)
 @export var sight_angle: float = 120.0   # Field of view in degrees (60 degrees each side)
-@export var sight_check_interval: float = 0.2  # How often to check line of sight (in seconds)
+@export var sight_check_interval: float = 5  # How often to check line of sight (in seconds)
 var sight_check_timer: float = 0.0
 
 # Edge detection variables
-@export var edge_detection_distance: float = 50.0  # How far ahead to check for edges
-@export var wall_detection_distance: float = 30.0  # How far ahead to check for walls
+@export var edge_detection_distance: float = 250.0  # How far ahead to check for edges
+@export var wall_detection_distance: float = 500.0  # How far ahead to check for walls
 
 # Attack variables
 @export var attack_range: float = 60.0   # Distance at which enemy can attack
@@ -54,9 +67,13 @@ var sight_check_timer: float = 0.0
 @export var passive_body_damage_enabled: bool = true  # Whether touching enemy damages player
 @export var passive_body_damage: int = 1  # Damage dealt by touching enemy body
 @export var passive_damage_cooldown: float = 1.0  # Cooldown between passive damage instances
+@export var passive_body_knockback_enabled: bool = true 
+@export var passive_body_knockback: int = 1
+
+
 
 # AI State variables
-enum EnemyState { PATROL, CHASE, ATTACK, RETURN_TO_PATROL }
+enum EnemyState { PATROL, CHASE, ATTACK, RETURN_TO_PATROL, SEARCH_ALTERNATE_PATH }
 var current_state: EnemyState = EnemyState.PATROL
 var patrol_start_position: Vector2
 var patrol_direction: int = 1  # 1 for right, -1 for left
@@ -66,6 +83,53 @@ var passive_damage_timer: float = 0.0  # Timer for passive damage cooldown
 var player: CharacterBody2D = null
 var last_known_player_position: Vector2
 var is_attacking: bool = false  # Flag to prevent multiple simultaneous attacks
+
+# Pathfinding and approach tracking variables
+var stuck_timer: float = 0.0  # How long enemy has been stuck trying to reach player
+var stuck_threshold: float = 3.0  # Seconds before considering alternative approach
+var last_distance_to_player: float = 0.0  # Track if we're getting closer to player
+var distance_check_timer: float = 0.0  # Timer for checking progress
+var failed_jump_attempts: int = 0  # Track consecutive failed jump attempts
+var max_failed_jumps: int = 3  # Max failed jumps before trying alternate path
+var alternate_search_timer: float = 0.0  # How long to search for alternate path
+var alternate_search_duration: float = 5.0  # Seconds to search before giving up
+var original_chase_direction: int = 1  # Remember original chase direction
+
+# Decision Tree System
+class DecisionTreeNode extends RefCounted:
+	"""Base class for all decision tree nodes"""
+	func evaluate(enemy) -> String:
+		return "default"
+
+class ConditionNode extends DecisionTreeNode:
+	"""A node that checks a condition and returns different actions based on result"""
+	var condition_func: Callable
+	var true_node: DecisionTreeNode
+	var false_node: DecisionTreeNode
+	
+	func _init(condition: Callable, true_action: DecisionTreeNode, false_action: DecisionTreeNode):
+		condition_func = condition
+		true_node = true_action
+		false_node = false_action
+	
+	func evaluate(enemy) -> String:
+		if condition_func.call(enemy):
+			return true_node.evaluate(enemy)
+		else:
+			return false_node.evaluate(enemy)
+
+class ActionNode extends DecisionTreeNode:
+	"""A leaf node that returns a specific action"""
+	var action_name: String
+	
+	func _init(action: String):
+		action_name = action
+	
+	func evaluate(enemy) -> String:
+		return action_name
+
+# Decision Tree Instance
+var decision_tree: DecisionTreeNode
 
 func _ready():
 	# Add the enemy to a group so other systems can find it
@@ -110,6 +174,9 @@ func _ready():
 	print("Enemy position: ", global_position)
 	print("Enemy is_on_floor(): ", is_on_floor())
 	print("Enemy patrol start position: ", patrol_start_position)
+	
+	# Build the decision tree
+	_build_decision_tree()
 
 # Recursive function to find player
 func _find_player_recursive(node: Node) -> CharacterBody2D:
@@ -131,6 +198,207 @@ func _find_player_recursive(node: Node) -> CharacterBody2D:
 			return result
 	
 	return null
+
+# Decision Tree Building and Conditions
+func _build_decision_tree():
+	"""Build the enemy's decision tree for AI behavior"""
+	# Define all the leaf actions
+	var attack_action = ActionNode.new("attack")
+	var chase_action = ActionNode.new("chase")
+	var patrol_action = ActionNode.new("patrol")
+	var return_action = ActionNode.new("return_to_patrol")
+	var jump_to_player_action = ActionNode.new("jump_to_player")
+	var search_alternate_action = ActionNode.new("search_alternate_path")
+	
+	# Build a smarter tree structure with alternate pathfinding
+	# Level 5: Check if stuck and need alternate path
+	var stuck_check = ConditionNode.new(
+		_should_search_alternate_path,
+		search_alternate_action,
+		ConditionNode.new(
+			_should_jump_to_player,
+			jump_to_player_action,
+			ConditionNode.new(
+				_is_in_attack_range,
+				attack_action,
+				chase_action
+			)
+		)
+	)
+	
+	# Level 4: Continue chase vs return
+	var continue_vs_return = ConditionNode.new(
+		_should_continue_chase,
+		stuck_check,  # Use smart pathfinding when chasing
+		return_action
+	)
+	
+	# Level 3: Player detected vs not detected
+	var player_detected = ConditionNode.new(
+		_can_detect_player,
+		stuck_check,  # Always use smart pathfinding when player detected
+		ConditionNode.new(
+			_should_return_to_patrol,
+			return_action,
+			patrol_action
+		)
+	)
+	
+	# Level 2: Root - Player exists check
+	decision_tree = ConditionNode.new(
+		_player_exists,
+		player_detected,
+		patrol_action
+	)
+	
+	print("Decision tree built successfully with smart pathfinding behavior")
+
+# Decision Tree Condition Functions
+func _player_exists(enemy) -> bool:
+	"""Check if player reference exists and is valid"""
+	return player != null and is_instance_valid(player)
+
+func _can_detect_player(enemy) -> bool:
+	"""Check if enemy can detect the player (sight or proximity)"""
+	if not player:
+		return false
+	
+	var distance = global_position.distance_to(player.global_position)
+	
+	# Check proximity detection first (always works)
+	if distance <= chase_range:
+		return true
+	
+	# Check line of sight if within sight range
+	if distance <= sight_range and sight_check_timer <= 0:
+		sight_check_timer = sight_check_interval
+		return can_see_player()
+	
+	return false
+
+func _should_jump_to_player(enemy) -> bool:
+	"""Check if enemy should jump up to reach player on a higher platform"""
+	if not player or jump_timer > 0 or not is_on_floor():
+		if randf() < 0.1:  # Debug output
+			print("Jump check failed: player=", player != null, " jump_timer=", jump_timer, " on_floor=", is_on_floor())
+		return false
+	
+	var player_pos = player.global_position
+	var enemy_pos = global_position
+	
+	# Check if player is above and within horizontal range
+	var horizontal_distance = abs(player_pos.x - enemy_pos.x)
+	var vertical_distance = enemy_pos.y - player_pos.y  # Positive if player is above
+	
+	# Debug output
+	if randf() < 0.1:
+		print("Jump check - H_dist: ", horizontal_distance, " V_dist: ", vertical_distance, " Player above: ", vertical_distance > 20)
+	
+	# More realistic jump conditions - enemy can only jump so high
+	if vertical_distance > 5 and vertical_distance <= 300 and horizontal_distance <= 150:
+		# Check if there's actually a clear path to jump
+		var space_state = get_world_2d().direct_space_state
+		
+		# Check for obstacles in jump path
+		var jump_path_check = PhysicsRayQueryParameters2D.create(
+			enemy_pos + Vector2(0, -10),
+			Vector2(player_pos.x, enemy_pos.y - 200)  # Check jump arc
+		)
+		jump_path_check.collision_mask = 1
+		jump_path_check.exclude = [self, player]
+		
+		var path_result = space_state.intersect_ray(jump_path_check)
+		
+		if path_result.is_empty():
+			print("Enemy should jump to reach player! H_dist:", horizontal_distance, " V_dist:", vertical_distance, " (SMART JUMP)")
+			return true
+		else:
+			print("Jump path blocked by obstacle - will try alternate route")
+			failed_jump_attempts += 1
+			return false
+	
+	return false
+
+func _is_in_attack_range(enemy) -> bool:
+	"""Check if player is within attack range and attack is ready"""
+	if not player:
+		return false
+	
+	var distance = global_position.distance_to(player.global_position)
+	return distance <= attack_range and attack_timer <= 0
+
+func _should_continue_chase(enemy) -> bool:
+	"""Check if enemy should continue chasing or return to patrol"""
+	if not player:
+		return false
+	
+	var distance = global_position.distance_to(player.global_position)
+	return distance <= return_to_patrol_range
+
+func _should_return_to_patrol(enemy) -> bool:
+	"""Check if enemy should return to patrol area"""
+	var distance_to_start = global_position.distance_to(patrol_start_position)
+	return distance_to_start > 50.0  # If far from patrol start, return
+
+func _should_search_alternate_path(enemy) -> bool:
+	"""Check if enemy should search for alternate path to reach player"""
+	if not player or current_state != EnemyState.CHASE:
+		return false
+	
+	# Check if enemy has been stuck trying to reach player
+	if stuck_timer >= stuck_threshold:
+		print("Enemy stuck for ", stuck_timer, " seconds - searching alternate path")
+		return true
+	
+	# Check if enemy has failed too many jump attempts
+	if failed_jump_attempts >= max_failed_jumps:
+		print("Enemy failed ", failed_jump_attempts, " jump attempts - searching alternate path")
+		return true
+	
+	return false
+
+# Decision Tree Execution
+func execute_decision_tree() -> String:
+	"""Execute the decision tree and return the action to take"""
+	if decision_tree:
+		return decision_tree.evaluate(self)
+	return "patrol"  # Default fallback
+
+# Decision Tree Debugging
+func debug_decision_tree():
+	"""Print current decision tree evaluation for debugging"""
+	print("=== Decision Tree Debug ===")
+	print("Player exists: ", _player_exists(self))
+	if _player_exists(self):
+		print("Can detect player: ", _can_detect_player(self))
+		print("Is in attack range: ", _is_in_attack_range(self))
+		print("Should continue chase: ", _should_continue_chase(self))
+	print("Should return to patrol: ", _should_return_to_patrol(self))
+	print("Final action: ", execute_decision_tree())
+	print("==========================")
+
+# Decision Tree Expansion Functions
+func add_new_behavior(condition_name: String, condition_func: Callable, action_name: String):
+	"""Add a new behavior branch to the decision tree"""
+	# This is a simplified example - in practice you'd rebuild the tree
+	# or have a more sophisticated tree modification system
+	print("Adding new behavior: ", condition_name, " -> ", action_name)
+
+func create_custom_decision_tree():
+	"""Example of how to create a custom decision tree"""
+	# You can completely customize the decision tree structure
+	var custom_tree = ConditionNode.new(
+		func(enemy): return enemy._player_exists(enemy),
+		ConditionNode.new(
+			func(enemy): return enemy._is_in_attack_range(enemy),
+			ActionNode.new("attack"),
+			ActionNode.new("chase")
+		),
+		ActionNode.new("patrol")
+	)
+	
+	decision_tree = custom_tree
+	print("Custom decision tree created")
 
 # Setup the passive body hitbox for contact damage
 func _setup_passive_body_hitbox():
@@ -176,6 +444,10 @@ func _physics_process(delta):
 	if attack_state_timer > 0:
 		attack_state_timer -= delta
 	
+	# Update jump timer
+	if jump_timer > 0:
+		jump_timer -= delta
+	
 	# Update passive damage timer
 	if passive_damage_timer > 0:
 		passive_damage_timer -= delta
@@ -183,6 +455,29 @@ func _physics_process(delta):
 	# Update sight check timer
 	if sight_check_timer > 0:
 		sight_check_timer -= delta
+	
+	# Update pathfinding timers and progress tracking
+	distance_check_timer += delta
+	if distance_check_timer >= 1.0:  # Check progress every second
+		distance_check_timer = 0.0
+		if player and current_state == EnemyState.CHASE:
+			var current_distance = global_position.distance_to(player.global_position)
+			
+			# Check if we're making progress toward the player
+			if last_distance_to_player > 0:
+				var progress = last_distance_to_player - current_distance
+				if progress < 10.0:  # If we haven't gotten 10 pixels closer
+					stuck_timer += 1.0
+					print("Enemy making little progress - stuck timer: ", stuck_timer)
+				else:
+					stuck_timer = max(0, stuck_timer - 0.5)  # Reduce stuck timer if making progress
+					failed_jump_attempts = 0  # Reset failed jumps if making progress
+			
+			last_distance_to_player = current_distance
+	
+	# Update alternate search timer
+	if current_state == EnemyState.SEARCH_ALTERNATE_PATH:
+		alternate_search_timer += delta
 	
 	# Debug output (more frequent for better visibility)
 	if randf() < 0.05:  # 5% chance each frame to see debug info more often
@@ -212,11 +507,21 @@ func _physics_process(delta):
 			# Air resistance
 			velocity.x *= air_friction
 	
-	# Apply gravity if not on floor
+	# Apply gravity if not on floor (using player's gravity scale system)
 	if not is_on_floor():
-		velocity.y += gravity * delta
-		# Cap falling speed to prevent excessive velocity
-		velocity.y = min(velocity.y, 2000.0)
+		# Determine gravity scale and terminal velocity based on falling behavior
+		# Uses same gravity values as player for consistent physics:
+		# - Base gravity: 980.0 (from ProjectSettings) 
+		# - Gravity scale: 20.0 (same as player's normal fall)
+		# - Terminal velocity: 3000.0 (same as player)
+		var gravity_scale = fall_gravity_scale
+		var max_fall_velocity = terminal_velocity
+		
+		# Apply gravity with scale and clamp to terminal velocity (identical to player fall state)
+		velocity.y = min(
+			velocity.y + gravity * gravity_scale * delta,
+			max_fall_velocity
+		)
 	
 	# Check for and resolve horizontal collisions to prevent getting jammed
 	if is_on_wall():
@@ -243,73 +548,76 @@ func _physics_process(delta):
 				# Force push away from collision
 				global_position += collision.get_normal() * collision_safety_margin
 
-# AI Behavior System
+# AI Behavior System (Decision Tree Based)
 func update_ai_behavior(delta: float):
 	# Re-try finding player if we don't have one
 	if not player or not is_instance_valid(player):
 		_try_find_player()
 	
-	# If still no player found, just patrol
-	if not player or not is_instance_valid(player):
-		patrol_behavior()
-		return
+	# Execute decision tree to get next action
+	var action = execute_decision_tree()
 	
-	var distance_to_player = global_position.distance_to(player.global_position)
+	# Debug output for decision tree
+	if randf() < 0.05:  # More frequent debug
+		print("=== AI Debug ===")
+		print("Action: ", action, " | State: ", get_current_state_name())
+		if player:
+			print("Player detected: ", _can_detect_player(self))
+			print("Should jump to player: ", _should_jump_to_player(self))
+			print("In attack range: ", _is_in_attack_range(self))
+		print("================")
 	
-	# Debug state transitions occasionally
-	var old_state = current_state
-	
-	match current_state:
-		EnemyState.PATROL:
-			patrol_behavior()
-			# Check for line of sight detection (only check periodically for performance)
-			if sight_check_timer <= 0:
-				sight_check_timer = sight_check_interval
-				if can_see_player():
-					current_state = EnemyState.CHASE
-					last_known_player_position = player.global_position
-					print("Enemy switching from PATROL to CHASE - Player spotted by sight!")
-			# Also check if player is within chase range (fallback detection)
-			elif distance_to_player <= chase_range:
-				current_state = EnemyState.CHASE
-				last_known_player_position = player.global_position
-				print("Enemy switching from PATROL to CHASE - Player distance: ", distance_to_player)
-		
-		EnemyState.CHASE:
-			chase_behavior()
-			# Check if player is within attack range and we're not already in attack cooldown
-			if distance_to_player <= attack_range and attack_timer <= 0:
+	# Execute the chosen action
+	match action:
+		"attack":
+			if current_state != EnemyState.ATTACK:
 				current_state = EnemyState.ATTACK
-				attack_state_timer = attack_state_duration  # Set minimum attack state duration
-				print("Enemy switching from CHASE to ATTACK - Player distance: ", distance_to_player)
-			# Check if player is too far away
-			elif distance_to_player > return_to_patrol_range:
-				current_state = EnemyState.RETURN_TO_PATROL
-				print("Enemy switching from CHASE to RETURN_TO_PATROL - Player distance: ", distance_to_player)
-			else:
-				last_known_player_position = player.global_position
-		
-		EnemyState.ATTACK:
+				attack_state_timer = attack_state_duration
+				print("Decision Tree: Switching to ATTACK")
 			attack_behavior()
-			# Only exit attack state if minimum duration has passed and player is far enough
-			if attack_state_timer <= 0 and distance_to_player > attack_state_exit_range:
-				if distance_to_player <= chase_range:
-					current_state = EnemyState.CHASE
-					print("Enemy switching from ATTACK to CHASE - Player distance: ", distance_to_player)
-				else:
-					current_state = EnemyState.RETURN_TO_PATROL
-					print("Enemy switching from ATTACK to RETURN_TO_PATROL - Player distance: ", distance_to_player)
-		
-		EnemyState.RETURN_TO_PATROL:
-			return_to_patrol_behavior()
-			# Check if we're back to patrol area
-			if global_position.distance_to(patrol_start_position) <= 50.0:
-				current_state = EnemyState.PATROL
-				print("Enemy returned to patrol area")
-			# Check if player comes back within chase range
-			elif distance_to_player <= chase_range:
+			
+		"chase":
+			if current_state != EnemyState.CHASE:
 				current_state = EnemyState.CHASE
-				print("Enemy switching from RETURN_TO_PATROL to CHASE - Player returned: ", distance_to_player)
+				last_known_player_position = player.global_position
+				# Reset pathfinding tracking when starting new chase
+				stuck_timer = 0.0
+				failed_jump_attempts = 0
+				last_distance_to_player = 0.0
+				print("Decision Tree: Switching to CHASE")
+			chase_behavior()
+			
+		"jump_to_player":
+			if current_state != EnemyState.CHASE:
+				current_state = EnemyState.CHASE
+				last_known_player_position = player.global_position
+				print("Decision Tree: Switching to JUMP_TO_PLAYER")
+			jump_to_player_behavior()
+			
+		"search_alternate_path":
+			if current_state != EnemyState.SEARCH_ALTERNATE_PATH:
+				current_state = EnemyState.SEARCH_ALTERNATE_PATH
+				alternate_search_timer = 0.0
+				if player:
+					original_chase_direction = 1 if player.global_position.x > global_position.x else -1
+				print("Decision Tree: Switching to SEARCH_ALTERNATE_PATH")
+			search_alternate_path_behavior()
+			
+		"return_to_patrol":
+			if current_state != EnemyState.RETURN_TO_PATROL:
+				current_state = EnemyState.RETURN_TO_PATROL
+				print("Decision Tree: Switching to RETURN_TO_PATROL")
+			return_to_patrol_behavior()
+			
+		"patrol":
+			if current_state != EnemyState.PATROL:
+				current_state = EnemyState.PATROL
+				print("Decision Tree: Switching to PATROL")
+			patrol_behavior()
+			
+		_:
+			# Fallback to patrol
+			patrol_behavior()
 
 # Helper function to try finding the player
 func _try_find_player():
@@ -329,44 +637,121 @@ func patrol_behavior():
 	# Check for obstacles and edges before moving
 	var can_move_forward = can_move_in_direction(patrol_direction)
 	
+	# Check if enemy should jump
+	if should_jump(patrol_direction):
+		perform_jump()
+	
 	# Simple back and forth patrol
 	var distance_from_start = global_position.x - patrol_start_position.x
 	
 	# Check if we've reached the patrol limits or hit an obstacle/edge
 	if distance_from_start >= patrol_range or not can_move_forward and patrol_direction > 0:
 		patrol_direction = -1
-		if randf() < 0.1:
+		if randf() < 0.02:  # Reduced from 0.1 to decrease debug frequency
 			print("Enemy turning left - reached limit or obstacle")
 	elif distance_from_start <= -patrol_range or not can_move_forward and patrol_direction < 0:
 		patrol_direction = 1
-		if randf() < 0.1:
+		if randf() < 0.02:  # Reduced from 0.1 to decrease debug frequency
 			print("Enemy turning right - reached limit or obstacle")
 	
-	# Move in patrol direction only if we can move forward
-	if can_move_forward:
+	# Move in patrol direction only if we can move forward or if we're jumping
+	if can_move_forward or not is_on_floor():
 		velocity.x = patrol_direction * move_speed
 	else:
 		velocity.x = 0
-		# Force direction change if stuck
-		patrol_direction *= -1
-		print("Enemy stuck, forcing direction change")
+		# Force direction change if stuck and can't jump
+		if not should_jump(patrol_direction):
+			patrol_direction *= -1
+			print("Enemy stuck, forcing direction change")
 	
 	# Face the direction we're moving
 	if sprite:
-		sprite.flip_h = patrol_direction < 0
+		sprite.flip_h = patrol_direction > 0
 	
 	# Debug patrol occasionally
-	if randf() < 0.02:
+	if randf() < 0.01:  # Reduced from 0.02 to decrease debug frequency
 		print("Patrolling - Distance from start: ", distance_from_start, " | Direction: ", patrol_direction, " | Range: ", patrol_range, " | Can move: ", can_move_forward)
 
 func chase_behavior():
 	# Move towards the player
 	var direction_to_player = (player.global_position - global_position).normalized()
-	velocity.x = direction_to_player.x * move_speed * 1.8  # Move much faster when chasing (increased from 1.5)
+	var chase_direction = 1 if direction_to_player.x > 0 else -1
+	
+	# Check if enemy should jump while chasing
+	if should_jump(chase_direction):
+		perform_jump()
+	
+	velocity.x = direction_to_player.x * move_speed * 2.5  # Move much faster when chasing (increased from 1.8)
 	
 	# Face the direction we're moving
 	if sprite:
-		sprite.flip_h = direction_to_player.x < 0
+		sprite.flip_h = direction_to_player.x > 0
+
+func jump_to_player_behavior():
+	"""Behavior for jumping up to reach player on higher platform"""
+	print("JUMP_TO_PLAYER behavior active!")
+	
+	# Move towards the player horizontally
+	var direction_to_player = (player.global_position - global_position).normalized()
+	var chase_direction = 1 if direction_to_player.x > 0 else -1
+	
+	# Move horizontally towards player position
+	velocity.x = direction_to_player.x * move_speed * 1.5  # Moderate speed while positioning
+	
+	# Perform the jump if we're close enough horizontally and conditions are right
+	if _should_jump_to_player(self) and is_on_floor():
+		perform_jump()
+		print("Enemy jumping to reach player on platform!")
+	
+	# Face the direction we're moving
+	if sprite:
+		sprite.flip_h = direction_to_player.x > 0
+
+func search_alternate_path_behavior():
+	"""Behavior for searching alternate path when direct approach fails"""
+	print("SEARCH_ALTERNATE_PATH behavior active! Timer: ", alternate_search_timer)
+	
+	# If we've been searching too long, give up and return to patrol
+	if alternate_search_timer >= alternate_search_duration:
+		print("Alternate path search timeout - returning to patrol")
+		current_state = EnemyState.RETURN_TO_PATROL
+		stuck_timer = 0.0
+		failed_jump_attempts = 0
+		return
+	
+	# Try moving in the opposite direction from original chase to find alternate route
+	var search_direction = -original_chase_direction
+	
+	# Check if we can move in the search direction
+	if can_move_in_direction(search_direction):
+		velocity.x = search_direction * move_speed * 1.2  # Move at moderate speed
+		print("Searching for alternate path, moving ", "left" if search_direction < 0 else "right")
+		
+		# Check if we found a way around the obstacle
+		if player:
+			var distance_to_player = global_position.distance_to(player.global_position)
+			var player_direction = 1 if player.global_position.x > global_position.x else -1
+			
+			# If we can now move toward player or are closer, switch back to chase
+			if can_move_in_direction(player_direction) and distance_to_player < last_distance_to_player + 100:
+				print("Found alternate path! Switching back to chase")
+				current_state = EnemyState.CHASE
+				stuck_timer = 0.0
+				failed_jump_attempts = 0
+				alternate_search_timer = 0.0
+				return
+	else:
+		# If can't move in search direction, try jumping over obstacles
+		if should_jump(search_direction):
+			perform_jump()
+		else:
+			# Change search direction
+			original_chase_direction *= -1
+			print("Blocked in search direction, trying other way")
+	
+	# Face the direction we're moving
+	if sprite:
+		sprite.flip_h = search_direction > 0
 
 func attack_behavior():
 	# Stop moving and attack
@@ -375,7 +760,7 @@ func attack_behavior():
 	# Face the player
 	if sprite and player:
 		var direction_to_player = (player.global_position - global_position).normalized()
-		sprite.flip_h = direction_to_player.x < 0
+		sprite.flip_h = direction_to_player.x > 0
 	
 	# Attack if cooldown is ready and not already attacking
 	if attack_timer <= 0 and not is_attacking:
@@ -399,7 +784,9 @@ func can_see_player() -> bool:
 	# Get enemy's facing direction based on sprite flip
 	var enemy_facing_direction = Vector2.RIGHT
 	if sprite and sprite.flip_h:
-		enemy_facing_direction = Vector2.LEFT
+		enemy_facing_direction = Vector2.RIGHT  # When flipped, still facing right
+	else:
+		enemy_facing_direction = Vector2.LEFT   # When not flipped, facing left
 	
 	# Calculate angle between enemy's facing direction and direction to player
 	var angle_to_player = rad_to_deg(enemy_facing_direction.angle_to(direction_to_player))
@@ -463,14 +850,98 @@ func can_move_in_direction(direction: int) -> bool:
 	
 	return true
 
+func should_jump(direction: int) -> bool:
+	"""Check if the enemy should jump over an obstacle or gap"""
+	if jump_timer > 0 or not is_on_floor():
+		return false
+	
+	var space_state = get_world_2d().direct_space_state
+	
+	# Check for obstacles that can be jumped over
+	var obstacle_check_start = global_position + Vector2(0, -10)  # Slightly above center
+	var obstacle_check_end = global_position + Vector2(direction * wall_detection_distance, -10)
+	
+	var obstacle_query = PhysicsRayQueryParameters2D.create(obstacle_check_start, obstacle_check_end)
+	obstacle_query.collision_mask = 1
+	obstacle_query.exclude = [self]
+	
+	var obstacle_result = space_state.intersect_ray(obstacle_query)
+	
+	# If there's an obstacle, check if it's jumpable
+	if not obstacle_result.is_empty():
+		var obstacle_height = global_position.y - obstacle_result.position.y
+		if obstacle_height <= jump_threshold_height:
+			print("Enemy should jump over obstacle, height: ", obstacle_height)
+			return true
+	
+	# Enhanced: Check if player is above and we should jump to reach them
+	if player and (current_state == EnemyState.CHASE or current_state == EnemyState.PATROL):
+		var player_pos = player.global_position
+		var enemy_pos = global_position
+		var horizontal_distance = abs(player_pos.x - enemy_pos.x)
+		var vertical_distance = enemy_pos.y - player_pos.y
+		
+		# With higher jump ability, can reach much higher platforms
+		if vertical_distance > 10 and vertical_distance <= 350 and horizontal_distance <= 120:
+			print("Enemy should jump to reach player above (HIGH JUMP from should_jump)")
+			return true
+	
+	# Check for gaps that can be jumped
+	if can_jump_gaps:
+		var gap_check_start = global_position + Vector2(direction * edge_detection_distance, 0)
+		var gap_check_end = gap_check_start + Vector2(0, 100)
+		
+		var gap_query = PhysicsRayQueryParameters2D.create(gap_check_start, gap_check_end)
+		gap_query.collision_mask = 1
+		gap_query.exclude = [self]
+		
+		var gap_result = space_state.intersect_ray(gap_query)
+		
+		# If no ground found, check if gap is small enough to jump
+		if gap_result.is_empty():
+			# Check for ground further ahead to see gap width
+			var far_check_start = global_position + Vector2(direction * max_jump_gap_width, 0)
+			var far_check_end = far_check_start + Vector2(0, 100)
+			
+			var far_query = PhysicsRayQueryParameters2D.create(far_check_start, far_check_end)
+			far_query.collision_mask = 1
+			far_query.exclude = [self]
+			
+			var far_result = space_state.intersect_ray(far_query)
+			
+			# If there's ground within jump distance, attempt the jump
+			if not far_result.is_empty():
+				print("Enemy should jump over gap")
+				return true
+	
+	return false
+
+func perform_jump():
+	"""Make the enemy jump"""
+	if is_on_floor() and jump_timer <= 0:
+		velocity.y = jump_velocity
+		jump_timer = jump_cooldown
+		print("Enemy jumping HIGH! Velocity: ", velocity.y, " (should reach approximately twice player height)")
+		
+		# Optional: Add some horizontal momentum if moving
+		if abs(velocity.x) > 50:
+			# Preserve horizontal momentum during jump
+			print("Jump with horizontal momentum: ", velocity.x)
+
 func return_to_patrol_behavior():
 	# Move back towards patrol start position
 	var direction_to_start = (patrol_start_position - global_position).normalized()
+	var return_direction = 1 if direction_to_start.x > 0 else -1
+	
+	# Check if enemy should jump while returning
+	if should_jump(return_direction):
+		perform_jump()
+	
 	velocity.x = direction_to_start.x * move_speed
 	
 	# Face the direction we're moving
 	if sprite:
-		sprite.flip_h = direction_to_start.x < 0
+		sprite.flip_h = direction_to_start.x > 0
 
 func perform_attack():
 	print("Enemy attacking!")
@@ -633,6 +1104,8 @@ func get_current_state_name() -> String:
 			return "ATTACK"
 		EnemyState.RETURN_TO_PATROL:
 			return "RETURN_TO_PATROL"
+		EnemyState.SEARCH_ALTERNATE_PATH:
+			return "SEARCH_ALTERNATE_PATH"
 		_:
 			return "UNKNOWN"
 
