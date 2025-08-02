@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://b4baaffqm4i8r"]
+[gd_scene load_steps=9 format=3 uid="uid://b4baaffqm4i8r"]
 
 [ext_resource type="Texture2D" uid="uid://cu6p1lcapdupf" path="res://assets/sprites/MC_Atlas.png" id="2_f7tsm"]
 [ext_resource type="Texture2D" uid="uid://cb33vb02h1qhp" path="res://assets/sprites/MC_Jacket.png" id="2_vod78"]
@@ -27,9 +27,99 @@ joint_data/1/constraint_angle_invert = true
 joint_data/1/constraint_in_localspace = true
 joint_data/1/editor_draw_gizmo = true
 
+[sub_resource type="SkeletonModification2DCCDIK" id="SkeletonModification2DCCDIK_vod78"]
+target_nodepath = NodePath("../IKTargets/RFootTarget")
+tip_nodepath = NodePath("Hips/RUpperThigh/RLowerThigh/RFoot")
+ccdik_data_chain_length = 2
+joint_data/0/bone_index = 22
+joint_data/0/bone2d_node = NodePath("Hips/RUpperThigh")
+joint_data/0/rotate_from_joint = false
+joint_data/0/enable_constraint = true
+joint_data/0/constraint_angle_min = 116.033
+joint_data/0/constraint_angle_max = 232.066
+joint_data/0/constraint_angle_invert = false
+joint_data/0/constraint_in_localspace = true
+joint_data/0/editor_draw_gizmo = true
+joint_data/1/bone_index = 23
+joint_data/1/bone2d_node = NodePath("Hips/RUpperThigh/RLowerThigh")
+joint_data/1/rotate_from_joint = false
+joint_data/1/enable_constraint = true
+joint_data/1/constraint_angle_min = -41.653
+joint_data/1/constraint_angle_max = 106.917
+joint_data/1/constraint_angle_invert = true
+joint_data/1/constraint_in_localspace = true
+joint_data/1/editor_draw_gizmo = true
+
+[sub_resource type="SkeletonModification2DCCDIK" id="SkeletonModification2DCCDIK_wqd30"]
+target_nodepath = NodePath("../IKTargets/RHandTarget")
+tip_nodepath = NodePath("Hips/Torso/RShoulder/RArm/RForearm/RHand")
+ccdik_data_chain_length = 3
+joint_data/0/bone_index = 10
+joint_data/0/bone2d_node = NodePath("Hips/Torso/RShoulder")
+joint_data/0/rotate_from_joint = false
+joint_data/0/enable_constraint = true
+joint_data/0/constraint_angle_min = 130.909
+joint_data/0/constraint_angle_max = -116.113
+joint_data/0/constraint_angle_invert = true
+joint_data/0/constraint_in_localspace = true
+joint_data/0/editor_draw_gizmo = true
+joint_data/1/bone_index = 11
+joint_data/1/bone2d_node = NodePath("Hips/Torso/RShoulder/RArm")
+joint_data/1/rotate_from_joint = false
+joint_data/1/enable_constraint = true
+joint_data/1/constraint_angle_min = 0.0
+joint_data/1/constraint_angle_max = 196.363
+joint_data/1/constraint_angle_invert = false
+joint_data/1/constraint_in_localspace = true
+joint_data/1/editor_draw_gizmo = true
+joint_data/2/bone_index = 12
+joint_data/2/bone2d_node = NodePath("Hips/Torso/RShoulder/RArm/RForearm")
+joint_data/2/rotate_from_joint = false
+joint_data/2/enable_constraint = true
+joint_data/2/constraint_angle_min = -211.144
+joint_data/2/constraint_angle_max = 360.0
+joint_data/2/constraint_angle_invert = false
+joint_data/2/constraint_in_localspace = true
+joint_data/2/editor_draw_gizmo = true
+
+[sub_resource type="SkeletonModification2DCCDIK" id="SkeletonModification2DCCDIK_f2c3w"]
+target_nodepath = NodePath("../IKTargets/LHandTarget")
+tip_nodepath = NodePath("Hips/Torso/LShoulder/LArm/LForearm/LHand")
+ccdik_data_chain_length = 3
+joint_data/0/bone_index = 15
+joint_data/0/bone2d_node = NodePath("Hips/Torso/LShoulder")
+joint_data/0/rotate_from_joint = false
+joint_data/0/enable_constraint = true
+joint_data/0/constraint_angle_min = 98.282
+joint_data/0/constraint_angle_max = 360.0
+joint_data/0/constraint_angle_invert = false
+joint_data/0/constraint_in_localspace = true
+joint_data/0/editor_draw_gizmo = true
+joint_data/1/bone_index = 16
+joint_data/1/bone2d_node = NodePath("Hips/Torso/LShoulder/LArm")
+joint_data/1/rotate_from_joint = false
+joint_data/1/enable_constraint = true
+joint_data/1/constraint_angle_min = 92.261
+joint_data/1/constraint_angle_max = 178.512
+joint_data/1/constraint_angle_invert = true
+joint_data/1/constraint_in_localspace = true
+joint_data/1/editor_draw_gizmo = true
+joint_data/2/bone_index = 17
+joint_data/2/bone2d_node = NodePath("Hips/Torso/LShoulder/LArm/LForearm")
+joint_data/2/rotate_from_joint = false
+joint_data/2/enable_constraint = true
+joint_data/2/constraint_angle_min = 232.066
+joint_data/2/constraint_angle_max = 360.0
+joint_data/2/constraint_angle_invert = false
+joint_data/2/constraint_in_localspace = true
+joint_data/2/editor_draw_gizmo = true
+
 [sub_resource type="SkeletonModificationStack2D" id="SkeletonModificationStack2D_wqd30"]
-modification_count = 1
+modification_count = 4
 modifications/0 = SubResource("SkeletonModification2DCCDIK_f7tsm")
+modifications/1 = SubResource("SkeletonModification2DCCDIK_vod78")
+modifications/2 = SubResource("SkeletonModification2DCCDIK_wqd30")
+modifications/3 = SubResource("SkeletonModification2DCCDIK_f2c3w")
 
 [node name="CharacterBody2D" type="CharacterBody2D"]
 
@@ -380,3 +470,7 @@ rest = Transform2D(0.380057, -0.924963, 0.924963, 0.380057, 327.697, -16.7178)
 [node name="LFootTarget" type="Node2D" parent="IKTargets"]
 
 [node name="RFootTarget" type="Node2D" parent="IKTargets"]
+
+[node name="RHandTarget" type="Node2D" parent="IKTargets"]
+
+[node name="LHandTarget" type="Node2D" parent="IKTargets"]
