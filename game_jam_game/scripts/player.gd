@@ -26,13 +26,6 @@ var input_actions: Array[String] = [
 @export var motion_blur_smoothing: float = 0.1  # How quickly blur changes (lower = smoother)
 var current_blur_intensity: float = 0.0
 
-# Player stats for UI display
-var health: int = 100
-var max_health: int = 100
-var score: int = 0
-var player_level: int = 1
-var experience: int = 0
-
 # Coyote time variables
 @export var coyote_time_duration: float = 0.25  # Time window for coyote jump
 var coyote_timer: float = 0.0
@@ -545,55 +538,43 @@ func end_current_action():
 func can_jump() -> bool:
 	return can_ground_jump() or can_coyote_jump()
 
-# Player stats getter methods for UI
-func get_health() -> int:
-	return health
 
-func get_max_health() -> int:
-	return max_health
-
-func get_score() -> int:
-	return score
-
-func get_level() -> int:
-	return player_level
-
-func get_experience() -> int:
-	return experience
-
-# Player stats setter methods
-func set_health(new_health: int):
-	health = clamp(new_health, 0, max_health)
-
-func set_max_health(new_max_health: int):
-	max_health = max(1, new_max_health)
-	health = min(health, max_health)
-
-func add_score(points: int):
-	score += points
-
-func add_experience(exp: int):
-	experience += exp
-	check_level_up()
-
-func damage(amount: int):
-	set_health(health - amount)
-	if health <= 0:
-		die()
-
-func heal(amount: int):
-	set_health(health + amount)
+func apply_knockback(knockback_force: Vector2):
+	"""Apply knockback force to the player"""
+	# Store the knockback for state machines to potentially use
+	var knockback_magnitude = knockback_force.length()
+	
+	# Different knockback handling based on player state
+	if is_on_floor():
+		# Ground knockback - apply horizontal force, reduce vertical knockback
+		velocity.x += knockback_force.x
+		velocity.y += knockback_force.y * 0.5  # Reduce vertical knockback when grounded but allow some
+	else:
+		# Air knockback - apply full force for more dynamic aerial combat
+		velocity += knockback_force
+	
+	# Clamp velocities to prevent excessive knockback but allow reasonable combat dynamics
+	var max_knockback_velocity = 1200.0  # Slightly reduced for better control
+	velocity.x = clamp(velocity.x, -max_knockback_velocity, max_knockback_velocity)
+	velocity.y = clamp(velocity.y, -max_knockback_velocity, max_knockback_velocity)
+	
+	# Add visual feedback for knockback
+	if knockback_magnitude > 80:  # Lowered threshold for more responsive feedback
+		# Flash sprite and shake camera for significant knockback
+		flash_sprite()
+		var damage_equivalent = int(knockback_magnitude / 15)  # More sensitive camera shake
+		shake_camera_for_damage(damage_equivalent)
+		
+		# Add motion blur burst effect
+		var blur_intensity = clamp(knockback_magnitude / 400.0, 0.2, 0.8)
+		trigger_motion_blur_burst(blur_intensity, 0.3)
+	
+	print("Player received knockback: ", knockback_force, " | New velocity: ", velocity, " | On floor: ", is_on_floor())
 
 func die():
 	print("Player died!")
 	# Add death logic here
 
-func check_level_up():
-	var exp_needed = player_level * 100  # Simple leveling formula
-	if experience >= exp_needed:
-		player_level += 1
-		experience -= exp_needed
-		print("Level up! Now level ", player_level)
 
 # Fast fall damage calculation
 func get_fast_fall_damage_multiplier() -> float:

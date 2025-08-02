@@ -20,6 +20,14 @@ func enter() -> void:
 	# Start cancelable action tracking
 	parent.start_cancelable_action("ground_attack")
 	
+	# Preserve facing direction when entering attack state
+	# Don't change facing direction during attack unless there's explicit input
+	var input_axis = Input.get_axis("move_left", "move_right")
+	if input_axis != 0.0:
+		# Only update facing if player is actively pressing a direction
+		parent.animations.flip_h = input_axis < 0
+	# Otherwise, keep the current facing direction from previous state
+	
 	#var sword_hitbox = parent.get_node("Sword/Sprite/Hitbox")  as Area2D
 
 func process_input(_event: InputEvent) -> State:

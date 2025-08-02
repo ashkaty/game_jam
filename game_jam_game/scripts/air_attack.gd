@@ -77,6 +77,7 @@ func process_physics(delta: float) -> State:
 			effective_air_accel = air_accel * air_direction_change_multiplier
 		
 		parent.velocity.x = move_toward(parent.velocity.x, target_speed, effective_air_accel * delta)
+		# Only update facing direction if there's active input
 		parent.animations.flip_h = input_axis < 0
 	else:
 		# Apply air friction when no input (same as other air states)

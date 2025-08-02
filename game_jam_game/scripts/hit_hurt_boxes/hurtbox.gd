@@ -41,5 +41,13 @@ func _on_area_entered(hitbox: HitBox) -> void:
 			DamageParticleManager.spawn_damage_text(actual_damage, spawn_position)
 		
 	if owner.has_method("apply_knockback"):
-		var dir: Vector2 = (owner.global_position - hitbox.global_position).normalized()
-		owner.apply_knockback(dir * hitbox.knockback_multiplier)
+		# Use the hitbox's complete knockback vector calculation
+		var knockback_vector = hitbox.get_knockback_vector()
+		var debug_info = hitbox.get_attack_debug_info()
+		
+		print("Knockback Debug - Attack: ", debug_info.attack_type, 
+			  " | Force: ", debug_info.knockback_force, 
+			  " | Direction: ", debug_info.direction_modifier, 
+			  " | Final Vector: ", debug_info.final_knockback_vector)
+		
+		owner.apply_knockback(knockback_vector)

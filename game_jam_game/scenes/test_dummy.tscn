@@ -8,6 +8,10 @@
 radius = 10.7958
 height = 21.9376
 
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_physics"]
+radius = 10.7958
+height = 21.9376
+
 [sub_resource type="Animation" id="Animation_0btni"]
 length = 0.001
 tracks/0/type = "value"
@@ -45,12 +49,17 @@ _data = {
 &"hurt": SubResource("Animation_amttc")
 }
 
-[node name="TestDummy" type="Node2D"]
+[node name="TestDummy" type="CharacterBody2D"]
 script = ExtResource("1_amttc")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(-26, -188)
 texture = ExtResource("1_gionw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-23, -212)
+scale = Vector2(9.07759, 19.3275)
+shape = SubResource("CapsuleShape2D_physics")
 
 [node name="HurtBox" type="Area2D" parent="."]
 script = ExtResource("2_amttc")

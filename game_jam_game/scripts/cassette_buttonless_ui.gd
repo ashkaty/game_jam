@@ -476,9 +476,9 @@ func _update_progress_bar():
 	timer_progress_bar.value = progress_percentage
 	
 	# Debug output to verify progress bar is updating
-	if int(time_remaining) % 5 == 0:  # Debug every 5 seconds
-		print("Progress bar updated: ", progress_percentage, "% - Elapsed: ", elapsed_time, "/", default_track_time, " - Track ", current_track)
-		print("Progress bar max_value: ", timer_progress_bar.max_value, ", current value: ", timer_progress_bar.value)
+	#if int(time_remaining) % 5 == 0:  # Debug every 5 seconds
+		#print("Progress bar updated: ", progress_percentage, "% - Elapsed: ", elapsed_time, "/", default_track_time, " - Track ", current_track)
+		#print("Progress bar max_value: ", timer_progress_bar.max_value, ", current value: ", timer_progress_bar.value)
 
 func get_time_remaining() -> float:
 	"""Get the remaining time in seconds"""
