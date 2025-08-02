@@ -60,7 +60,10 @@ offset_top = -357.0
 offset_right = 317.0
 offset_bottom = -218.0
 
-[node name="TimerLabel" type="Label" parent="TimerContainer"]
+[node name="VBoxContainer" type="MarginContainer" parent="TimerContainer"]
+layout_mode = 2
+
+[node name="TimerLabel" type="Label" parent="TimerContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 60
@@ -82,3 +85,14 @@ theme_override_font_sizes/font_size = 60
 text = "1.0x"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+layout_mode = 2
+offset_left = 119.0
+offset_top = -402.0
+offset_right = 933.0
+offset_bottom = -160.0
+step = 1.0
+rounded = true
+fill_mode = 1
+show_percentage = false

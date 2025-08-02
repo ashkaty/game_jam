@@ -9,7 +9,8 @@ class_name CassetteButtonlessUI
 @onready var green_button: Sprite2D = $GreenButton
 
 # UI References
-@onready var timer_label: Label = $TimerContainer/TimerLabel
+@onready var timer_label: Label = $TimerContainer/VBoxContainer/TimerLabel
+@onready var timer_progress_bar: ProgressBar = $ProgressBar
 
 # Audio Reference
 @onready var button_click_audio: AudioStreamPlayer2D = $AudioStreamPlayer2D
@@ -86,6 +87,9 @@ func _ready():
 	
 	# Start the countdown timer
 	start_timer()
+	
+	# Drop red button by default when game starts
+	_drop_red_button()
 
 func _store_button_positions():
 	button_original_positions.clear()
@@ -366,6 +370,7 @@ func start_timer():
 		time_remaining = countdown_time
 		is_timer_running = true
 		_update_timer_display()
+		_update_progress_bar()
 		print("Timer started - countdown from ", countdown_time, " seconds")
 	else:
 		print("Error: TimerLabel not found! Cannot start timer.")
@@ -375,12 +380,14 @@ func _process(delta):
 	if is_timer_running:
 		time_remaining -= delta
 		_update_timer_display()
+		_update_progress_bar()
 		
 		# Check if timer has finished
 		if time_remaining <= 0.0:
 			time_remaining = 0.0
 			is_timer_running = false
 			_update_timer_display()
+			_update_progress_bar()
 			timer_finished.emit()
 			print("Timer finished!")
 
@@ -402,6 +409,22 @@ func _update_timer_display():
 	if int(time_remaining) % 10 == 0 and time_remaining != 0:
 		print("Timer: ", time_text)
 
+func _update_progress_bar():
+	"""Update the progress bar with current time remaining"""
+	if not timer_progress_bar:
+		print("Warning: ProgressBar is null, cannot update display")
+		return
+	
+	# Calculate progress percentage (remaining time / total time * 100)
+	var progress_percentage = (time_remaining / countdown_time) * 100.0
+	progress_percentage = max(0.0, min(100.0, progress_percentage))  # Clamp between 0-100
+	
+	timer_progress_bar.value = progress_percentage
+	
+	# Debug output to verify progress bar is updating
+	if int(time_remaining) % 5 == 0:  # Debug every 5 seconds
+		print("Progress bar updated: ", progress_percentage, "% (", time_remaining, "/", countdown_time, ")")
+
 func get_time_remaining() -> float:
 	"""Get the remaining time in seconds"""
 	return time_remaining
@@ -418,6 +441,7 @@ func reset_timer():
 	"""Reset the timer to initial countdown time"""
 	time_remaining = countdown_time
 	_update_timer_display()
+	_update_progress_bar()
 
 func set_countdown_time(new_time: float):
 	"""Set a new countdown time"""
@@ -425,6 +449,7 @@ func set_countdown_time(new_time: float):
 	if not is_timer_running:
 		time_remaining = countdown_time
 		_update_timer_display()
+		_update_progress_bar()
 
 # Public methods for external scripts to control button animations
 func animate_red_button():
