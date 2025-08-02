@@ -110,7 +110,7 @@ alignment = 1
 layout_mode = 2
 
 [node name="Heart1" type="Sprite2D" parent="HeartsContainer/Container"]
-position = Vector2(-206, 75)
+position = Vector2(204, 65)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("8_0s6uv")
 region_enabled = true
@@ -120,7 +120,7 @@ region_rect = Rect2(383.607, 285.745, 338.688, 308.677)
 layout_mode = 2
 
 [node name="Heart2" type="Sprite2D" parent="HeartsContainer/Container2"]
-position = Vector2(209, 75)
+position = Vector2(-7.5, 67)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("8_0s6uv")
 region_enabled = true
@@ -130,7 +130,7 @@ region_rect = Rect2(383.607, 285.745, 338.688, 308.677)
 layout_mode = 2
 
 [node name="Heart3" type="Sprite2D" parent="HeartsContainer/Container3"]
-position = Vector2(-1, 75)
+position = Vector2(-217.5, 64)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("8_0s6uv")
 region_enabled = true

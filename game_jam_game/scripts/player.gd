@@ -53,6 +53,13 @@ var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 @export var max_health: int = 3  # Player starts with 3 hearts
 var current_health: int = 3
 var ui_reference: Control = null  # Reference to the UI for health updates
+
+# Invincibility frames system
+@export var invincibility_duration: float = 1.5  # Duration of invincibility after taking damage
+@export var invincibility_flash_rate: float = 8.0  # How fast to flash during invincibility (flashes per second)
+var invincibility_timer: float = 0.0
+var is_invincible: bool = false
+var flash_visible: bool = true  # Track visibility state for flashing effect
 @export var head_bonk_grace_period: float = 0.1   # Time after jump start to allow head bonk
 @export var head_bonk_vertical_impulse: float = 50.0  # Small downward push after bonk
 @export var head_bonk_minimum_upward_velocity: float = -100.0  # Must be moving up fast enough
@@ -119,6 +126,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	# Update total time for head bonk tracking
 	total_time += delta
+	
+	# Update invincibility timer and flashing effect
+	update_invincibility(delta)
 	
 	# Update jump cooldown timer
 	if jump_cooldown_timer > 0.0:
@@ -229,18 +239,24 @@ func update_motion_blur(delta: float) -> void:
 		var scale_y = 1.0 + (blur_factor * vertical_velocity_ratio * 0.04)  # Slight vertical stretch
 		animations.scale = Vector2(scale_x, scale_y)
 		
-		# Slight transparency effect for motion blur illusion
-		var alpha = 1.0 - (blur_factor * 0.15)  # Subtle transparency
-		animations.modulate.a = alpha
+		# Slight transparency effect for motion blur illusion, but respect invincibility flashing
+		var motion_blur_alpha = 1.0 - (blur_factor * 0.15)  # Subtle transparency
+		
+		# If invincible, use the invincibility alpha value instead
+		if is_invincible:
+			motion_blur_alpha = animations.modulate.a  # Keep current invincibility alpha
+		else:
+			animations.modulate.a = motion_blur_alpha
 		
 		# Add slight color shift for high-speed effect
 		var speed_tint = 1.0 - (blur_factor * 0.1)
 		animations.modulate.b = speed_tint  # Slight blue reduction for warm speed tint
 		
 	else:
-		# Reset effects when not moving fast
+		# Reset effects when not moving fast, but respect invincibility
 		animations.scale = Vector2(1.0, 1.0)
-		animations.modulate = Color.WHITE
+		if not is_invincible:
+			animations.modulate = Color.WHITE
 
 func trigger_motion_blur_burst(intensity: float = 0.8, duration: float = 0.2) -> void:
 	"""Trigger a temporary motion blur effect for special actions like dashes or impacts"""
@@ -383,7 +399,58 @@ func consume_input_buffer(action: String):
 	last_buffer_times.erase(action)
 	
 	# print(action.capitalize(), " buffer consumed! Was held for: ", hold_time, " seconds")
-	return hold_time  # Return the hold time for states to use
+	return hold_time  	# Return the hold time for states to use
+
+# Update invincibility system
+func update_invincibility(delta: float) -> void:
+	if is_invincible:
+		invincibility_timer -= delta
+		
+		# Handle flashing effect during invincibility
+		var flash_interval = 1.0 / invincibility_flash_rate
+		var flash_time = fmod(invincibility_timer, flash_interval * 2.0)
+		flash_visible = flash_time < flash_interval
+		
+		# Apply visibility based on flash state
+		if animations:
+			animations.modulate.a = 0.4 if flash_visible else 0.8
+		
+		# End invincibility when timer expires
+		if invincibility_timer <= 0.0:
+			end_invincibility()
+
+func start_invincibility() -> void:
+	"""Start invincibility frames after taking damage"""
+	is_invincible = true
+	invincibility_timer = invincibility_duration
+	flash_visible = true
+	print("Invincibility started for ", invincibility_duration, " seconds")
+
+func end_invincibility() -> void:
+	"""End invincibility frames and restore normal appearance"""
+	is_invincible = false
+	invincibility_timer = 0.0
+	flash_visible = true
+	
+	# Restore normal sprite appearance
+	if animations:
+		animations.modulate.a = 1.0
+	
+	print("Invincibility ended")
+
+func is_player_invincible() -> bool:
+	"""Check if player is currently invincible"""
+	return is_invincible
+
+# Debug function to get invincibility status
+func get_invincibility_status() -> Dictionary:
+	"""Get detailed invincibility status for debugging"""
+	return {
+		"is_invincible": is_invincible,
+		"time_remaining": invincibility_timer,
+		"flash_visible": flash_visible,
+		"total_duration": invincibility_duration
+	}
 
 # Legacy jump buffer functions for compatibility
 func buffer_jump():
@@ -649,10 +716,10 @@ func shake_camera_for_damage(damage_amount: int):
 	var game_camera = get_tree().get_first_node_in_group("game_camera")
 	var player_camera = camera
 	
-	# Calculate shake intensity based on damage (scale from 1-50 damage to 2-15 shake strength)
+	# Calculate shake intensity based on damage (scale from 1-5 damage to 2-15 shake strength)
 	var base_shake = 5.0
 	var max_shake = 45.0
-	var max_damage_for_scaling = 50.0
+	var max_damage_for_scaling = 5.0  # Updated for new damage scaling
 	var damage_ratio = clamp(float(damage_amount) / max_damage_for_scaling, 0.0, 1.0)
 	var shake_strength = lerp(base_shake, max_shake, damage_ratio)
 	
@@ -714,11 +781,19 @@ func flash_sprite():
 # Health System Functions
 func take_damage(damage_amount: int) -> void:
 	"""Called when player takes damage - reduces health and updates UI"""
+	# Check if player is invincible
+	if is_invincible:
+		print("Player is invincible! Damage ignored.")
+		return
+	
 	if current_health <= 0:
 		return  # Player is already dead
 	
 	current_health = max(0, current_health - damage_amount)
 	print("Player took ", damage_amount, " damage! Health: ", current_health, "/", max_health)
+	
+	# Start invincibility frames
+	start_invincibility()
 	
 	# Update UI to reflect health change
 	update_health_ui()

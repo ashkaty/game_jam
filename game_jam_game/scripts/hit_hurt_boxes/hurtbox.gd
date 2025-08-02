@@ -18,25 +18,39 @@ func _on_area_entered(hitbox: HitBox) -> void:
 	if hitbox == null:
 		return
 	
-	# Check damage cooldown to prevent multiple hits in rapid succession
-	var current_time = Time.get_time_dict_from_system()
-	var current_timestamp = current_time["hour"] * 3600 + current_time["minute"] * 60 + current_time["second"]
+	print("=== HURTBOX COLLISION DETECTED ===")
+	print("Hurtbox owner: ", owner.name if owner else "no owner")
+	print("Hitbox source: ", hitbox.get_parent().name if hitbox.get_parent() else "no parent")
+	print("Hitbox damage: ", hitbox.damage)
 	
-	if (current_timestamp - last_damage_time) < damage_cooldown and last_damage_time > 0.0:
-		print("Damage blocked by cooldown! Time since last damage: ", current_timestamp - last_damage_time)
+	# Check if the owner is the player
+	var is_player = owner.is_in_group("player") or (owner.has_method("get_script") and owner.get_script() and owner.get_script().get_global_name() == "Player")
+	
+	print("Is player: ", is_player)
+	
+	# For player, check invincibility status instead of damage cooldown
+	if is_player and owner.has_method("is_player_invincible") and owner.is_player_invincible():
+		print("Player is invincible! Damage ignored by hurtbox.")
 		return
 	
-	last_damage_time = current_timestamp
+	# For non-player entities, use the legacy damage cooldown system
+	if not is_player:
+		# Check damage cooldown to prevent multiple hits in rapid succession
+		var current_time = Time.get_time_dict_from_system()
+		var current_timestamp = current_time["hour"] * 3600 + current_time["minute"] * 60 + current_time["second"]
+		
+		if (current_timestamp - last_damage_time) < damage_cooldown and last_damage_time > 0.0:
+			print("Damage blocked by cooldown! Time since last damage: ", current_timestamp - last_damage_time)
+			return
+		
+		last_damage_time = current_timestamp
 	
 	# Get the actual damage (which may include fast fall multiplier)
 	var actual_damage = hitbox.get_damage()
-	print("Taking damage: ", actual_damage, " at time: ", current_timestamp)
-	
-	# Check if the owner is the player and handle damage accordingly
-	var is_player = owner.is_in_group("player") or (owner.has_method("get_script") and owner.get_script() and owner.get_script().get_global_name() == "Player")
+	print("Taking damage: ", actual_damage, " at time: ", Time.get_time_dict_from_system())
 	
 	if is_player and owner.has_method("take_damage"):
-		# Player takes damage through the health system
+		# Player takes damage through the health system (which will handle invincibility)
 		owner.take_damage(actual_damage)
 	elif owner.has_method("take_damage"):
 		# Non-player entities (like enemies) take damage directly
