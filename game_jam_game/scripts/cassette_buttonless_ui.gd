@@ -8,6 +8,9 @@ class_name CassetteButtonlessUI
 @onready var blue_button: Sprite2D = $BlueButton
 @onready var green_button: Sprite2D = $GreenButton
 
+# UI References
+@onready var timer_label: Label = $TimerContainer/TimerLabel
+
 # Audio Reference
 @onready var button_click_audio: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
@@ -44,7 +47,13 @@ const SLIDE_EASE_TYPE = Tween.EASE_OUT
 const SLIDE_TRANS_TYPE = Tween.TRANS_BACK
 const BUTTON_ANIM_DURATION: float = 0.3
 
+# Timer variables
+var countdown_time: float = 60.0  # 1 minute in seconds
+var time_remaining: float = 60.0
+var is_timer_running: bool = false
+
 signal ui_toggled(visible: bool)
+signal timer_finished()
 
 func _ready():
 	# Store original positions for animation
@@ -74,6 +83,9 @@ func _ready():
 	
 	# Find player
 	_find_player()
+	
+	# Start the countdown timer
+	start_timer()
 
 func _store_button_positions():
 	button_original_positions.clear()
@@ -346,6 +358,73 @@ func _animate_slide():
 func _update_display():
 	# This version is just for button animations, no stats display
 	pass
+
+# Timer functions
+func start_timer():
+	"""Start the countdown timer"""
+	if timer_label:
+		time_remaining = countdown_time
+		is_timer_running = true
+		_update_timer_display()
+		print("Timer started - countdown from ", countdown_time, " seconds")
+	else:
+		print("Error: TimerLabel not found! Cannot start timer.")
+
+func _process(delta):
+	"""Update timer each frame"""
+	if is_timer_running:
+		time_remaining -= delta
+		_update_timer_display()
+		
+		# Check if timer has finished
+		if time_remaining <= 0.0:
+			time_remaining = 0.0
+			is_timer_running = false
+			_update_timer_display()
+			timer_finished.emit()
+			print("Timer finished!")
+
+func _update_timer_display():
+	"""Update the timer label with current time"""
+	if not timer_label:
+		print("Warning: TimerLabel is null, cannot update display")
+		return
+	
+	# Convert to minutes and seconds
+	var minutes = int(time_remaining) / 60
+	var seconds = int(time_remaining) % 60
+	
+	# Format as MM:SS
+	var time_text = "%02d:%02d" % [minutes, seconds]
+	timer_label.text = time_text
+	
+	# Debug output every 10 seconds
+	if int(time_remaining) % 10 == 0 and time_remaining != 0:
+		print("Timer: ", time_text)
+
+func get_time_remaining() -> float:
+	"""Get the remaining time in seconds"""
+	return time_remaining
+
+func is_timer_active() -> bool:
+	"""Check if the timer is currently running"""
+	return is_timer_running
+
+func stop_timer():
+	"""Stop the timer"""
+	is_timer_running = false
+
+func reset_timer():
+	"""Reset the timer to initial countdown time"""
+	time_remaining = countdown_time
+	_update_timer_display()
+
+func set_countdown_time(new_time: float):
+	"""Set a new countdown time"""
+	countdown_time = new_time
+	if not is_timer_running:
+		time_remaining = countdown_time
+		_update_timer_display()
 
 # Public methods for external scripts to control button animations
 func animate_red_button():

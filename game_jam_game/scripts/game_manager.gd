@@ -16,5 +16,16 @@ func _ready():
 	# Set up UI connections
 	if cassette_ui and player:
 		cassette_ui.set_player_reference(player)
+		# Connect to timer finished signal
+		cassette_ui.timer_finished.connect(_on_timer_finished)
 	
-	print("Game Manager ready - Buttonless Cassette UI loaded")
+	print("Game Manager ready - Buttonless Cassette UI loaded with timer")
+
+func _on_timer_finished():
+	"""Called when the countdown timer reaches zero"""
+	print("Game timer finished!")
+	# Add any game-ending logic here, such as:
+	# - Show game over screen
+	# - Stop player movement
+	# - Calculate final score
+	# - etc.
