@@ -8,11 +8,14 @@ class_name CassetteButtonlessUI
 @onready var blue_button: Sprite2D = $Background/BlueButton
 @onready var green_button: Sprite2D = $Background/GreenButton
 
+# Audio Reference (commented out since node doesn't exist in scene)
+# @onready var button_click_audio: AudioStreamPlayer = $ButtonClickAudio
+
 # Player reference
 var player: Node = null
 
 # UI state
-var is_visible: bool = false
+var is_visible: bool = true
 var slide_tween: Tween
 var original_position: Vector2
 var hidden_position: Vector2
@@ -21,12 +24,17 @@ var hidden_position: Vector2
 var button_tweens: Array[Tween] = []
 var button_original_positions: Array[Vector2] = []
 var button_pressed_offset: float = 10.0  # How much buttons move down when pressed
+var red_button_drop_offset: float = 100.0  # How far red button drops when key 1 is pressed
+
+# Red button state
+var red_button_dropped: bool = false
+var red_button_original_position: Vector2
 
 # Animation settings
 const SLIDE_DURATION: float = 0.3
 const SLIDE_EASE_TYPE = Tween.EASE_OUT
 const SLIDE_TRANS_TYPE = Tween.TRANS_BACK
-const BUTTON_ANIM_DURATION: float = 0.1
+const BUTTON_ANIM_DURATION: float = 0.3
 
 signal ui_toggled(visible: bool)
 
@@ -41,10 +49,14 @@ func _ready():
 	# Store button original positions
 	_store_button_positions()
 	
+	# Store red button's original position specifically
+	if red_button:
+		red_button_original_position = red_button.position
+	
 	# Start hidden
 	position = hidden_position
 	visible = true  # Keep visible for animations, but positioned off-screen
-	is_visible = false
+	is_visible = true
 	
 	# Find player
 	_find_player()
@@ -60,21 +72,33 @@ func _input(event):
 	# Handle UI toggle
 	if event.is_action_pressed("toggle_cassette_ui") or (event is InputEventKey and event.pressed and event.keycode == KEY_TAB):
 		toggle_visibility()
+		print("UI toggled, is_visible: ", is_visible)
 	
 	# Handle button animations when UI is visible
 	if not is_visible:
+		if event is InputEventKey and event.pressed and event.keycode == KEY_1:
+			print("Key 1 pressed but UI is not visible (is_visible: ", is_visible, ")")
 		return
 		
 	if event is InputEventKey and event.pressed:
 		var key_code = event.keycode
+		print("Input received, key: ", key_code, ", UI visible: ", is_visible)
 		match key_code:
 			KEY_1:
-				_animate_button_press(0)  # Red button
+				print("Key 1 pressed - Dropping red button 200 pixels")
+				# Audio removed since ButtonClickAudio node doesn't exist in scene
+				_drop_red_button()
 			KEY_2:
+				print("Key 2 pressed - Returning red button to original position")
+				_return_red_button()
 				_animate_button_press(1)  # Yellow button
 			KEY_3:
+				print("Key 3 pressed - Returning red button to original position")
+				_return_red_button()
 				_animate_button_press(2)  # Blue button
 			KEY_4:
+				print("Key 4 pressed - Returning red button to original position")
+				_return_red_button()
 				_animate_button_press(3)  # Green button
 
 func _animate_button_press(button_index: int):
@@ -84,6 +108,10 @@ func _animate_button_press(button_index: int):
 		
 	var button = buttons[button_index]
 	if not button:
+		return
+	
+	# Don't animate red button with normal press if it's already dropped
+	if button == red_button and red_button_dropped:
 		return
 	
 	# Stop any existing tween for this button
@@ -105,6 +133,35 @@ func _animate_button_press(button_index: int):
 	# Animate button press (down then back up)
 	tween.tween_property(button, "position", pressed_pos, BUTTON_ANIM_DURATION)
 	tween.tween_property(button, "position", original_pos, BUTTON_ANIM_DURATION)
+
+func _drop_red_button():
+	"""Drop the red button 200 pixels down"""
+	print("_drop_red_button called, red_button exists: ", red_button != null, ", already dropped: ", red_button_dropped)
+	if not red_button or red_button_dropped:
+		return
+	
+	print("Dropping red button from position: ", red_button.position, " to: ", Vector2(red_button_original_position.x, red_button_original_position.y + red_button_drop_offset))
+	red_button_dropped = true
+	var target_position = Vector2(red_button_original_position.x, red_button_original_position.y + red_button_drop_offset)
+	
+	# Create smooth drop animation
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BOUNCE)
+	tween.tween_property(red_button, "position", target_position, BUTTON_ANIM_DURATION * 2)
+
+func _return_red_button():
+	"""Return the red button to its original position"""
+	if not red_button or not red_button_dropped:
+		return
+	
+	red_button_dropped = false
+	
+	# Create smooth return animation
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.tween_property(red_button, "position", red_button_original_position, BUTTON_ANIM_DURATION)
 
 func _find_player():
 	# Try multiple methods to find the player
@@ -172,15 +229,19 @@ func _update_display():
 
 # Public methods for external scripts to control button animations
 func animate_red_button():
-	_animate_button_press(0)
+	# Audio removed since ButtonClickAudio node doesn't exist in scene
+	_drop_red_button()
 
 func animate_yellow_button():
+	_return_red_button()
 	_animate_button_press(1)
 
 func animate_blue_button():
+	_return_red_button()
 	_animate_button_press(2)
 
 func animate_green_button():
+	_return_red_button()
 	_animate_button_press(3)
 
 # Public methods for external control
@@ -192,3 +253,15 @@ func set_player_reference(player_node: Node):
 func is_ui_visible() -> bool:
 	"""Check if the UI is currently visible"""
 	return is_visible
+
+func is_red_button_dropped() -> bool:
+	"""Check if red button is currently dropped"""
+	return red_button_dropped
+
+func force_drop_red_button():
+	"""Force drop red button (external API)"""
+	_drop_red_button()
+
+func force_return_red_button():
+	"""Force return red button (external API)"""
+	_return_red_button()

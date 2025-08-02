@@ -29,6 +29,10 @@ var hidden_position: Vector2
 var button_tweens: Array[Tween] = []
 var button_original_positions: Array[Vector2] = []
 var button_pressed_offset: float = 5.0  # How much buttons move down when pressed (reduced for smaller buttons)
+var button_selected_offset: float = 8.0  # How much the selected track button stays lowered
+
+# Track state
+var track: int = 1  # Current track (1=Red, 2=Yellow, 3=Blue, 4=Green)
 
 # Animation settings
 const SLIDE_DURATION: float = 0.3
@@ -48,6 +52,9 @@ func _ready():
 	
 	# Store button original positions
 	_store_button_positions()
+	
+	# Set initial track state
+	_update_track_display()
 	
 	# Start hidden
 	position = hidden_position
@@ -83,13 +90,14 @@ func _input(event):
 		var key_code = event.keycode
 		match key_code:
 			KEY_1:
-				_animate_button_press(0)  # Red button
+				print("Button 1 pressed - Setting track to Red")
+				set_track(1)  # Red button
 			KEY_2:
-				_animate_button_press(1)  # Yellow button
+				set_track(2)  # Yellow button
 			KEY_3:
-				_animate_button_press(2)  # Blue button
+				set_track(3)  # Blue button
 			KEY_4:
-				_animate_button_press(3)  # Green button
+				set_track(4)  # Green button
 
 func _animate_button_press(button_index: int):
 	var buttons = [red_button, yellow_button, blue_button, green_button]
@@ -112,13 +120,55 @@ func _animate_button_press(button_index: int):
 	button_tweens[button_index] = create_tween()
 	var tween = button_tweens[button_index]
 	
-	# Get original position
+	# Get original position and calculate target positions
 	var original_pos = button_original_positions[button_index]
 	var pressed_pos = Vector2(original_pos.x, original_pos.y + button_pressed_offset)
 	
-	# Animate button press (down then back up)
+	# Determine final position based on track state
+	var track_button_index = track - 1  # Convert track (1-4) to index (0-3)
+	var final_pos = original_pos
+	if button_index == track_button_index:
+		final_pos = Vector2(original_pos.x, original_pos.y + button_selected_offset)
+	
+	# Animate button press (down then to final position)
 	tween.tween_property(button, "position", pressed_pos, BUTTON_ANIM_DURATION)
-	tween.tween_property(button, "position", original_pos, BUTTON_ANIM_DURATION)
+	tween.tween_property(button, "position", final_pos, BUTTON_ANIM_DURATION)
+
+func set_track(new_track: int):
+	"""Set the current track and update button positions"""
+	if new_track < 1 or new_track > 4:
+		return
+	
+	if track != new_track:
+		track = new_track
+		print("CassetteUIV2: Track set to ", track)
+		
+		# Animate the button press for the selected track
+		_animate_button_press(track - 1)
+		
+		# Update all button positions to reflect new track state
+		_update_track_display()
+
+func _update_track_display():
+	"""Update button positions based on current track state"""
+	var buttons = [red_button, yellow_button, blue_button, green_button]
+	var track_button_index = track - 1  # Convert track (1-4) to index (0-3)
+	
+	for i in range(buttons.size()):
+		var button = buttons[i]
+		if not button or i >= button_original_positions.size():
+			continue
+		
+		var original_pos = button_original_positions[i]
+		var target_pos = original_pos
+		
+		# Lower the button if it's the selected track
+		if i == track_button_index:
+			target_pos = Vector2(original_pos.x, original_pos.y + button_selected_offset)
+		
+		# Smoothly move to target position
+		var tween = create_tween()
+		tween.tween_property(button, "position", target_pos, BUTTON_ANIM_DURATION * 2)
 
 func _find_player():
 	# Try multiple methods to find the player
@@ -270,6 +320,19 @@ func is_ui_visible() -> bool:
 	"""Check if the UI is currently visible"""
 	return is_visible
 
+func get_track() -> int:
+	"""Get the current track number (1-4)"""
+	return track
+
+func get_track_name() -> String:
+	"""Get the current track name"""
+	match track:
+		1: return "Red"
+		2: return "Yellow" 
+		3: return "Blue"
+		4: return "Green"
+		_: return "Unknown"
+
 # Animation event handlers
 func _on_slide_animation_finished():
 	"""Called when slide animation completes"""
@@ -282,13 +345,26 @@ func _on_slide_animation_finished():
 
 # Public methods for external scripts to control button animations
 func animate_red_button():
-	_animate_button_press(0)
+	set_track(1)
 
 func animate_yellow_button():
-	_animate_button_press(1)
+	set_track(2)
 
 func animate_blue_button():
-	_animate_button_press(2)
+	set_track(3)
 
 func animate_green_button():
+	set_track(4)
+
+# Direct button press animations (for external use)
+func press_red_button():
+	_animate_button_press(0)
+
+func press_yellow_button():
+	_animate_button_press(1)
+
+func press_blue_button():
+	_animate_button_press(2)
+
+func press_green_button():
 	_animate_button_press(3)

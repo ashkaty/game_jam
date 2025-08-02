@@ -19,32 +19,32 @@ offset_bottom = -20.0
 grow_vertical = 0
 script = ExtResource("7_script")
 
+[node name="RedButton" type="Sprite2D" parent="."]
+position = Vector2(205, -550)
+texture = ExtResource("2_red_button")
+region_enabled = true
+region_rect = Rect2(83.2007, 161.481, 240.332, 126.15)
+
+[node name="BlueButton" type="Sprite2D" parent="."]
+position = Vector2(415, -547)
+texture = ExtResource("4_blue_button")
+region_enabled = true
+region_rect = Rect2(306.76, 175.012, 222.292, 108.977)
+
+[node name="YellowButton" type="Sprite2D" parent="."]
+position = Vector2(630, -542)
+texture = ExtResource("3_yellow_button")
+region_enabled = true
+region_rect = Rect2(513.546, 178.012, 233.637, 111.17)
+
+[node name="GreenButton" type="Sprite2D" parent="."]
+position = Vector2(858, -543)
+texture = ExtResource("5_green_button")
+region_enabled = true
+region_rect = Rect2(733.533, 178.54, 221.883, 106.815)
+
 [node name="Background" type="Sprite2D" parent="."]
 position = Vector2(537, -236)
 texture = ExtResource("1_cassette_buttonless")
 region_enabled = true
 region_rect = Rect2(33.1022, 260.974, 1006.99, 554.789)
-
-[node name="RedButton" type="Sprite2D" parent="Background"]
-position = Vector2(-332, -314)
-texture = ExtResource("2_red_button")
-region_enabled = true
-region_rect = Rect2(83.2007, 161.481, 240.332, 126.15)
-
-[node name="BlueButton" type="Sprite2D" parent="Background"]
-position = Vector2(-122, -311)
-texture = ExtResource("4_blue_button")
-region_enabled = true
-region_rect = Rect2(306.76, 175.012, 222.292, 108.977)
-
-[node name="YellowButton" type="Sprite2D" parent="Background"]
-position = Vector2(93, -306)
-texture = ExtResource("3_yellow_button")
-region_enabled = true
-region_rect = Rect2(513.546, 178.012, 233.637, 111.17)
-
-[node name="GreenButton" type="Sprite2D" parent="Background"]
-position = Vector2(321, -307)
-texture = ExtResource("5_green_button")
-region_enabled = true
-region_rect = Rect2(733.533, 178.54, 221.883, 106.815)
