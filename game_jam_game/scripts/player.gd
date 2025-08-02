@@ -2,7 +2,12 @@ class_name Player
 
 extends CharacterBody2D
 
+# -- Set up ring buffer -- #
+@onready var track1: RingBuffer = RingBuffer.create_by_seconds(15, Engine.get_physics_ticks_per_second())
+var is_replaying: bool = false
+var track_replay_index: int = 0
 
+ 
 @onready var animations: AnimatedSprite2D = $AnimatedSprite2D
 @onready var sword: Node2D = $AnimatedSprite2D/Sword
 @onready var camera: Camera2D = $Camera2D
@@ -10,6 +15,8 @@ extends CharacterBody2D
 @onready var state_machine: Node = $state_machine
 var last_flip_h: bool = false
 var original_sword_position: Vector2
+
+
 
 # Input polling system - ensures inputs are only processed once per frame
 var input_just_pressed: Dictionary = {}
@@ -99,6 +106,12 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	
+	if is_replaying and event.is_action_pressed("reset_track"):
+		is_replaying = false
+		track1.clear()
+		track_replay_index = 0
+		
 	# Track when input buttons are first pressed for hold time calculation
 	for action in input_actions:
 		if event.is_action_pressed(action):
@@ -112,6 +125,26 @@ func _unhandled_input(event: InputEvent) -> void:
 	state_machine.process_input(event)
 
 func _physics_process(delta: float) -> void:
+	
+	if is_replaying:
+		if track1.length == 0:
+			return
+		var tick = track1.get_at(track_replay_index)
+		self.position = tick.position
+		self.velocity = tick.velocity
+		self.input_just_pressed = tick.input
+		track_replay_index = (track_replay_index+ 1) % track1.length
+	else:
+		track1.push({
+		"input" : input_just_pressed,
+		"seconds" : total_time,
+		"health" : 3,
+		"position": self.position,
+		"velocity": self.velocity
+	})
+		if track1.is_full():
+			track_replay_index = 0
+			is_replaying = true
 	# Update total time for head bonk tracking
 	total_time += delta
 	
@@ -121,6 +154,8 @@ func _physics_process(delta: float) -> void:
 		if jump_cooldown_timer <= 0.0:
 			can_jump_again = true
 			# print("Jump cooldown expired - can jump again")
+		
+	
 	
 	# Update jump buffer timer
 	update_input_buffers(delta)
@@ -128,7 +163,9 @@ func _physics_process(delta: float) -> void:
 	# Update coyote time BEFORE state machine processing
 	update_coyote_time(delta)
 	
+	
 	state_machine.process_physics(delta)
+
 
 func _process(delta: float) -> void:
 	# Poll inputs first to ensure they're captured for this frame
@@ -145,8 +182,13 @@ func _process(delta: float) -> void:
 
 		last_flip_h = animations.flip_h
 
+
+	
 # Input polling system - call this every frame to capture inputs
 func poll_inputs() -> void:
+	
+	if is_replaying:
+		return
 	# Reset consumed flags for new frame
 	input_consumed.clear()
 	

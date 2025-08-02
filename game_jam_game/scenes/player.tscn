@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://b15t68w17acxb"]
+[gd_scene load_steps=27 format=3 uid="uid://b15t68w17acxb"]
 
 [ext_resource type="Texture2D" uid="uid://hh6utf025oib" path="res://assets/sprites/example_sprites.png" id="1_3vyb7"]
 [ext_resource type="PackedScene" uid="uid://bl8edr7x4e5q5" path="res://scenes/sword.tscn" id="2_smehm"]
@@ -11,7 +11,7 @@
 [ext_resource type="Script" uid="uid://c35ujxap2j06r" path="res://scripts/ground_attack.gd" id="8_qwkas"]
 [ext_resource type="Script" uid="uid://placeholder" path="res://scripts/air_attack.gd" id="9_air_attack"]
 [ext_resource type="Script" uid="uid://cmi6yhkd03cmy" path="res://scripts/crouch.gd" id="10_crouch"]
-[ext_resource type="Script" path="res://scripts/dash.gd" id="11_dash"]
+[ext_resource type="Script" uid="uid://dqfwmxsn6hsyc" path="res://scripts/dash.gd" id="11_dash"]
 [ext_resource type="Script" uid="uid://be2h8sxopel4k" path="res://scripts/state_machine/state.gd" id="12_3v2ag"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouch"]
@@ -249,7 +249,7 @@ jump_state = NodePath("../jump")
 air_attack_state = NodePath("../air_attack")
 crouch_state = NodePath("../crouch")
 
-[node name="State" type="Node" parent="state_machine"]
+[node name="playback" type="Node" parent="state_machine"]
 script = ExtResource("12_3v2ag")
 metadata/_custom_type_script = "uid://be2h8sxopel4k"
 
