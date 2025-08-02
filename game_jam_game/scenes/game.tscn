@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=4 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=13 format=4 uid="uid://cwbv2y4y74b4t"]
 
 [ext_resource type="PackedScene" uid="uid://cp5l4kktdyj4y" path="res://scenes/test_dummy.tscn" id="1_p57ef"]
 [ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://mex3itl4qovj" path="res://scripts/game_manager.gd" id="7_game"]
 [ext_resource type="Script" uid="uid://dkrqctvyafve4" path="res://scripts/damage_particle_manager.gd" id="8_damage_particle_manager"]
 [ext_resource type="PackedScene" uid="uid://5utxsmxaf4j5" path="res://scenes/cassette_buttonless_ui.tscn" id="8_gee14"]
+[ext_resource type="PackedScene" uid="uid://dmn11pyh7fi6f" path="res://scenes/enemy.tscn" id="9_0tnpc"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2o6t"]
 distance = 256.0
@@ -151,6 +152,9 @@ script = ExtResource("8_damage_particle_manager")
 [node name="TestDummy" parent="." instance=ExtResource("1_p57ef")]
 position = Vector2(700, 0)
 
+[node name="Enemy" parent="." instance=ExtResource("9_0tnpc")]
+position = Vector2(400, -240)
+
 [node name="WorldBorder" type="StaticBody2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WorldBorder"]
@@ -196,9 +200,9 @@ anchor_top = -0.676
 anchor_right = 0.915
 anchor_bottom = 0.0
 offset_left = -83.16
-offset_top = 486.72
+offset_top = 428.72
 offset_right = 10938.8
-offset_bottom = 7058.0
+offset_bottom = 7000.0
 grow_vertical = 1
 scale = Vector2(0.3, 0.3)
 pivot_offset = Vector2(3, -800)
