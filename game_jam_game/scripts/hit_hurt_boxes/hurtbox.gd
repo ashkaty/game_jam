@@ -20,6 +20,11 @@ func _on_area_entered(hitbox: HitBox) -> void:
 	if owner.has_method("take_damage"):
 		owner.take_damage(actual_damage)
 		
+		# Trigger camera shake based on damage amount
+		var player = get_tree().get_first_node_in_group("player")
+		if player and player.has_method("shake_camera_for_damage"):
+			player.shake_camera_for_damage(actual_damage)
+		
 		# Calculate spawn position based on the collision shape bounds
 		var collision_shape = $CollisionShape2D
 		if collision_shape and collision_shape.shape:

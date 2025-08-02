@@ -6,17 +6,24 @@ extends State
 @export var jump_state: State
 @export var air_attack_state: State
 @export var crouch_state: State
+@export var dash_state: State
 
 # ---- Tunables --------------------------------------------------------
-@export var fall_gravity_scale: float = 4.0
-@export var fast_fall_gravity_scale: float = 8  # Much faster fall when crouching in air
-@export var terminal_velocity: float  = 1200.0
+@export var fall_gravity_scale: float = 3000.0
+@export var fast_fall_gravity_scale: float = 20.0  # Much faster fall when crouching in air
+@export var terminal_velocity: float  = 1500.0
 @export var fast_fall_terminal_velocity: float = 3000.0  # Higher terminal velocity for fast fall
-@export var air_accel: float          = 400.0
-@export var air_friction: float       = 800.0
-@export var max_air_speed: float      = 150.0
+@export var air_accel: float          = 100.0
+@export var air_friction: float       = 200.0  # Increased from 0.0 for better air control
+@export var air_direction_change_multiplier: float = 1.5  # Extra braking force when changing directions in air
+@export var max_air_speed: float      = 2000.0
 @export var fast_fall_air_speed: float = 150.0  # Reduced air control during fast fall
 @export var sword_offset_y: float     = -15.0  # How much to move sword up during fall
+
+# Air camera panning tunables
+@export var air_camera_offset_y: float = 60.0  # How much to move camera down when in air
+@export var air_camera_transition_speed: float = 4.0  # Slower, smoother camera transition
+@export var air_camera_pan_delay: float = 0.1  # Seconds to wait before camera starts panning down in air
 
 # Wall sliding tunables
 @export var wall_slide_gravity_scale: float = 0.8  # Reduced gravity when wall sliding
@@ -36,15 +43,33 @@ var enhanced_control_multiplier: float = 1.0
 
 # Wall sliding state tracking
 var is_currently_wall_sliding: bool = false
+
+# Air camera panning state tracking
+var original_camera_offset: Vector2
+var target_camera_offset: Vector2
+var air_timer: float = 0.0
+var camera_tween: Tween  # For smooth camera transitions
 # ----------------------------------------------------------------------
 
 var original_sword_position: Vector2
 
 func enter() -> void:
 	super()
-	print("Entering fall state")
+	# print("Entering fall state")
 	# Reset wall sliding state
 	is_currently_wall_sliding = false
+	# Reset air timer for camera panning
+	air_timer = 0.0
+	
+	# Store original camera offset and set target for air panning
+	if parent.camera:
+		original_camera_offset = parent.camera.offset
+		target_camera_offset = original_camera_offset + Vector2(0, air_camera_offset_y)
+		
+		# Kill any existing camera tween
+		if camera_tween:
+			camera_tween.kill()
+	
 	# Store original sword position and move it up slightly during fall
 	if parent.sword:
 		original_sword_position = parent.sword.position
@@ -53,27 +78,25 @@ func enter() -> void:
 func exit() -> void:
 	# Reset wall sliding state
 	is_currently_wall_sliding = false
+	
+	# Smoothly reset camera offset when exiting fall state
+	if parent.camera and camera_tween:
+		camera_tween.kill()
+		camera_tween = parent.create_tween()
+		camera_tween.set_ease(Tween.EASE_OUT)
+		camera_tween.set_trans(Tween.TRANS_QUART)
+		camera_tween.tween_property(parent.camera, "offset", original_camera_offset, 0.4)
+	elif parent.camera:
+		parent.camera.offset = original_camera_offset
+	
 	# Reset sword position when exiting fall, but let player handle direction
 	if parent.sword:
 		parent.sword.position.y = original_sword_position.y  # Reset Y position only
 		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 func process_frame(delta: float) -> State:
-	# Update animation based on whether player is fast falling
-	if Input.is_action_pressed("crouch"):
-		parent.animations.play("crouch")
-	elif Input.is_action_pressed("shift"):
-		# You can add a specific fast fall animation here if one exists
-		# For now, we'll let the default animation play or use crouch
-		parent.animations.play("crouch")  # Using crouch animation for shift fast fall too
-	else:
-		# You can add a specific fall animation here if one exists
-		# For now, we'll let the default animation play
-		pass
-	return null
-
-func process_input(_event: InputEvent) -> State:
-	if Input.is_action_just_pressed("jump"):
+	# Handle input processing every frame using polling system
+	if parent.is_action_just_pressed_once("jump"):
 		# Check if we're wall sliding and can perform a wall jump
 		if is_currently_wall_sliding:
 			perform_wall_jump()
@@ -86,18 +109,59 @@ func process_input(_event: InputEvent) -> State:
 			# Can't jump right now, but buffer the input
 			parent.buffer_jump()
 			
-	if Input.is_action_just_pressed('attack'):
+	if parent.is_action_just_pressed_once('attack'):
 		return air_attack_state
 		
 	# Don't transition to crouch state if already holding crouch
 	# This prevents unnecessary state switching between fall and crouch
-	if Input.is_action_just_pressed('crouch'):
+	if parent.is_action_just_pressed_once('crouch'):
 		return crouch_state
+		
+	# Allow air dash
+	if parent.is_action_just_pressed_once('dash'):
+		# Check if dash is available and air dash is enabled
+		if dash_state and dash_state.is_dash_available() and dash_state.air_dash_enabled:
+			return dash_state
+		else:
+			print("Air dash on cooldown! Buffering dash input...")
+			parent.buffer_dash()
+	
+	# Check for buffered inputs that can now be executed
+	if parent.has_valid_dash_buffer() and dash_state and dash_state.is_dash_available():
+		print("Executing buffered dash!")
+		parent.consume_dash_buffer()
+		return dash_state
+	
+	# Update air timer for camera panning
+	air_timer += delta
+	
+	# Start smooth camera panning after the delay
+	if parent.camera and air_timer >= air_camera_pan_delay and not camera_tween:
+		camera_tween = parent.create_tween()
+		camera_tween.set_ease(Tween.EASE_OUT)
+		camera_tween.set_trans(Tween.TRANS_QUART)
+		camera_tween.tween_property(parent.camera, "offset", target_camera_offset, 0.5)  # Smooth 0.5 second transition
+	
+	# Update animation based on whether player is fast falling
+	if parent.is_action_pressed_polling("crouch"):
+		parent.animations.play("crouch")
+	else:
+		# You can add a specific fall animation here if one exists
+		# For now, we'll let the default animation play
+		pass
+	return null
+
+func process_input(_event: InputEvent) -> State:
+	# Input processing moved to process_frame for polling system
 	return null
 
 func process_physics(delta: float) -> State:
-	# Check if player is holding crouch or shift for fast fall
-	var is_fast_falling = Input.is_action_pressed("crouch") or Input.is_action_pressed("shift")
+	# Update dash cooldown
+	if dash_state:
+		dash_state.update_cooldown(delta)
+		
+	# Check if player is holding crouch for fast fall
+	var is_fast_falling = parent.is_action_pressed_polling("crouch")
 	
 	# Get input axis for wall sliding detection
 	var axis := Input.get_axis("move_left","move_right")
@@ -112,7 +176,7 @@ func process_physics(delta: float) -> State:
 		# Check if player is falling and still sufficiently overlapping with wall
 		if moving_towards_wall and parent.velocity.y > 0 and is_player_overlapping_wall():
 			is_wall_sliding = true
-			print("Wall sliding activated!")
+			# print("Wall sliding activated!")
 	
 	# Update wall sliding state tracking
 	is_currently_wall_sliding = is_wall_sliding
@@ -137,10 +201,11 @@ func process_physics(delta: float) -> State:
 	
 	# Debug output for wall sliding (can be removed later)
 	if is_wall_sliding:
-		print("Wall sliding! Velocity: ", parent.velocity.y, " | Gravity scale: ", gravity_scale)
+		# print("Wall sliding! Velocity: ", parent.velocity.y, " | Gravity scale: ", gravity_scale)
+		pass  # Debug output disabled
 	elif is_fast_falling and parent.velocity.y > 0:
-		var fall_type = "crouch" if Input.is_action_pressed("crouch") else "shift"
-		print("Fast falling with ", fall_type, "! Velocity: ", parent.velocity.y)
+		# print("Fast falling with crouch! Velocity: ", parent.velocity.y)
+		pass  # Debug output disabled
 	
 	# Gravity with clamp
 	parent.velocity.y = min(
@@ -160,12 +225,20 @@ func process_physics(delta: float) -> State:
 		
 		if enhanced_control_timer <= 0.0:
 			enhanced_air_control = false
-			print("Enhanced air control expired in fall state")
+			# print("Enhanced air control expired in fall state")
 
 	var target: float = axis * air_speed_limit
 
 	if axis != 0:
-		parent.velocity.x = move_toward(parent.velocity.x, target, current_air_accel * delta)
+		# Check if we're changing direction in air (input and current velocity have opposite signs)
+		var is_changing_direction = (axis > 0 and parent.velocity.x < 0) or (axis < 0 and parent.velocity.x > 0)
+		
+		# Apply stronger braking force when changing directions in air
+		var effective_air_accel = current_air_accel
+		if is_changing_direction:
+			effective_air_accel = current_air_accel * air_direction_change_multiplier
+		
+		parent.velocity.x = move_toward(parent.velocity.x, target, effective_air_accel * delta)
 		parent.animations.flip_h = axis < 0
 	else:
 		# Don't apply friction when wall sliding to maintain contact with wall
@@ -176,14 +249,15 @@ func process_physics(delta: float) -> State:
 	
 	# Check for buffered jump that can now be executed
 	if parent.has_valid_jump_buffer() and parent.can_jump():
-		print("Executing buffered jump from fall state!")
+		# print("Executing buffered jump from fall state!")
 		parent.consume_jump_buffer()
 		return jump_state
 	
 	# Check for head bonk during fall (rare but possible)
 	# This can happen if player hits ceiling while falling upward from a bounce or something
 	if parent.velocity.y < 0 and parent.check_and_handle_head_bonk():
-		print("Head bonk during fall state!")
+		# print("Head bonk during fall state!")
+		pass  # Head bonk handling is done in the check function
 
 	if parent.is_on_floor():
 		return land_state

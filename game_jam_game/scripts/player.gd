@@ -11,6 +11,21 @@ extends CharacterBody2D
 var last_flip_h: bool = false
 var original_sword_position: Vector2
 
+# Input polling system - ensures inputs are only processed once per frame
+var input_just_pressed: Dictionary = {}
+var input_consumed: Dictionary = {}
+var input_actions: Array[String] = [
+	"jump", "attack", "crouch", "dash", "move_left", "move_right", "up"
+]
+
+# Motion blur effect variables
+@export var motion_blur_enabled: bool = true
+@export var motion_blur_threshold: float = 300.0  # Minimum velocity to start blur
+@export var motion_blur_max_velocity: float = 1500.0  # Velocity for maximum blur
+@export var motion_blur_max_intensity: float = 0.4  # Maximum blur intensity (0.0 to 1.0)
+@export var motion_blur_smoothing: float = 0.1  # How quickly blur changes (lower = smoother)
+var current_blur_intensity: float = 0.0
+
 # Player stats for UI display
 var health: int = 100
 var max_health: int = 100
@@ -26,14 +41,17 @@ var coyote_available: bool = false  # Track if coyote time should be available
 var jumped_off_ground: bool = false  # Track if player jumped off ground (vs walked off)
 
 # Jump cooldown variables
-@export var jump_cooldown_duration: float = 0.15  # Time before allowing another jump after landing
+@export var jump_cooldown_duration: float = 0.05  # Shorter cooldown for continuous short jumps
 var jump_cooldown_timer: float = 0.0
 var can_jump_again: bool = true
 
-# Jump buffer variables
-@export var jump_buffer_duration: float = 0.15  # Time window to buffer jump input
-var jump_buffer_timer: float = 0.0
-var has_buffered_jump: bool = false
+# Generalized input buffer system
+@export var input_buffer_duration: float = 0.15  # Buffer duration for input responsiveness
+@export var input_buffer_refresh_cooldown: float = 0.02  # Cooldown before buffer can be refreshed
+var input_buffers: Dictionary = {}  # Stores buffered inputs with their timers
+var input_buffer_hold_times: Dictionary = {}  # Stores how long inputs were held when buffered
+var input_hold_start_times: Dictionary = {}  # Track when input buttons were first pressed
+var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 
 # Head bonk mechanic variables
 @export var head_bonk_speed_boost: float = 300.0  # Horizontal speed added when hitting head
@@ -48,6 +66,18 @@ var total_time: float = 0.0  # Track total game time
 @export var fast_fall_damage_multiplier: float = 1.5  # Damage multiplier when fast falling
 @export var fast_fall_minimum_speed: float = 800.0  # Minimum fall speed to trigger bonus damage
 @export var max_fast_fall_damage_multiplier: float = 4.0  # Maximum damage multiplier at terminal velocity
+
+# Action cancellation system
+@export var allow_movement_cancel: bool = true  # Allow movement to cancel actions
+@export var allow_jump_cancel: bool = true     # Allow jump to cancel actions  
+@export var allow_dash_cancel: bool = true     # Allow dash to cancel actions
+@export var action_cancel_window: float = 0.3  # Time window after action start where cancellation is allowed
+@export var dash_cancel_window: float = 0.1    # Shorter cancel window for dash (more commitment)
+@export var use_animation_cancel_points: bool = false  # Use specific animation frames for cancellation
+var current_action_start_time: float = 0.0     # When the current action started
+var current_action_cancelable: bool = false    # Whether the current action can be canceled
+var current_action_type: String = ""           # Type of current action for specific cancel rules
+var animation_cancel_enabled: bool = false     # Whether animation-based cancellation is currently enabled
 
 # Signal for head bonk events (can be connected to by UI, particles, etc.)
 signal head_bonk_occurred(boost_amount: float, direction: int)
@@ -68,15 +98,24 @@ func _ready() -> void:
 	jump_cooldown_timer = 0.0
 	can_jump_again = true
 	
-	# Initialize jump buffer state
-	has_buffered_jump = false
-	jump_buffer_timer = 0.0
+	# Input buffer system is initialized automatically via Dictionary declarations
+	# No manual initialization needed for the generalized buffer system
 	
 	# Add player to a group so the UI can find it
 	add_to_group("player")
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Track when input buttons are first pressed for hold time calculation
+	for action in input_actions:
+		if event.is_action_pressed(action):
+			input_hold_start_times[action] = total_time
+			# print(action.capitalize(), " hold started at: ", total_time)
+		elif event.is_action_released(action):
+			input_hold_start_times[action] = 0.0
+			# print(action.capitalize(), " hold reset - button released")
+	
+	# Keep calling process_input for states that haven't been converted to polling yet
 	state_machine.process_input(event)
 
 func _physics_process(delta: float) -> void:
@@ -88,14 +127,10 @@ func _physics_process(delta: float) -> void:
 		jump_cooldown_timer -= delta
 		if jump_cooldown_timer <= 0.0:
 			can_jump_again = true
-			print("Jump cooldown expired - can jump again")
+			# print("Jump cooldown expired - can jump again")
 	
 	# Update jump buffer timer
-	if has_buffered_jump:
-		jump_buffer_timer -= delta
-		if jump_buffer_timer <= 0.0:
-			has_buffered_jump = false
-			print("Jump buffer expired")
+	update_input_buffers(delta)
 	
 	# Update coyote time BEFORE state machine processing
 	update_coyote_time(delta)
@@ -103,11 +138,52 @@ func _physics_process(delta: float) -> void:
 	state_machine.process_physics(delta)
 
 func _process(delta: float) -> void:
+	# Poll inputs first to ensure they're captured for this frame
+	poll_inputs()
+	
 	state_machine.process_frame(delta)
+	
+	# Update motion blur based on velocity
+	if motion_blur_enabled:
+		update_motion_blur(delta)
+	
 	if animations.flip_h != last_flip_h:
 		update_sword_position()
 
 		last_flip_h = animations.flip_h
+
+# Input polling system - call this every frame to capture inputs
+func poll_inputs() -> void:
+	# Reset consumed flags for new frame
+	input_consumed.clear()
+	
+	# Poll all input actions and store their just_pressed state
+	for action in input_actions:
+		var just_pressed = Input.is_action_just_pressed(action)
+		input_just_pressed[action] = just_pressed
+		
+		# Auto-buffer inputs when they're pressed for improved responsiveness
+		if just_pressed:
+			buffer_input(action)
+
+# Public method for states to check if an action was just pressed this frame
+# Returns true only once per frame, even if called multiple times
+func is_action_just_pressed_once(action: String) -> bool:
+	if not input_just_pressed.has(action):
+		return false
+	
+	if input_consumed.get(action, false):
+		return false  # Already consumed this frame
+	
+	if input_just_pressed[action]:
+		input_consumed[action] = true  # Mark as consumed
+		return true
+	
+	return false
+
+# Public method for states to check if an action is currently pressed
+func is_action_pressed_polling(action: String) -> bool:
+	return Input.is_action_pressed(action)
 
 func update_sword_position() -> void:
 	# Flip the sword's x position when the sprite flips
@@ -120,10 +196,83 @@ func update_sword_position() -> void:
 		sword.scale.x = 1
 		sword.position.x = abs(sword.position.x)
 
+func update_motion_blur(delta: float) -> void:
+	"""Update motion blur effect based on player velocity"""
+	if not animations:
+		return
+	
+	# Calculate total velocity magnitude
+	var velocity_magnitude = velocity.length()
+	
+	# Calculate target blur intensity based on velocity
+	var target_intensity = 0.0
+	if velocity_magnitude > motion_blur_threshold:
+		var velocity_ratio = (velocity_magnitude - motion_blur_threshold) / (motion_blur_max_velocity - motion_blur_threshold)
+		velocity_ratio = clamp(velocity_ratio, 0.0, 1.0)
+		target_intensity = velocity_ratio * motion_blur_max_intensity
+	
+	# Enhance blur for fast falling (when crouching and falling fast)
+	if is_action_pressed_polling("crouch") and velocity.y > 800.0:
+		target_intensity = min(target_intensity * 1.5, motion_blur_max_intensity)
+	
+	# Smoothly interpolate current blur towards target
+	current_blur_intensity = lerp(current_blur_intensity, target_intensity, motion_blur_smoothing)
+	
+	# Apply blur effect through material modulation and slight scale effects
+	if current_blur_intensity > 0.01:
+		# Create motion blur through subtle visual effects
+		var blur_factor = current_blur_intensity
+		
+		# Subtle scale effect for speed sensation (horizontal stretch for horizontal movement)
+		var horizontal_velocity_ratio = abs(velocity.x) / velocity_magnitude if velocity_magnitude > 0 else 0
+		var vertical_velocity_ratio = abs(velocity.y) / velocity_magnitude if velocity_magnitude > 0 else 0
+		
+		var scale_x = 1.0 + (blur_factor * horizontal_velocity_ratio * 0.08)  # Horizontal stretch
+		var scale_y = 1.0 + (blur_factor * vertical_velocity_ratio * 0.04)  # Slight vertical stretch
+		animations.scale = Vector2(scale_x, scale_y)
+		
+		# Slight transparency effect for motion blur illusion
+		var alpha = 1.0 - (blur_factor * 0.15)  # Subtle transparency
+		animations.modulate.a = alpha
+		
+		# Add slight color shift for high-speed effect
+		var speed_tint = 1.0 - (blur_factor * 0.1)
+		animations.modulate.b = speed_tint  # Slight blue reduction for warm speed tint
+		
+	else:
+		# Reset effects when not moving fast
+		animations.scale = Vector2(1.0, 1.0)
+		animations.modulate = Color.WHITE
+
+func trigger_motion_blur_burst(intensity: float = 0.8, duration: float = 0.2) -> void:
+	"""Trigger a temporary motion blur effect for special actions like dashes or impacts"""
+	if not animations or not motion_blur_enabled:
+		return
+	
+	var burst_tween = create_tween()
+	burst_tween.set_parallel(true)
+	
+	# Temporary intense blur effect
+	var burst_scale = Vector2(1.0 + intensity * 0.15, 1.0 + intensity * 0.05)
+	var burst_alpha = 1.0 - intensity * 0.3
+	
+	# Apply burst effect
+	burst_tween.tween_property(animations, "scale", burst_scale, duration * 0.3)
+	burst_tween.tween_property(animations, "modulate:a", burst_alpha, duration * 0.3)
+	
+	# Return to normal
+	burst_tween.tween_property(animations, "scale", Vector2(1.0, 1.0), duration * 0.7)
+	burst_tween.tween_property(animations, "modulate:a", 1.0, duration * 0.7)
+
 func update_coyote_time(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
 	
 	if currently_on_floor:
+		# Add motion blur effect for high-speed landings
+		if not was_on_floor and abs(velocity.y) > motion_blur_threshold:
+			var impact_intensity = clamp(abs(velocity.y) / 1200.0, 0.2, 0.8)
+			trigger_motion_blur_burst(impact_intensity, 0.3)
+		
 		# Reset timer and availability when on ground
 		coyote_timer = coyote_time_duration
 		coyote_available = true
@@ -174,25 +323,227 @@ func mark_jumped_off_ground():
 func can_ground_jump() -> bool:
 	return is_on_floor() and can_jump_again
 
-# Check if player can perform any type of jump (ground or coyote)
-func can_jump() -> bool:
-	return can_ground_jump() or can_coyote_jump()
+# Update all input buffers - call this every physics frame
+func update_input_buffers(delta: float) -> void:
+	var expired_buffers = []
+	
+	for action in input_buffers.keys():
+		input_buffers[action] -= delta
+		if input_buffers[action] <= 0.0:
+			expired_buffers.append(action)
+			print(action.capitalize(), " buffer expired")
+	
+	# Remove expired buffers
+	for action in expired_buffers:
+		input_buffers.erase(action)
+		input_buffer_hold_times.erase(action)
 
-# Buffer a jump input for later execution
+# Buffer any input for later execution
+func buffer_input(action: String):
+	# Allow refreshing the buffer if enough time has passed or if no buffer exists
+	var current_time = total_time
+	var last_time = last_buffer_times.get(action, 0.0)
+	
+	if not input_buffers.has(action) or (current_time - last_time) >= input_buffer_refresh_cooldown:
+		input_buffers[action] = input_buffer_duration
+		last_buffer_times[action] = current_time
+		
+		# Calculate how long the input has been held when buffering
+		var hold_start = input_hold_start_times.get(action, current_time)
+		input_buffer_hold_times[action] = current_time - hold_start
+		
+		# print(action.capitalize(), " buffered! Timer: ", input_buffers[action], " Hold time: ", input_buffer_hold_times[action], " at time: ", current_time)
+	else:
+		# print(action.capitalize(), " buffer refresh on cooldown, ignoring input")
+		pass  # Do nothing when buffer refresh is on cooldown
+
+# Check if there's a buffered input that should be executed
+func has_valid_input_buffer(action: String) -> bool:
+	return input_buffers.has(action) and input_buffers[action] > 0.0
+
+# Get the hold time of a buffered input
+func get_buffered_input_hold_time(action: String) -> float:
+	return input_buffer_hold_times.get(action, 0.0)
+
+# Get current hold time for any input (how long it's been held since press)
+func get_current_input_hold_time(action: String) -> float:
+	var hold_start = input_hold_start_times.get(action, 0.0)
+	if hold_start > 0.0:
+		return total_time - hold_start
+	return 0.0
+
+# Legacy helper for jump hold time (for backward compatibility)
+func get_current_jump_hold_time() -> float:
+	return get_current_input_hold_time("jump")
+
+# Consume an input buffer (call this when a buffered input is executed)
+func consume_input_buffer(action: String):
+	var hold_time = input_buffer_hold_times.get(action, 0.0)
+	
+	input_buffers.erase(action)
+	input_buffer_hold_times.erase(action)
+	last_buffer_times.erase(action)
+	
+	# print(action.capitalize(), " buffer consumed! Was held for: ", hold_time, " seconds")
+	return hold_time  # Return the hold time for states to use
+
+# Legacy jump buffer functions for compatibility
 func buffer_jump():
-	has_buffered_jump = true
-	jump_buffer_timer = jump_buffer_duration
-	print("Jump buffered! Timer: ", jump_buffer_timer)
+	buffer_input("jump")
 
 # Check if there's a buffered jump that should be executed
 func has_valid_jump_buffer() -> bool:
-	return has_buffered_jump and jump_buffer_timer > 0.0
+	return has_valid_input_buffer("jump")
+
+# Get the hold time of the buffered jump
+func get_buffered_jump_hold_time() -> float:
+	return get_buffered_input_hold_time("jump")
 
 # Consume the jump buffer (call this when a buffered jump is executed)
 func consume_jump_buffer():
-	has_buffered_jump = false
-	jump_buffer_timer = 0.0
-	print("Jump buffer consumed!")
+	return consume_input_buffer("jump")
+
+# Convenience methods for buffering common actions
+func buffer_attack():
+	buffer_input("attack")
+
+func buffer_dash():
+	buffer_input("dash")
+
+func buffer_crouch():
+	buffer_input("crouch")
+
+func has_valid_attack_buffer() -> bool:
+	return has_valid_input_buffer("attack")
+
+func has_valid_dash_buffer() -> bool:
+	return has_valid_input_buffer("dash")
+
+func has_valid_crouch_buffer() -> bool:
+	return has_valid_input_buffer("crouch")
+
+func consume_attack_buffer():
+	return consume_input_buffer("attack")
+
+func consume_dash_buffer():
+	return consume_input_buffer("dash")
+
+func consume_crouch_buffer():
+	return consume_input_buffer("crouch")
+
+# Clear all input buffers (useful for state resets or special conditions)
+func clear_all_input_buffers():
+	input_buffers.clear()
+	input_buffer_hold_times.clear()
+	last_buffer_times.clear()
+	print("All input buffers cleared")
+
+# Clear a specific input buffer
+func clear_input_buffer(action: String):
+	input_buffers.erase(action)
+	input_buffer_hold_times.erase(action)
+	last_buffer_times.erase(action)
+	print(action.capitalize(), " buffer cleared")
+
+# Debug function to see currently buffered inputs
+func get_buffered_inputs() -> Array:
+	return input_buffers.keys()
+
+# Debug function to print all current buffers
+func print_buffer_status():
+	if input_buffers.is_empty():
+		print("No inputs currently buffered")
+	else:
+		print("Currently buffered inputs:")
+		for action in input_buffers.keys():
+			print("  ", action.capitalize(), ": ", input_buffers[action], "s remaining")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ACTION CANCELLATION SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Start a new cancelable action
+func start_cancelable_action(action_type: String = "default"):
+	current_action_start_time = total_time
+	current_action_cancelable = true
+	current_action_type = action_type
+
+# Mark current action as non-cancelable
+func set_action_non_cancelable():
+	current_action_cancelable = false
+
+# Check if current action can be canceled
+func can_cancel_current_action() -> bool:
+	if not current_action_cancelable:
+		return false
+	
+	# If using animation-based cancellation, check that too
+	if use_animation_cancel_points and not animation_cancel_enabled:
+		return false
+	
+	var time_since_action_start = total_time - current_action_start_time
+	var cancel_window = action_cancel_window
+	
+	# Use shorter cancel window for dash
+	if current_action_type == "dash":
+		cancel_window = dash_cancel_window
+	
+	return time_since_action_start <= cancel_window
+
+# Enable animation-based cancellation (called from animation events)
+func enable_animation_cancel():
+	animation_cancel_enabled = true
+
+# Disable animation-based cancellation (called from animation events)  
+func disable_animation_cancel():
+	animation_cancel_enabled = false
+
+# Check if player is trying to cancel with movement
+func is_trying_to_cancel_with_movement() -> bool:
+	if not allow_movement_cancel or not can_cancel_current_action():
+		return false
+	
+	var input_axis = Input.get_axis("move_left", "move_right")
+	return input_axis != 0.0
+
+# Check if player is trying to cancel with jump
+func is_trying_to_cancel_with_jump() -> bool:
+	if not allow_jump_cancel or not can_cancel_current_action():
+		return false
+	
+	return is_action_just_pressed_once("jump")
+
+# Check if player is trying to cancel with dash
+func is_trying_to_cancel_with_dash() -> bool:
+	if not allow_dash_cancel or not can_cancel_current_action():
+		return false
+	
+	return is_action_just_pressed_once("dash")
+
+# Check for any cancellation input
+func is_trying_to_cancel_action() -> bool:
+	return is_trying_to_cancel_with_movement() or is_trying_to_cancel_with_jump() or is_trying_to_cancel_with_dash()
+
+# Get the current action status for debugging
+func get_action_status() -> Dictionary:
+	return {
+		"action_type": current_action_type,
+		"cancelable": current_action_cancelable,
+		"time_remaining": max(0.0, action_cancel_window - (total_time - current_action_start_time)),
+		"animation_cancel_enabled": animation_cancel_enabled
+	}
+
+# End the current action (called when action completes or is canceled)
+func end_current_action():
+	current_action_cancelable = false
+	animation_cancel_enabled = false
+	current_action_type = ""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Check if player can perform any type of jump (ground or coyote)
+func can_jump() -> bool:
+	return can_ground_jump() or can_coyote_jump()
 
 # Player stats getter methods for UI
 func get_health() -> int:
@@ -246,8 +597,8 @@ func check_level_up():
 
 # Fast fall damage calculation
 func get_fast_fall_damage_multiplier() -> float:
-	# Check if player is fast falling (holding crouch or shift) and moving downward fast enough
-	var is_fast_falling = Input.is_action_pressed("crouch") or Input.is_action_pressed("shift")
+	# Check if player is fast falling (holding crouch) and moving downward fast enough
+	var is_fast_falling = is_action_pressed_polling("crouch")
 	
 	if not is_fast_falling or velocity.y <= fast_fall_minimum_speed:
 		return 1.0  # No bonus damage
@@ -303,10 +654,65 @@ func perform_head_bonk():
 	# Visual feedback: briefly flash the sprite
 	flash_sprite()
 	
+	# Add motion blur burst effect for head bonk
+	trigger_motion_blur_burst(0.6, 0.3)
+	
 	# Emit signal for any listeners (particles, UI feedback, etc.)
 	head_bonk_occurred.emit(actual_boost, direction)
 	
 	return
+
+# Camera shake function for damage feedback
+func shake_camera_for_damage(damage_amount: int):
+	"""Shake the camera based on damage amount - more damage = stronger shake"""
+	var game_camera = get_tree().get_first_node_in_group("game_camera")
+	var player_camera = camera
+	
+	# Calculate shake intensity based on damage (scale from 1-50 damage to 2-15 shake strength)
+	var base_shake = 5.0
+	var max_shake = 45.0
+	var max_damage_for_scaling = 50.0
+	var damage_ratio = clamp(float(damage_amount) / max_damage_for_scaling, 0.0, 1.0)
+	var shake_strength = lerp(base_shake, max_shake, damage_ratio)
+	
+	# Calculate duration based on damage (0.1 to 0.4 seconds)
+	var base_duration = 0.1
+	var max_duration = 0.4
+	var shake_duration = lerp(base_duration, max_duration, damage_ratio)
+	
+	print("Camera shake for ", damage_amount, " damage - strength: ", shake_strength, ", duration: ", shake_duration)
+	
+	# Add motion blur burst effect based on damage amount
+	var blur_intensity = clamp(damage_ratio * 0.5, 0.1, 0.7)
+	trigger_motion_blur_burst(blur_intensity, 0.25)
+	
+	# Shake both cameras if they exist
+	for target_camera in [game_camera, player_camera]:
+		if target_camera:
+			_perform_camera_shake(target_camera, shake_strength, shake_duration)
+
+func _perform_camera_shake(target_camera: Camera2D, shake_strength: float, duration: float):
+	"""Perform the actual camera shake on a specific camera"""
+	var original_offset = target_camera.offset
+	var shake_tween = create_tween()
+	shake_tween.set_parallel(true)
+	
+	var shake_steps = int(duration * 20)  # 20 steps per second for smooth shake
+	var step_duration = duration / shake_steps
+	
+	for i in range(shake_steps):
+		var progress = float(i) / shake_steps
+		var falloff = 1.0 - progress  # Gradually reduce shake intensity
+		var current_strength = shake_strength * falloff
+		
+		var random_offset = Vector2(
+			randf_range(-current_strength, current_strength),
+			randf_range(-current_strength, current_strength)
+		)
+		shake_tween.tween_property(target_camera, "offset", original_offset + random_offset, step_duration)
+	
+	# Return to original position at the end
+	shake_tween.tween_property(target_camera, "offset", original_offset, step_duration)
 
 # Visual feedback for head bonk
 func flash_sprite():
@@ -319,20 +725,7 @@ func flash_sprite():
 		var tween = create_tween()
 		tween.tween_property(animations, "modulate", original_modulate, 0.2)
 		
-		# Optional: Add a slight screen shake effect
-		if camera:
-			var original_offset = camera.offset
-			var shake_strength = 3.0
-			var shake_tween = create_tween()
-			shake_tween.set_parallel(true)  # Allow multiple tweens
-			
-			# Shake in random directions
-			for i in range(3):
-				var random_offset = Vector2(
-					randf_range(-shake_strength, shake_strength),
-					randf_range(-shake_strength, shake_strength)
-				)
-				shake_tween.tween_property(camera, "offset", original_offset + random_offset, 0.05)
-				shake_tween.tween_property(camera, "offset", original_offset, 0.05)
+		# Use the new shake system for head bonk feedback
+		shake_camera_for_damage(15)  # Moderate shake for head bonk
 		
 	return

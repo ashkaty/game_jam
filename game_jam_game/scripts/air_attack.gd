@@ -3,53 +3,85 @@ extends State
 @export var fall_state: State
 @export var idle_state: State
 @export var move_state: State
+@export var dash_state: State
 
-# Air attack specific properties
-@export var air_attack_gravity_scale: float = 1.5  # Slightly reduced gravity during air attack
-@export var air_attack_horizontal_damping: float = 0.8  # Reduce horizontal movement during attack
-@export var downward_attack_speed_boost: float = 400.0  # Extra downward velocity for downward attacks
+# Air attack specific properties - movement effects removed
+# @export var air_attack_gravity_scale: float = 1.5  # Removed: no longer affects gravity
+# @export var air_attack_horizontal_damping: float = 0.8  # Removed: no longer affects horizontal movement
+# @export var downward_attack_speed_boost: float = 400.0  # Removed: no longer affects downward velocity
 
 var sword_anim: AnimationPlayer
-var initial_horizontal_velocity: float
+# var initial_horizontal_velocity: float  # Removed: no longer needed
 
 func enter() -> void:
 	super()
 	
+	# Start cancelable action tracking
+	parent.start_cancelable_action("air_attack")
 	
-	
-	# Store initial horizontal velocity and apply damping
-	initial_horizontal_velocity = parent.velocity.x
-	parent.velocity.x *= air_attack_horizontal_damping
+	# No longer modifying horizontal velocity - let player maintain natural movement during air attacks
 	
 
 	
 
 func process_input(_event: InputEvent):
+	# Input processing moved to process_frame for polling system
+	return null
+
+func process_frame(delta: float) -> State:
+	# Check for action cancellation first (air attacks are more restrictive)
+	if parent.is_trying_to_cancel_with_dash() and dash_state and dash_state.is_dash_available():
+		parent.end_current_action()
+		return dash_state
+	
 	sword_anim = parent.get_node("AnimatedSprite2D/Sword/AnimationPlayer") as AnimationPlayer
-	if Input.is_action_pressed("up"):
+	if parent.is_action_pressed_polling("up"):
 		sword_anim.play("up_ward_swing")
-		print("Playing Upward Air Attack Animation")
-		return idle_state
-	elif Input.is_action_pressed("crouch"):	# or "down"
+		# print("Playing Upward Air Attack Animation")
+		parent.end_current_action()
+		return fall_state  # Return to falling after air attack
+	elif parent.is_action_pressed_polling("crouch"):	# or "down"
 		sword_anim.play("down_ward_swing")
-		print("Playing Downward Air Attack Animation - FAST FALL ATTACK!")
+		# print("Playing Downward Air Attack Animation")
 		
-		# Apply extra downward velocity for a more powerful downward attack
-		parent.velocity.y += downward_attack_speed_boost
-		print("Boosted downward velocity! New velocity: ", parent.velocity.y)
-		
-		return idle_state
+		# No longer applying extra downward velocity - maintaining natural movement
+		parent.end_current_action()
+		return fall_state  # Return to falling after air attack
 	else:
 		sword_anim.play("swing")
-		print("Playing Attack Animation")
-		return idle_state
+		# print("Playing Attack Animation")
+		parent.end_current_action()
+		return fall_state  # Return to falling after air attack
+	
+	return null
 
 func process_physics(delta: float) -> State:
-	# Apply reduced gravity during air attack
-	parent.velocity.y += gravity * air_attack_gravity_scale * delta
+	# Apply normal gravity during air attack - no longer modified
+	parent.velocity.y += gravity * delta
 	
-	# Maintain reduced horizontal movement during attack
-	# Don't allow new horizontal input during attack animation
+	# Allow normal horizontal input during attack animation with enhanced responsiveness
+	var input_axis: float = Input.get_axis("move_left", "move_right")
+	if input_axis != 0.0:
+		# Use the same enhanced air movement values as other air states for consistency
+		var air_accel = 100.0  # Same as fall state
+		var max_air_speed = 300.0  # Reasonable air speed limit
+		var air_direction_change_multiplier = 1.5  # Same braking force as other air states
+		var target_speed = input_axis * max_air_speed
+		
+		# Check if we're changing direction in air (input and current velocity have opposite signs)
+		var is_changing_direction = (input_axis > 0 and parent.velocity.x < 0) or (input_axis < 0 and parent.velocity.x > 0)
+		
+		# Apply stronger braking force when changing directions in air
+		var effective_air_accel = air_accel
+		if is_changing_direction:
+			effective_air_accel = air_accel * air_direction_change_multiplier
+		
+		parent.velocity.x = move_toward(parent.velocity.x, target_speed, effective_air_accel * delta)
+		parent.animations.flip_h = input_axis < 0
+	else:
+		# Apply air friction when no input (same as other air states)
+		var air_friction = 200.0
+		parent.velocity.x = move_toward(parent.velocity.x, 0.0, air_friction * delta)
 	
 	parent.move_and_slide()
 	

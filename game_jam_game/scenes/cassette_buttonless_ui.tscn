@@ -1,0 +1,98 @@
+[gd_scene load_steps=8 format=3 uid="uid://5utxsmxaf4j5"]
+
+[ext_resource type="Texture2D" uid="uid://0hlcavja38jn" path="res://assets/sprites/Cassette Buttonless.png" id="1_cassette_buttonless"]
+[ext_resource type="Texture2D" uid="uid://y4ombgtpnee" path="res://assets/sprites/Red Button.png" id="2_red_button"]
+[ext_resource type="Texture2D" uid="uid://cvkhxffxj25ky" path="res://assets/sprites/Yellow Button.png" id="3_yellow_button"]
+[ext_resource type="Texture2D" uid="uid://bibdxp10f6tnn" path="res://assets/sprites/Blue Button.png" id="4_blue_button"]
+[ext_resource type="Texture2D" uid="uid://d25vf5hr3eaf1" path="res://assets/sprites/Green Button.png" id="5_green_button"]
+[ext_resource type="AudioStream" uid="uid://dbto86yjvukop" path="res://assets/audio/old-radio-button-click-97549.mp3" id="7_73q0x"]
+[ext_resource type="Script" uid="uid://d2borc3v3jjc2" path="res://scripts/cassette_buttonless_ui.gd" id="7_script"]
+
+[node name="CassetteButtonlessUI" type="Control"]
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -150.0
+offset_right = 320.0
+offset_bottom = -20.0
+grow_vertical = 0
+script = ExtResource("7_script")
+
+[node name="RedButton" type="Sprite2D" parent="."]
+position = Vector2(205, -550)
+texture = ExtResource("2_red_button")
+region_enabled = true
+region_rect = Rect2(83.2007, 161.481, 240.332, 126.15)
+
+[node name="BlueButton" type="Sprite2D" parent="."]
+position = Vector2(644, -548)
+texture = ExtResource("4_blue_button")
+region_enabled = true
+region_rect = Rect2(306.76, 175.012, 222.292, 108.977)
+
+[node name="YellowButton" type="Sprite2D" parent="."]
+position = Vector2(418, -543)
+texture = ExtResource("3_yellow_button")
+region_enabled = true
+region_rect = Rect2(513.546, 178.012, 233.637, 111.17)
+
+[node name="GreenButton" type="Sprite2D" parent="."]
+position = Vector2(858, -543)
+texture = ExtResource("5_green_button")
+region_enabled = true
+region_rect = Rect2(733.533, 178.54, 221.883, 106.815)
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(537, -236)
+texture = ExtResource("1_cassette_buttonless")
+region_enabled = true
+region_rect = Rect2(33.1022, 260.974, 1006.99, 554.789)
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("7_73q0x")
+
+[node name="TimerContainer" type="MarginContainer" parent="."]
+layout_mode = 0
+offset_left = 131.0
+offset_top = -357.0
+offset_right = 317.0
+offset_bottom = -218.0
+
+[node name="VBoxContainer" type="MarginContainer" parent="TimerContainer"]
+layout_mode = 2
+
+[node name="TimerLabel" type="Label" parent="TimerContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 60
+text = "00:00"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SpeedModifierContainer" type="MarginContainer" parent="."]
+layout_mode = 0
+offset_left = 771.0
+offset_top = -346.0
+offset_right = 899.0
+offset_bottom = -218.0
+
+[node name="SpeedModifierLabel" type="Label" parent="SpeedModifierContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 60
+text = "1.0x"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+layout_mode = 2
+offset_left = 121.0
+offset_top = -402.0
+offset_right = 932.0
+offset_bottom = -160.0
+step = 1.0
+value = 100.0
+rounded = true
+show_percentage = false
