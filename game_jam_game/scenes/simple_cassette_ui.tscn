@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=4 uid="uid://simple_cassette_ui"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/cassette_ui_v2.png" id="1_cassette"]
+
+[node name="SimpleCassetteUI" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 520.0
+offset_bottom = 360.0
+
+[node name="CassetteImage" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("1_cassette")
+expand_mode = 1
+stretch_mode = 5
