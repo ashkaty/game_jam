@@ -3,13 +3,13 @@ class_name CassetteButtonlessUI
 
 # Button References - adjusted to match actual scene structure
 @onready var background: Sprite2D = $Background
-@onready var red_button: Sprite2D = $Background/RedButton
-@onready var yellow_button: Sprite2D = $Background/YellowButton
-@onready var blue_button: Sprite2D = $Background/BlueButton
-@onready var green_button: Sprite2D = $Background/GreenButton
+@onready var red_button: Sprite2D = $RedButton
+@onready var yellow_button: Sprite2D = $YellowButton
+@onready var blue_button: Sprite2D = $BlueButton
+@onready var green_button: Sprite2D = $GreenButton
 
-# Audio Reference (commented out since node doesn't exist in scene)
-# @onready var button_click_audio: AudioStreamPlayer = $ButtonClickAudio
+# Audio Reference
+@onready var button_click_audio: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
 # Player reference
 var player: Node = null
@@ -23,12 +23,20 @@ var hidden_position: Vector2
 # Button animation
 var button_tweens: Array[Tween] = []
 var button_original_positions: Array[Vector2] = []
-var button_pressed_offset: float = 10.0  # How much buttons move down when pressed
-var red_button_drop_offset: float = 100.0  # How far red button drops when key 1 is pressed
+var button_pressed_offset: float = 50.0  # How much buttons move down when pressed
+var red_button_drop_offset: float = 50.0  # How far red button drops when key 1 is pressed
 
-# Red button state
+# Button state variables
 var red_button_dropped: bool = false
+var yellow_button_dropped: bool = false
+var blue_button_dropped: bool = false
+var green_button_dropped: bool = false
+
+# Button original positions
 var red_button_original_position: Vector2
+var yellow_button_original_position: Vector2
+var blue_button_original_position: Vector2
+var green_button_original_position: Vector2
 
 # Animation settings
 const SLIDE_DURATION: float = 0.3
@@ -52,6 +60,12 @@ func _ready():
 	# Store red button's original position specifically
 	if red_button:
 		red_button_original_position = red_button.position
+	if yellow_button:
+		yellow_button_original_position = yellow_button.position
+	if blue_button:
+		blue_button_original_position = blue_button.position
+	if green_button:
+		green_button_original_position = green_button.position
 	
 	# Start hidden
 	position = hidden_position
@@ -85,21 +99,29 @@ func _input(event):
 		print("Input received, key: ", key_code, ", UI visible: ", is_visible)
 		match key_code:
 			KEY_1:
-				print("Key 1 pressed - Dropping red button 200 pixels")
-				# Audio removed since ButtonClickAudio node doesn't exist in scene
+				print("Key 1 pressed - Dropping red button")
+				if button_click_audio:
+					button_click_audio.play()
+				_return_all_other_buttons("red")
 				_drop_red_button()
 			KEY_2:
-				print("Key 2 pressed - Returning red button to original position")
-				_return_red_button()
-				_animate_button_press(1)  # Yellow button
+				print("Key 2 pressed - Dropping yellow button")
+				if button_click_audio:
+					button_click_audio.play()
+				_return_all_other_buttons("yellow")
+				_drop_yellow_button()
 			KEY_3:
-				print("Key 3 pressed - Returning red button to original position")
-				_return_red_button()
-				_animate_button_press(2)  # Blue button
+				print("Key 3 pressed - Dropping blue button")
+				if button_click_audio:
+					button_click_audio.play()
+				_return_all_other_buttons("blue")
+				_drop_blue_button()
 			KEY_4:
-				print("Key 4 pressed - Returning red button to original position")
-				_return_red_button()
-				_animate_button_press(3)  # Green button
+				print("Key 4 pressed - Dropping green button")
+				if button_click_audio:
+					button_click_audio.play()
+				_return_all_other_buttons("green")
+				_drop_green_button()
 
 func _animate_button_press(button_index: int):
 	var buttons = [red_button, yellow_button, blue_button, green_button]
@@ -162,6 +184,104 @@ func _return_red_button():
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
 	tween.tween_property(red_button, "position", red_button_original_position, BUTTON_ANIM_DURATION)
+
+func _drop_yellow_button():
+	"""Drop the yellow button down"""
+	print("_drop_yellow_button called, yellow_button exists: ", yellow_button != null, ", already dropped: ", yellow_button_dropped)
+	if not yellow_button or yellow_button_dropped:
+		return
+	
+	print("Dropping yellow button from position: ", yellow_button.position, " to: ", Vector2(yellow_button_original_position.x, yellow_button_original_position.y + button_pressed_offset))
+	yellow_button_dropped = true
+	var target_position = Vector2(yellow_button_original_position.x, yellow_button_original_position.y + button_pressed_offset)
+	
+	# Create smooth drop animation
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BOUNCE)
+	tween.tween_property(yellow_button, "position", target_position, BUTTON_ANIM_DURATION * 2)
+
+func _return_yellow_button():
+	"""Return the yellow button to its original position"""
+	if not yellow_button or not yellow_button_dropped:
+		return
+	
+	yellow_button_dropped = false
+	
+	# Create smooth return animation
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.tween_property(yellow_button, "position", yellow_button_original_position, BUTTON_ANIM_DURATION)
+
+func _drop_blue_button():
+	"""Drop the blue button down"""
+	print("_drop_blue_button called, blue_button exists: ", blue_button != null, ", already dropped: ", blue_button_dropped)
+	if not blue_button or blue_button_dropped:
+		return
+	
+	print("Dropping blue button from position: ", blue_button.position, " to: ", Vector2(blue_button_original_position.x, blue_button_original_position.y + button_pressed_offset))
+	blue_button_dropped = true
+	var target_position = Vector2(blue_button_original_position.x, blue_button_original_position.y + button_pressed_offset)
+	
+	# Create smooth drop animation
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BOUNCE)
+	tween.tween_property(blue_button, "position", target_position, BUTTON_ANIM_DURATION * 2)
+
+func _return_blue_button():
+	"""Return the blue button to its original position"""
+	if not blue_button or not blue_button_dropped:
+		return
+	
+	blue_button_dropped = false
+	
+	# Create smooth return animation
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.tween_property(blue_button, "position", blue_button_original_position, BUTTON_ANIM_DURATION)
+
+func _drop_green_button():
+	"""Drop the green button down"""
+	print("_drop_green_button called, green_button exists: ", green_button != null, ", already dropped: ", green_button_dropped)
+	if not green_button or green_button_dropped:
+		return
+	
+	print("Dropping green button from position: ", green_button.position, " to: ", Vector2(green_button_original_position.x, green_button_original_position.y + button_pressed_offset))
+	green_button_dropped = true
+	var target_position = Vector2(green_button_original_position.x, green_button_original_position.y + button_pressed_offset)
+	
+	# Create smooth drop animation
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BOUNCE)
+	tween.tween_property(green_button, "position", target_position, BUTTON_ANIM_DURATION * 2)
+
+func _return_green_button():
+	"""Return the green button to its original position"""
+	if not green_button or not green_button_dropped:
+		return
+	
+	green_button_dropped = false
+	
+	# Create smooth return animation
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.tween_property(green_button, "position", green_button_original_position, BUTTON_ANIM_DURATION)
+
+func _return_all_other_buttons(except_button: String):
+	"""Return all buttons to original position except the specified one"""
+	if except_button != "red":
+		_return_red_button()
+	if except_button != "yellow":
+		_return_yellow_button()
+	if except_button != "blue":
+		_return_blue_button()
+	if except_button != "green":
+		_return_green_button()
 
 func _find_player():
 	# Try multiple methods to find the player
@@ -229,20 +349,28 @@ func _update_display():
 
 # Public methods for external scripts to control button animations
 func animate_red_button():
-	# Audio removed since ButtonClickAudio node doesn't exist in scene
+	if button_click_audio:
+		button_click_audio.play()
+	_return_all_other_buttons("red")
 	_drop_red_button()
 
 func animate_yellow_button():
-	_return_red_button()
-	_animate_button_press(1)
+	if button_click_audio:
+		button_click_audio.play()
+	_return_all_other_buttons("yellow")
+	_drop_yellow_button()
 
 func animate_blue_button():
-	_return_red_button()
-	_animate_button_press(2)
+	if button_click_audio:
+		button_click_audio.play()
+	_return_all_other_buttons("blue")
+	_drop_blue_button()
 
 func animate_green_button():
-	_return_red_button()
-	_animate_button_press(3)
+	if button_click_audio:
+		button_click_audio.play()
+	_return_all_other_buttons("green")
+	_drop_green_button()
 
 # Public methods for external control
 func set_player_reference(player_node: Node):
@@ -258,6 +386,18 @@ func is_red_button_dropped() -> bool:
 	"""Check if red button is currently dropped"""
 	return red_button_dropped
 
+func is_yellow_button_dropped() -> bool:
+	"""Check if yellow button is currently dropped"""
+	return yellow_button_dropped
+
+func is_blue_button_dropped() -> bool:
+	"""Check if blue button is currently dropped"""
+	return blue_button_dropped
+
+func is_green_button_dropped() -> bool:
+	"""Check if green button is currently dropped"""
+	return green_button_dropped
+
 func force_drop_red_button():
 	"""Force drop red button (external API)"""
 	_drop_red_button()
@@ -265,3 +405,27 @@ func force_drop_red_button():
 func force_return_red_button():
 	"""Force return red button (external API)"""
 	_return_red_button()
+
+func force_drop_yellow_button():
+	"""Force drop yellow button (external API)"""
+	_drop_yellow_button()
+
+func force_return_yellow_button():
+	"""Force return yellow button (external API)"""
+	_return_yellow_button()
+
+func force_drop_blue_button():
+	"""Force drop blue button (external API)"""
+	_drop_blue_button()
+
+func force_return_blue_button():
+	"""Force return blue button (external API)"""
+	_return_blue_button()
+
+func force_drop_green_button():
+	"""Force drop green button (external API)"""
+	_drop_green_button()
+
+func force_return_green_button():
+	"""Force return green button (external API)"""
+	_return_green_button()
