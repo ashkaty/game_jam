@@ -53,8 +53,14 @@ var countdown_time: float = 60.0  # 1 minute in seconds
 var time_remaining: float = 60.0
 var is_timer_running: bool = false
 
+# Multi-track timer system
+var track_timers: Dictionary = {}  # Stores time remaining for each track
+var current_track: int = 1  # Currently active track (1-4)
+var default_track_time: float = 60.0  # Default time for new tracks
+
 signal ui_toggled(visible: bool)
 signal timer_finished()
+signal track_timer_finished(track_number: int)
 
 func _ready():
 	# Store original positions for animation
@@ -85,8 +91,19 @@ func _ready():
 	# Find player
 	_find_player()
 	
-	# Start the countdown timer
-	start_timer()
+	# Initialize progress bar settings
+	if timer_progress_bar:
+		timer_progress_bar.max_value = 100.0
+		timer_progress_bar.min_value = 0.0
+		timer_progress_bar.fill_mode = ProgressBar.FILL_BEGIN_TO_END
+		timer_progress_bar.value = 0.0  # Start at 0 (no progress yet)
+		print("Progress bar initialized: max=", timer_progress_bar.max_value, ", min=", timer_progress_bar.min_value)
+	
+	# Initialize track timers
+	_initialize_track_timers()
+	
+	# Start the countdown timer for track 1
+	switch_to_track(1)
 	
 	# Drop red button by default when game starts
 	_drop_red_button()
@@ -115,29 +132,29 @@ func _input(event):
 		print("Input received, key: ", key_code, ", UI visible: ", is_visible)
 		match key_code:
 			KEY_1:
-				print("Key 1 pressed - Dropping red button")
+				print("Key 1 pressed - Switching to track 1 (Red)")
 				if button_click_audio:
 					button_click_audio.play()
-				_return_all_other_buttons("red")
-				_drop_red_button()
+				switch_to_track(1)
+				_set_only_button_dropped("red")
 			KEY_2:
-				print("Key 2 pressed - Dropping yellow button")
+				print("Key 2 pressed - Switching to track 2 (Yellow)")
 				if button_click_audio:
 					button_click_audio.play()
-				_return_all_other_buttons("yellow")
-				_drop_yellow_button()
+				switch_to_track(2)
+				_set_only_button_dropped("yellow")
 			KEY_3:
-				print("Key 3 pressed - Dropping blue button")
+				print("Key 3 pressed - Switching to track 3 (Blue)")
 				if button_click_audio:
 					button_click_audio.play()
-				_return_all_other_buttons("blue")
-				_drop_blue_button()
+				switch_to_track(3)
+				_set_only_button_dropped("blue")
 			KEY_4:
-				print("Key 4 pressed - Dropping green button")
+				print("Key 4 pressed - Switching to track 4 (Green)")
 				if button_click_audio:
 					button_click_audio.play()
-				_return_all_other_buttons("green")
-				_drop_green_button()
+				switch_to_track(4)
+				_set_only_button_dropped("green")
 
 func _animate_button_press(button_index: int):
 	var buttons = [red_button, yellow_button, blue_button, green_button]
@@ -299,6 +316,29 @@ func _return_all_other_buttons(except_button: String):
 	if except_button != "green":
 		_return_green_button()
 
+func _set_only_button_dropped(button_name: String):
+	"""Ensure only one button is dropped at a time"""
+	# First, return all buttons to their original positions
+	_return_all_buttons()
+	
+	# Then drop only the specified button
+	match button_name:
+		"red":
+			_drop_red_button()
+		"yellow":
+			_drop_yellow_button()
+		"blue":
+			_drop_blue_button()
+		"green":
+			_drop_green_button()
+
+func _return_all_buttons():
+	"""Return all buttons to their original positions"""
+	_return_red_button()
+	_return_yellow_button()
+	_return_blue_button()
+	_return_green_button()
+
 func _find_player():
 	# Try multiple methods to find the player
 	player = get_tree().get_first_node_in_group("player")
@@ -365,13 +405,13 @@ func _update_display():
 
 # Timer functions
 func start_timer():
-	"""Start the countdown timer"""
+	"""Start the countdown timer for current track"""
 	if timer_label:
-		time_remaining = countdown_time
+		# Use the current track's time remaining
 		is_timer_running = true
 		_update_timer_display()
 		_update_progress_bar()
-		print("Timer started - countdown from ", countdown_time, " seconds")
+		print("Timer started for track ", current_track, " - time remaining: ", time_remaining, " seconds")
 	else:
 		print("Error: TimerLabel not found! Cannot start timer.")
 
@@ -382,14 +422,21 @@ func _process(delta):
 		_update_timer_display()
 		_update_progress_bar()
 		
-		# Check if timer has finished
+		# Check if current track timer has finished
 		if time_remaining <= 0.0:
 			time_remaining = 0.0
-			is_timer_running = false
 			_update_timer_display()
 			_update_progress_bar()
+			
+			# Save the completed track time
+			track_timers[current_track] = 0.0
+			
+			print("Track ", current_track, " timer finished!")
 			timer_finished.emit()
-			print("Timer finished!")
+			track_timer_finished.emit(current_track)
+			
+			# Stop timer for this track but don't auto-switch
+			# User needs to manually switch to continue with other tracks
 
 func _update_timer_display():
 	"""Update the timer label with current time"""
@@ -415,15 +462,23 @@ func _update_progress_bar():
 		print("Warning: ProgressBar is null, cannot update display")
 		return
 	
-	# Calculate progress percentage (remaining time / total time * 100)
-	var progress_percentage = (time_remaining / countdown_time) * 100.0
+	# Ensure progress bar is configured correctly
+	timer_progress_bar.max_value = 100.0
+	timer_progress_bar.min_value = 0.0
+	timer_progress_bar.fill_mode = ProgressBar.FILL_BEGIN_TO_END
+	
+	# Calculate progress percentage (elapsed time / total time * 100)
+	# This will grow from 0 to 100 as time progresses
+	var elapsed_time = default_track_time - time_remaining
+	var progress_percentage = (elapsed_time / default_track_time) * 100.0
 	progress_percentage = max(0.0, min(100.0, progress_percentage))  # Clamp between 0-100
 	
 	timer_progress_bar.value = progress_percentage
 	
 	# Debug output to verify progress bar is updating
 	if int(time_remaining) % 5 == 0:  # Debug every 5 seconds
-		print("Progress bar updated: ", progress_percentage, "% (", time_remaining, "/", countdown_time, ")")
+		print("Progress bar updated: ", progress_percentage, "% - Elapsed: ", elapsed_time, "/", default_track_time, " - Track ", current_track)
+		print("Progress bar max_value: ", timer_progress_bar.max_value, ", current value: ", timer_progress_bar.value)
 
 func get_time_remaining() -> float:
 	"""Get the remaining time in seconds"""
@@ -438,10 +493,12 @@ func stop_timer():
 	is_timer_running = false
 
 func reset_timer():
-	"""Reset the timer to initial countdown time"""
-	time_remaining = countdown_time
+	"""Reset the current track timer to default track time"""
+	time_remaining = default_track_time
+	track_timers[current_track] = default_track_time
 	_update_timer_display()
 	_update_progress_bar()
+	print("Reset track ", current_track, " timer to: ", default_track_time)
 
 func set_countdown_time(new_time: float):
 	"""Set a new countdown time"""
@@ -451,30 +508,116 @@ func set_countdown_time(new_time: float):
 		_update_timer_display()
 		_update_progress_bar()
 
+# Multi-track timer system functions
+func _initialize_track_timers():
+	"""Initialize all track timers with default time"""
+	for i in range(1, 5):  # Tracks 1-4
+		track_timers[i] = default_track_time
+	print("Track timers initialized: ", track_timers)
+
+func switch_to_track(track_number: int):
+	"""Switch to a different track, saving current progress and loading new track's progress"""
+	if track_number < 1 or track_number > 4:
+		print("Invalid track number: ", track_number)
+		return
+	
+	# Save current track's timer state
+	if current_track >= 1 and current_track <= 4:
+		track_timers[current_track] = time_remaining
+		print("Saved track ", current_track, " time: ", track_timers[current_track])
+	
+	# Switch to new track
+	var old_track = current_track
+	current_track = track_number
+	
+	# Load new track's timer state
+	time_remaining = track_timers[current_track]
+	print("Switched from track ", old_track, " to track ", current_track, " - loaded time: ", time_remaining)
+	
+	# Update display
+	_update_timer_display()
+	_update_progress_bar()
+	
+	# Start timer if it wasn't running
+	if not is_timer_running and time_remaining > 0:
+		is_timer_running = true
+		print("Started timer for track ", current_track)
+
+func get_current_track() -> int:
+	"""Get the currently active track number"""
+	return current_track
+
+func get_track_time_remaining(track_number: int) -> float:
+	"""Get the time remaining for a specific track"""
+	if track_number >= 1 and track_number <= 4:
+		if track_number == current_track:
+			return time_remaining
+		else:
+			return track_timers[track_number]
+	return 0.0
+
+func set_track_time(track_number: int, new_time: float):
+	"""Set the time for a specific track"""
+	if track_number >= 1 and track_number <= 4:
+		if track_number == current_track:
+			time_remaining = new_time
+			_update_timer_display()
+			_update_progress_bar()
+		else:
+			track_timers[track_number] = new_time
+		print("Set track ", track_number, " time to: ", new_time)
+
+func reset_track_timer(track_number: int):
+	"""Reset a specific track timer to default time"""
+	if track_number >= 1 and track_number <= 4:
+		if track_number == current_track:
+			time_remaining = default_track_time
+			_update_timer_display()
+			_update_progress_bar()
+		else:
+			track_timers[track_number] = default_track_time
+		print("Reset track ", track_number, " timer to: ", default_track_time)
+
+func reset_all_track_timers():
+	"""Reset all track timers to default time"""
+	for i in range(1, 5):
+		track_timers[i] = default_track_time
+	if current_track >= 1 and current_track <= 4:
+		time_remaining = default_track_time
+		_update_timer_display()
+		_update_progress_bar()
+	print("Reset all track timers to: ", default_track_time)
+
+func get_all_track_times() -> Dictionary:
+	"""Get a dictionary of all track times"""
+	var all_times = track_timers.duplicate()
+	all_times[current_track] = time_remaining  # Update current track with live time
+	return all_times
+
 # Public methods for external scripts to control button animations
 func animate_red_button():
 	if button_click_audio:
 		button_click_audio.play()
-	_return_all_other_buttons("red")
-	_drop_red_button()
+	switch_to_track(1)
+	_set_only_button_dropped("red")
 
 func animate_yellow_button():
 	if button_click_audio:
 		button_click_audio.play()
-	_return_all_other_buttons("yellow")
-	_drop_yellow_button()
+	switch_to_track(2)
+	_set_only_button_dropped("yellow")
 
 func animate_blue_button():
 	if button_click_audio:
 		button_click_audio.play()
-	_return_all_other_buttons("blue")
-	_drop_blue_button()
+	switch_to_track(3)
+	_set_only_button_dropped("blue")
 
 func animate_green_button():
 	if button_click_audio:
 		button_click_audio.play()
-	_return_all_other_buttons("green")
-	_drop_green_button()
+	switch_to_track(4)
+	_set_only_button_dropped("green")
 
 # Public methods for external control
 func set_player_reference(player_node: Node):
@@ -533,3 +676,7 @@ func force_drop_green_button():
 func force_return_green_button():
 	"""Force return green button (external API)"""
 	_return_green_button()
+
+func clear_all_buttons():
+	"""Clear all button states - return all to original positions"""
+	_return_all_buttons()

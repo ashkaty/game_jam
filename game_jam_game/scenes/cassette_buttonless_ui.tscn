@@ -88,11 +88,11 @@ vertical_alignment = 1
 
 [node name="ProgressBar" type="ProgressBar" parent="."]
 layout_mode = 2
-offset_left = 119.0
+offset_left = 121.0
 offset_top = -402.0
-offset_right = 933.0
+offset_right = 932.0
 offset_bottom = -160.0
 step = 1.0
+value = 100.0
 rounded = true
-fill_mode = 1
 show_percentage = false

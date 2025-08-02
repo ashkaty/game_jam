@@ -136,15 +136,16 @@ func _animate_button_press(button_index: int):
 
 func set_track(new_track: int):
 	"""Set the current track and update button positions"""
-	if new_track < 1 or new_track > 4:
+	if new_track < 0 or new_track > 4:
 		return
 	
 	if track != new_track:
 		track = new_track
 		print("CassetteUIV2: Track set to ", track)
 		
-		# Animate the button press for the selected track
-		_animate_button_press(track - 1)
+		# Animate the button press for the selected track (if any)
+		if track > 0:
+			_animate_button_press(track - 1)
 		
 		# Update all button positions to reflect new track state
 		_update_track_display()
@@ -152,7 +153,7 @@ func set_track(new_track: int):
 func _update_track_display():
 	"""Update button positions based on current track state"""
 	var buttons = [red_button, yellow_button, blue_button, green_button]
-	var track_button_index = track - 1  # Convert track (1-4) to index (0-3)
+	var track_button_index = track - 1  # Convert track (1-4) to index (0-3), or -1 for no track
 	
 	for i in range(buttons.size()):
 		var button = buttons[i]
@@ -163,7 +164,7 @@ func _update_track_display():
 		var target_pos = original_pos
 		
 		# Lower the button if it's the selected track
-		if i == track_button_index:
+		if track > 0 and i == track_button_index:
 			target_pos = Vector2(original_pos.x, original_pos.y + button_selected_offset)
 		
 		# Smoothly move to target position
@@ -358,13 +359,19 @@ func animate_green_button():
 
 # Direct button press animations (for external use)
 func press_red_button():
-	_animate_button_press(0)
+	set_track(1)  # Use track system to ensure only one button is down
 
 func press_yellow_button():
-	_animate_button_press(1)
+	set_track(2)  # Use track system to ensure only one button is down
 
 func press_blue_button():
-	_animate_button_press(2)
+	set_track(3)  # Use track system to ensure only one button is down
 
 func press_green_button():
-	_animate_button_press(3)
+	set_track(4)  # Use track system to ensure only one button is down
+
+func clear_all_buttons():
+	"""Clear all button states - return all buttons to original positions"""
+	# Reset track to 0 (no track selected) and update display
+	track = 0
+	_update_track_display()
