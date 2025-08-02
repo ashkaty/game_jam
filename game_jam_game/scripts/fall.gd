@@ -8,12 +8,12 @@ extends State
 @export var crouch_state: State
 
 # ---- Tunables --------------------------------------------------------
-@export var fall_gravity_scale: float = 2.6
-@export var fast_fall_gravity_scale: float = 4.5  # Much faster fall when crouching in air
+@export var fall_gravity_scale: float = 3.0
+@export var fast_fall_gravity_scale: float = 8  # Much faster fall when crouching in air
 @export var terminal_velocity: float  = 1200.0
-@export var fast_fall_terminal_velocity: float = 1800.0  # Higher terminal velocity for fast fall
-@export var air_accel: float          = 600.0
-@export var air_friction: float       = 300.0
+@export var fast_fall_terminal_velocity: float = 3000.0  # Higher terminal velocity for fast fall
+@export var air_accel: float          = 400.0
+@export var air_friction: float       = 400.0
 @export var max_air_speed: float      = 220.0
 @export var fast_fall_air_speed: float = 150.0  # Reduced air control during fast fall
 @export var sword_offset_y: float     = -15.0  # How much to move sword up during fall

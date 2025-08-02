@@ -7,6 +7,7 @@ extends State
 # Air attack specific properties
 @export var air_attack_gravity_scale: float = 1.5  # Slightly reduced gravity during air attack
 @export var air_attack_horizontal_damping: float = 0.8  # Reduce horizontal movement during attack
+@export var downward_attack_speed_boost: float = 400.0  # Extra downward velocity for downward attacks
 
 var sword_anim: AnimationPlayer
 var initial_horizontal_velocity: float
@@ -31,7 +32,12 @@ func process_input(_event: InputEvent):
 		return idle_state
 	elif Input.is_action_pressed("crouch"):	# or "down"
 		sword_anim.play("down_ward_swing")
-		print("Playing Downward Air Attak Animation")
+		print("Playing Downward Air Attack Animation - FAST FALL ATTACK!")
+		
+		# Apply extra downward velocity for a more powerful downward attack
+		parent.velocity.y += downward_attack_speed_boost
+		print("Boosted downward velocity! New velocity: ", parent.velocity.y)
+		
 		return idle_state
 	else:
 		sword_anim.play("swing")

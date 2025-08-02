@@ -39,6 +39,11 @@ var last_head_bonk_time: float = 0.0
 var head_bonk_cooldown: float = 0.3  # Prevent multiple bonks in quick succession
 var total_time: float = 0.0  # Track total game time
 
+# Fast fall damage mechanic variables
+@export var fast_fall_damage_multiplier: float = 1.5  # Damage multiplier when fast falling
+@export var fast_fall_minimum_speed: float = 800.0  # Minimum fall speed to trigger bonus damage
+@export var max_fast_fall_damage_multiplier: float = 4.0  # Maximum damage multiplier at terminal velocity
+
 # Signal for head bonk events (can be connected to by UI, particles, etc.)
 signal head_bonk_occurred(boost_amount: float, direction: int)
 
@@ -206,6 +211,25 @@ func check_level_up():
 		player_level += 1
 		experience -= exp_needed
 		print("Level up! Now level ", player_level)
+
+# Fast fall damage calculation
+func get_fast_fall_damage_multiplier() -> float:
+	# Check if player is fast falling (holding crouch or shift) and moving downward fast enough
+	var is_fast_falling = Input.is_action_pressed("crouch") or Input.is_action_pressed("shift")
+	
+	if not is_fast_falling or velocity.y <= fast_fall_minimum_speed:
+		return 1.0  # No bonus damage
+	
+	# Calculate multiplier based on fall speed
+	# Linear interpolation from minimum speed to terminal velocity
+	var speed_ratio = (velocity.y - fast_fall_minimum_speed) / (3000.0 - fast_fall_minimum_speed)  # 3000 is fast fall terminal velocity
+	speed_ratio = clamp(speed_ratio, 0.0, 1.0)
+	
+	# Calculate the final multiplier
+	var damage_multiplier = lerp(fast_fall_damage_multiplier, max_fast_fall_damage_multiplier, speed_ratio)
+	
+	print("Fast fall damage! Speed: ", velocity.y, " | Multiplier: ", damage_multiplier)
+	return damage_multiplier
 
 # Head bonk mechanic functions
 func check_and_handle_head_bonk() -> bool:

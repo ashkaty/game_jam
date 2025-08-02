@@ -14,8 +14,11 @@ func _on_area_entered(hitbox: HitBox) -> void:
 	if hitbox == null:
 		return
 	
+	# Get the actual damage (which may include fast fall multiplier)
+	var actual_damage = hitbox.get_damage()
+	
 	if owner.has_method("take_damage"):
-		owner.take_damage(hitbox.damage)
+		owner.take_damage(actual_damage)
 		
 		# Calculate spawn position based on the collision shape bounds
 		var collision_shape = $CollisionShape2D
@@ -26,11 +29,11 @@ func _on_area_entered(hitbox: HitBox) -> void:
 				collision_shape.global_position.x + randf_range(-20, 20),
 				shape_top - 20  # Spawn 20 pixels above the top of the collision shape
 			)
-			DamageParticleManager.spawn_damage_text(hitbox.damage, spawn_position)
+			DamageParticleManager.spawn_damage_text(actual_damage, spawn_position)
 		else:
 			# Fallback: use hurtbox position with upward offset
 			var spawn_position = global_position + Vector2(randf_range(-15, 15), -80)
-			DamageParticleManager.spawn_damage_text(hitbox.damage, spawn_position)
+			DamageParticleManager.spawn_damage_text(actual_damage, spawn_position)
 		
 	if owner.has_method("apply_knockback"):
 		var dir: Vector2 = (owner.global_position - hitbox.global_position).normalized()

@@ -13,6 +13,16 @@ func _ready() -> void:
 	collision_layer = 4
 	collision_mask = 0
 	collision_shape_2d.disabled = true
+
+# Calculate the actual damage to deal, considering fast fall multiplier
+func get_damage() -> int:
+	# Try to get the player to calculate fast fall damage multiplier
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("get_fast_fall_damage_multiplier"):
+		var multiplier = player.get_fast_fall_damage_multiplier()
+		return int(damage * multiplier)
+	else:
+		return damage
 	
 
 func _on_animation_player_animation_started(anim_name: StringName) -> void:
