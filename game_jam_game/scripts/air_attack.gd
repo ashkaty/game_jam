@@ -3,6 +3,7 @@ extends State
 @export var fall_state: State
 @export var idle_state: State
 @export var move_state: State
+@export var dash_state: State
 
 # Air attack specific properties - movement effects removed
 # @export var air_attack_gravity_scale: float = 1.5  # Removed: no longer affects gravity
@@ -15,6 +16,9 @@ var sword_anim: AnimationPlayer
 func enter() -> void:
 	super()
 	
+	# Start cancelable action tracking
+	parent.start_cancelable_action("air_attack")
+	
 	# No longer modifying horizontal velocity - let player maintain natural movement during air attacks
 	
 
@@ -25,22 +29,29 @@ func process_input(_event: InputEvent):
 	return null
 
 func process_frame(delta: float) -> State:
+	# Check for action cancellation first (air attacks are more restrictive)
+	if parent.is_trying_to_cancel_with_dash() and dash_state and dash_state.is_dash_available():
+		parent.end_current_action()
+		return dash_state
+	
 	sword_anim = parent.get_node("AnimatedSprite2D/Sword/AnimationPlayer") as AnimationPlayer
 	if parent.is_action_pressed_polling("up"):
 		sword_anim.play("up_ward_swing")
 		# print("Playing Upward Air Attack Animation")
-		return idle_state
+		parent.end_current_action()
+		return fall_state  # Return to falling after air attack
 	elif parent.is_action_pressed_polling("crouch"):	# or "down"
 		sword_anim.play("down_ward_swing")
 		# print("Playing Downward Air Attack Animation")
 		
 		# No longer applying extra downward velocity - maintaining natural movement
-		
-		return idle_state
+		parent.end_current_action()
+		return fall_state  # Return to falling after air attack
 	else:
 		sword_anim.play("swing")
 		# print("Playing Attack Animation")
-		return idle_state
+		parent.end_current_action()
+		return fall_state  # Return to falling after air attack
 	
 	return null
 

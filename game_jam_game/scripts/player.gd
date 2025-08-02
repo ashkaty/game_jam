@@ -67,6 +67,18 @@ var total_time: float = 0.0  # Track total game time
 @export var fast_fall_minimum_speed: float = 800.0  # Minimum fall speed to trigger bonus damage
 @export var max_fast_fall_damage_multiplier: float = 4.0  # Maximum damage multiplier at terminal velocity
 
+# Action cancellation system
+@export var allow_movement_cancel: bool = true  # Allow movement to cancel actions
+@export var allow_jump_cancel: bool = true     # Allow jump to cancel actions  
+@export var allow_dash_cancel: bool = true     # Allow dash to cancel actions
+@export var action_cancel_window: float = 0.3  # Time window after action start where cancellation is allowed
+@export var dash_cancel_window: float = 0.1    # Shorter cancel window for dash (more commitment)
+@export var use_animation_cancel_points: bool = false  # Use specific animation frames for cancellation
+var current_action_start_time: float = 0.0     # When the current action started
+var current_action_cancelable: bool = false    # Whether the current action can be canceled
+var current_action_type: String = ""           # Type of current action for specific cancel rules
+var animation_cancel_enabled: bool = false     # Whether animation-based cancellation is currently enabled
+
 # Signal for head bonk events (can be connected to by UI, particles, etc.)
 signal head_bonk_occurred(boost_amount: float, direction: int)
 
@@ -445,6 +457,89 @@ func print_buffer_status():
 		print("Currently buffered inputs:")
 		for action in input_buffers.keys():
 			print("  ", action.capitalize(), ": ", input_buffers[action], "s remaining")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ACTION CANCELLATION SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Start a new cancelable action
+func start_cancelable_action(action_type: String = "default"):
+	current_action_start_time = total_time
+	current_action_cancelable = true
+	current_action_type = action_type
+
+# Mark current action as non-cancelable
+func set_action_non_cancelable():
+	current_action_cancelable = false
+
+# Check if current action can be canceled
+func can_cancel_current_action() -> bool:
+	if not current_action_cancelable:
+		return false
+	
+	# If using animation-based cancellation, check that too
+	if use_animation_cancel_points and not animation_cancel_enabled:
+		return false
+	
+	var time_since_action_start = total_time - current_action_start_time
+	var cancel_window = action_cancel_window
+	
+	# Use shorter cancel window for dash
+	if current_action_type == "dash":
+		cancel_window = dash_cancel_window
+	
+	return time_since_action_start <= cancel_window
+
+# Enable animation-based cancellation (called from animation events)
+func enable_animation_cancel():
+	animation_cancel_enabled = true
+
+# Disable animation-based cancellation (called from animation events)  
+func disable_animation_cancel():
+	animation_cancel_enabled = false
+
+# Check if player is trying to cancel with movement
+func is_trying_to_cancel_with_movement() -> bool:
+	if not allow_movement_cancel or not can_cancel_current_action():
+		return false
+	
+	var input_axis = Input.get_axis("move_left", "move_right")
+	return input_axis != 0.0
+
+# Check if player is trying to cancel with jump
+func is_trying_to_cancel_with_jump() -> bool:
+	if not allow_jump_cancel or not can_cancel_current_action():
+		return false
+	
+	return is_action_just_pressed_once("jump")
+
+# Check if player is trying to cancel with dash
+func is_trying_to_cancel_with_dash() -> bool:
+	if not allow_dash_cancel or not can_cancel_current_action():
+		return false
+	
+	return is_action_just_pressed_once("dash")
+
+# Check for any cancellation input
+func is_trying_to_cancel_action() -> bool:
+	return is_trying_to_cancel_with_movement() or is_trying_to_cancel_with_jump() or is_trying_to_cancel_with_dash()
+
+# Get the current action status for debugging
+func get_action_status() -> Dictionary:
+	return {
+		"action_type": current_action_type,
+		"cancelable": current_action_cancelable,
+		"time_remaining": max(0.0, action_cancel_window - (total_time - current_action_start_time)),
+		"animation_cancel_enabled": animation_cancel_enabled
+	}
+
+# End the current action (called when action completes or is canceled)
+func end_current_action():
+	current_action_cancelable = false
+	animation_cancel_enabled = false
+	current_action_type = ""
+
+# ═══════════════════════════════════════════════════════════════════════════════
 
 # Check if player can perform any type of jump (ground or coyote)
 func can_jump() -> bool:

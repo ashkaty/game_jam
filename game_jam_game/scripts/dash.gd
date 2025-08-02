@@ -34,6 +34,9 @@ func enter() -> void:
 	super()
 	print("Entering dash state")
 	
+	# Start cancelable action tracking (dash has shorter cancel window)
+	parent.start_cancelable_action("dash")
+	
 	# Trigger motion blur for dash
 	if parent.has_method("trigger_motion_blur_burst"):
 		parent.trigger_motion_blur_burst(0.6, 0.15)
@@ -87,6 +90,11 @@ func process_frame(delta: float) -> State:
 	return null
 
 func process_input(_event: InputEvent) -> State:
+	# Check for action cancellation first (jump can cancel dash)
+	if parent.is_trying_to_cancel_with_jump() and parent.can_jump():
+		parent.end_current_action()
+		return jump_state
+	
 	# Allow attack during dash
 	if parent.is_action_just_pressed_once('attack'):
 		return air_attack_state

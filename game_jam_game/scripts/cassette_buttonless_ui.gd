@@ -119,38 +119,38 @@ func _input(event):
 	# Handle UI toggle
 	if event.is_action_pressed("toggle_cassette_ui") or (event is InputEventKey and event.pressed and event.keycode == KEY_TAB):
 		toggle_visibility()
-		print("UI toggled, is_visible: ", is_visible)
+		#print("UI toggled, is_visible: ", is_visible)
 	
 	# Handle button animations when UI is visible
-	if not is_visible:
-		if event is InputEventKey and event.pressed and event.keycode == KEY_1:
-			print("Key 1 pressed but UI is not visible (is_visible: ", is_visible, ")")
-		return
+	#if not is_visible:
+		#if event is InputEventKey and event.pressed and event.keycode == KEY_1:
+	#		print("Key 1 pressed but UI is not visible (is_visible: ", is_visible, ")")
+	#	return
 		
 	if event is InputEventKey and event.pressed:
 		var key_code = event.keycode
-		print("Input received, key: ", key_code, ", UI visible: ", is_visible)
+		#print("Input received, key: ", key_code, ", UI visible: ", is_visible)
 		match key_code:
 			KEY_1:
-				print("Key 1 pressed - Switching to track 1 (Red)")
+				#print("Key 1 pressed - Switching to track 1 (Red)")
 				if button_click_audio:
 					button_click_audio.play()
 				switch_to_track(1)
 				_set_only_button_dropped("red")
 			KEY_2:
-				print("Key 2 pressed - Switching to track 2 (Yellow)")
+				#print("Key 2 pressed - Switching to track 2 (Yellow)")
 				if button_click_audio:
 					button_click_audio.play()
 				switch_to_track(2)
 				_set_only_button_dropped("yellow")
 			KEY_3:
-				print("Key 3 pressed - Switching to track 3 (Blue)")
+				#print("Key 3 pressed - Switching to track 3 (Blue)")
 				if button_click_audio:
 					button_click_audio.play()
 				switch_to_track(3)
 				_set_only_button_dropped("blue")
 			KEY_4:
-				print("Key 4 pressed - Switching to track 4 (Green)")
+				#print("Key 4 pressed - Switching to track 4 (Green)")
 				if button_click_audio:
 					button_click_audio.play()
 				switch_to_track(4)
