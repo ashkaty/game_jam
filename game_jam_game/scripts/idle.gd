@@ -23,6 +23,18 @@ func process_input(_event: InputEvent) -> State:
 				print("Normal ground jump from idle state!")
 			else:
 				print("Coyote jump from idle state!")
+			jump_state.set_fresh_press(true)  # Mark as fresh press
+			jump_state.reset_hold_time()  # Reset hold time for fresh jump
+			return jump_state
+		else:
+			# Can't jump right now, but buffer the input
+			parent.buffer_jump()
+	# Check for held jump input for repetitive jumping
+	elif Input.is_action_pressed('jump'):
+		if parent.can_jump():
+			print("Repetitive jump from idle state!")
+			jump_state.set_fresh_press(false)  # Mark as held input
+			jump_state.reset_hold_time()  # Reset hold time even for held jumps
 			return jump_state
 		else:
 			# Can't jump right now, but buffer the input
@@ -42,7 +54,12 @@ func process_physics(delta: float) -> State:
 	# Check for buffered jump that can now be executed
 	if parent.has_valid_jump_buffer() and parent.can_jump():
 		print("Executing buffered jump from idle state!")
-		parent.consume_jump_buffer()
+		var buffered_hold_time = parent.consume_jump_buffer()
+		
+		# Set up the jump state with the buffered hold time
+		jump_state.set_fresh_press(true)  # Buffered jumps count as fresh
+		jump_state.set_initial_hold_time(buffered_hold_time)
+		
 		return jump_state
 	
 	if !parent.is_on_floor():

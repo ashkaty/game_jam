@@ -10,13 +10,14 @@ extends State
 # ── Jump variants ───────────────────────────────────────────────
 @export var short_hop_force: float			= 250.0		# initial impulse (increased for faster jumping)
 @export var long_hop_force: float			= 400.0		# extra impulse if held (increased for faster jumping)
-@export var long_hop_threshold: float		= 0.2		# sec key must be held (reduced for more responsive)
-@export var short_gravity_scale: float		= 300.0		# reduced gravity for faster jumps
-@export var long_gravity_scale: float		= 500.0		# reduced gravity for faster jumps
+@export var long_hop_threshold: float		= 0.09		# Very short threshold for smooth upgrade
+@export var short_gravity_scale: float		= 600.0		# reduced gravity for faster jumps
+@export var long_gravity_scale: float		= 1200.0		# reduced gravity for faster jumps
+@export var allow_long_jump_on_repeat: bool = false	# Whether repeated jumps can become long jumps
 # ── Shared air control ──────────────────────────────────────────
 @export var inherit_ground_vel_mult: float	= 1.0
 @export var air_accel: float				= 600.0
-@export var air_friction: float				= 1.0
+@export var air_friction: float				= 0.0
 @export var max_air_speed: float			= 300.0
 @export var sword_offset_y: float			= -20.0		# How much to move sword up during jump
 
@@ -29,6 +30,7 @@ var head_bonk_control_timer: float = 0.0
 
 var _hold_time := 0.0
 var _is_long := false
+var _was_fresh_press := true  # Track if this jump was from a fresh press or held input
 var original_sword_position: Vector2
 var jump_start_time: float = 0.0  # Track when jump started for head bonk timing
 
@@ -36,11 +38,20 @@ func enter() -> void:
 	super()
 	print("JUMP STATE ENTERED")
 	
-	# Start with short hop, but we'll upgrade it quickly if needed
-	parent.velocity.y = -short_hop_force				# start with short hop
+	# Check if this should start as a long jump based on initial hold time
+	var should_start_as_long = _hold_time >= long_hop_threshold and _was_fresh_press
+	
+	if should_start_as_long:
+		# Start with long jump force
+		parent.velocity.y = -long_hop_force
+		_is_long = true
+		print("Started as buffered long jump! Hold time: ", _hold_time)
+	else:
+		# Start with short hop, can upgrade to long jump if held
+		parent.velocity.y = -short_hop_force
+		_is_long = false
+	
 	parent.velocity.x *= inherit_ground_vel_mult			# carry runway speed
-	_hold_time = 0.0
-	_is_long = false
 	jump_start_time = parent.total_time
 	
 	# Mark that player jumped off ground (this will disable coyote time)
@@ -55,6 +66,20 @@ func enter() -> void:
 		original_sword_position = parent.sword.position
 		parent.sword.position = original_sword_position + Vector2(0, sword_offset_y)
 
+# Call this to mark whether this jump was from a fresh press or held input
+func set_fresh_press(is_fresh: bool):
+	_was_fresh_press = is_fresh
+
+# Call this to set initial hold time for buffered long jumps
+func set_initial_hold_time(hold_time: float):
+	_hold_time = hold_time
+	print("Jump started with initial hold time: ", hold_time)
+
+# Reset hold time (call this for fresh jumps)
+func reset_hold_time():
+	_hold_time = 0.0
+	print("Hold time reset for fresh jump")
+
 func exit() -> void:
 	# Reset sword position when exiting jump, but let player handle direction
 	if parent.sword:
@@ -67,18 +92,23 @@ func process_input(_event: InputEvent) -> State:
 	return null
 
 func process_physics(delta: float) -> State:
-	# Track how long the jump key is held and upgrade to long jump quickly
+	# Track how long the jump key is held for long jump upgrade
 	if Input.is_action_pressed("jump"):
 		_hold_time += delta
-		# Upgrade to long jump very early in the jump
-		if !_is_long and _hold_time >= 0.15:  # Much shorter threshold
-			# Apply additional velocity to make it a long jump
-			var velocity_boost = long_hop_force - short_hop_force
-			parent.velocity.y -= velocity_boost
+		# Only upgrade to long jump if:
+		# 1. Not already a long jump
+		# 2. Held long enough
+		# 3. Either this was a fresh press OR we allow long jumps on repeated input
+		var can_upgrade_to_long = !_is_long and _hold_time >= long_hop_threshold
+		var should_upgrade = can_upgrade_to_long and (_was_fresh_press or allow_long_jump_on_repeat)
+		
+		if should_upgrade:
+			# Set full long jump velocity instead of adding boost
+			parent.velocity.y = -long_hop_force
 			_is_long = true
-			print("Upgraded to long jump")
+			print("Upgraded to long jump (fresh press: ", _was_fresh_press, ")")
 	
-	# Use appropriate gravity scale
+	# Use appropriate gravity scale based on jump type
 	var current_gravity_scale = short_gravity_scale
 	if _is_long:
 		current_gravity_scale = long_gravity_scale

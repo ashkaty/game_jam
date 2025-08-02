@@ -26,14 +26,18 @@ var coyote_available: bool = false  # Track if coyote time should be available
 var jumped_off_ground: bool = false  # Track if player jumped off ground (vs walked off)
 
 # Jump cooldown variables
-@export var jump_cooldown_duration: float = 0.15  # Time before allowing another jump after landing
+@export var jump_cooldown_duration: float = 0.05  # Shorter cooldown for continuous short jumps
 var jump_cooldown_timer: float = 0.0
 var can_jump_again: bool = true
 
 # Jump buffer variables
-@export var jump_buffer_duration: float = 0.15  # Time window to buffer jump input
+@export var jump_buffer_duration: float = 0.15  # Shorter buffer duration for rapid jumps
+@export var jump_buffer_refresh_cooldown: float = 0.02  # Very short refresh cooldown for continuous jumping
 var jump_buffer_timer: float = 0.0
 var has_buffered_jump: bool = false
+var last_buffer_time: float = 0.0  # Track when buffer was last set
+var buffered_jump_hold_time: float = 0.0  # Track how long jump was held when buffered
+var jump_hold_start_time: float = 0.0  # Track when jump button was first pressed
 
 # Head bonk mechanic variables
 @export var head_bonk_speed_boost: float = 300.0  # Horizontal speed added when hitting head
@@ -71,12 +75,22 @@ func _ready() -> void:
 	# Initialize jump buffer state
 	has_buffered_jump = false
 	jump_buffer_timer = 0.0
+	last_buffer_time = 0.0
 	
 	# Add player to a group so the UI can find it
 	add_to_group("player")
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Track when jump button is first pressed for long jump buffering
+	if event.is_action_pressed("jump"):
+		jump_hold_start_time = total_time
+		print("Jump hold started at: ", jump_hold_start_time)
+	# Reset hold time when jump button is released
+	elif event.is_action_released("jump"):
+		jump_hold_start_time = 0.0
+		print("Jump hold reset - button released")
+	
 	state_machine.process_input(event)
 
 func _physics_process(delta: float) -> void:
@@ -180,19 +194,37 @@ func can_jump() -> bool:
 
 # Buffer a jump input for later execution
 func buffer_jump():
-	has_buffered_jump = true
-	jump_buffer_timer = jump_buffer_duration
-	print("Jump buffered! Timer: ", jump_buffer_timer)
+	# Allow refreshing the buffer if enough time has passed or if no buffer exists
+	var current_time = total_time
+	if not has_buffered_jump or (current_time - last_buffer_time) >= jump_buffer_refresh_cooldown:
+		has_buffered_jump = true
+		jump_buffer_timer = jump_buffer_duration
+		last_buffer_time = current_time
+		
+		# Calculate how long the jump button has been held when buffering
+		buffered_jump_hold_time = current_time - jump_hold_start_time
+		
+		print("Jump buffered! Timer: ", jump_buffer_timer, " Hold time: ", buffered_jump_hold_time, " at time: ", current_time)
+	else:
+		print("Buffer refresh on cooldown, ignoring input")
 
 # Check if there's a buffered jump that should be executed
 func has_valid_jump_buffer() -> bool:
 	return has_buffered_jump and jump_buffer_timer > 0.0
 
+# Get the hold time of the buffered jump
+func get_buffered_jump_hold_time() -> float:
+	return buffered_jump_hold_time
+
 # Consume the jump buffer (call this when a buffered jump is executed)
 func consume_jump_buffer():
 	has_buffered_jump = false
 	jump_buffer_timer = 0.0
-	print("Jump buffer consumed!")
+	last_buffer_time = 0.0  # Reset the buffer time tracking
+	var hold_time = buffered_jump_hold_time
+	buffered_jump_hold_time = 0.0  # Reset buffered hold time
+	print("Jump buffer consumed! Was held for: ", hold_time, " seconds")
+	return hold_time  # Return the hold time for the jump state to use
 
 # Player stats getter methods for UI
 func get_health() -> int:
