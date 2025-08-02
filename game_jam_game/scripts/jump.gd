@@ -8,16 +8,16 @@ extends State
 
 
 # ── Jump variants ───────────────────────────────────────────────
-@export var short_hop_force: float			= 750.0		# initial impulse
-@export var long_hop_force: float			= 950.0		# extra impulse if held
-@export var long_hop_threshold: float		= 0.15		# sec key must be held
-@export var short_gravity_scale: float		= 10.0
-@export var long_gravity_scale: float		= 10.0
+@export var short_hop_force: float			= 250.0		# initial impulse (increased for faster jumping)
+@export var long_hop_force: float			= 400.0		# extra impulse if held (increased for faster jumping)
+@export var long_hop_threshold: float		= 0.2		# sec key must be held (reduced for more responsive)
+@export var short_gravity_scale: float		= 300.0		# reduced gravity for faster jumps
+@export var long_gravity_scale: float		= 500.0		# reduced gravity for faster jumps
 # ── Shared air control ──────────────────────────────────────────
 @export var inherit_ground_vel_mult: float	= 1.0
 @export var air_accel: float				= 600.0
-@export var air_friction: float				= 200.0
-@export var max_air_speed: float			= 220.0
+@export var air_friction: float				= 1.0
+@export var max_air_speed: float			= 300.0
 @export var sword_offset_y: float			= -20.0		# How much to move sword up during jump
 
 # Head bonk enhanced air control
@@ -35,6 +35,8 @@ var jump_start_time: float = 0.0  # Track when jump started for head bonk timing
 func enter() -> void:
 	super()
 	print("JUMP STATE ENTERED")
+	
+	# Start with short hop, but we'll upgrade it quickly if needed
 	parent.velocity.y = -short_hop_force				# start with short hop
 	parent.velocity.x *= inherit_ground_vel_mult			# carry runway speed
 	_hold_time = 0.0
@@ -65,12 +67,21 @@ func process_input(_event: InputEvent) -> State:
 	return null
 
 func process_physics(delta: float) -> State:
-	# Track how long the jump key is held
+	# Track how long the jump key is held and upgrade to long jump quickly
 	if Input.is_action_pressed("jump"):
 		_hold_time += delta
-		if !_is_long and _hold_time >= long_hop_threshold:
-			parent.velocity.y -= (long_hop_force - short_hop_force)	# top-up impulse
+		# Upgrade to long jump very early in the jump
+		if !_is_long and _hold_time >= 0.15:  # Much shorter threshold
+			# Apply additional velocity to make it a long jump
+			var velocity_boost = long_hop_force - short_hop_force
+			parent.velocity.y -= velocity_boost
 			_is_long = true
+			print("Upgraded to long jump")
+	
+	# Use appropriate gravity scale
+	var current_gravity_scale = short_gravity_scale
+	if _is_long:
+		current_gravity_scale = long_gravity_scale
 
 	# Horizontal air control
 	var axis := Input.get_axis("move_left", "move_right")
@@ -93,10 +104,7 @@ func process_physics(delta: float) -> State:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, air_friction * delta)
 
 	# Apply gravity based on hop type
-	var g_scale := short_gravity_scale
-	if _is_long:
-		g_scale = long_gravity_scale
-	parent.velocity.y += gravity * g_scale * delta
+	parent.velocity.y += gravity * current_gravity_scale * delta
 
 	parent.move_and_slide()
 	

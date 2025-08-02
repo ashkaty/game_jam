@@ -7,9 +7,9 @@ extends State
 @export var attack_state: State
 @export var crouch_state: State
 # -- Tunable movement parameters ------------------------------------------------
-@export var max_speed: float = 200.0               # Units per second (top horizontal speed)
-@export var acceleration: float = 800.0            # Units per second² when pressing a direction
-@export var deceleration: float = 600.0            # Units per second² when no directional input
+@export var max_speed: float = 150.0               # Units per second (top horizontal speed)
+@export var acceleration: float = 600.0            # Units per second² when pressing a direction
+@export var deceleration: float = 400.0            # Units per second² when no directional input
 @export var idle_transition_vel: float = 50.0 
 # ------------------------------------------------------------------------------
 
