@@ -2,7 +2,7 @@ class_name HitBox
 
 extends Area2D
 
-@export var damage := 10
+@export var damage := 1
 @export var knockback_multiplier: float = 400.0
 
 # Different knockback multipliers for different attack types
@@ -101,20 +101,35 @@ func get_attack_debug_info() -> Dictionary:
 
 # Calculate the actual damage to deal, considering fast fall multiplier
 func get_damage() -> int:
-	# Try to get the player to calculate fast fall damage multiplier
-	var player = get_tree().get_first_node_in_group("player")
-	if player and player.has_method("get_fast_fall_damage_multiplier"):
-		var multiplier = player.get_fast_fall_damage_multiplier()
-		var final_damage = int(damage * multiplier)
-		
-		# Trigger motion blur for high-damage attacks
-		if player.has_method("trigger_motion_blur_burst") and final_damage > damage * 2.0:
-			var blur_intensity = clamp((multiplier - 1.0) * 0.3, 0.1, 0.6)
-			player.trigger_motion_blur_burst(blur_intensity, 0.2)
-		
-		return final_damage
-	else:
-		return damage
+	# Check if this hitbox belongs to the player (for fast fall damage multiplier)
+	var hitbox_owner = get_parent()
+	var is_player_hitbox = false
+	
+	# Check if the hitbox owner is the player or player's sword
+	if hitbox_owner:
+		# Check if owner is player directly
+		if hitbox_owner.is_in_group("player"):
+			is_player_hitbox = true
+		# Check if owner is player's sword (nested under player)
+		elif hitbox_owner.get_parent() and hitbox_owner.get_parent().is_in_group("player"):
+			is_player_hitbox = true
+	
+	# Only apply fast fall multiplier for player attacks
+	if is_player_hitbox:
+		var player = get_tree().get_first_node_in_group("player")
+		if player and player.has_method("get_fast_fall_damage_multiplier"):
+			var multiplier = player.get_fast_fall_damage_multiplier()
+			var final_damage = int(damage * multiplier)
+			
+			# Trigger motion blur for high-damage attacks
+			if player.has_method("trigger_motion_blur_burst") and final_damage > damage * 2.0:
+				var blur_intensity = clamp((multiplier - 1.0) * 0.3, 0.1, 0.6)
+				player.trigger_motion_blur_burst(blur_intensity, 0.2)
+			
+			return final_damage
+	
+	# For enemy attacks or when fast fall logic doesn't apply, return base damage
+	return damage
 
 func _on_animation_player_animation_started(anim_name: StringName) -> void:
 	print("animation start")
