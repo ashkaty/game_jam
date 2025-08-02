@@ -19,6 +19,11 @@ extends State
 @export var fast_fall_air_speed: float = 150.0  # Reduced air control during fast fall
 @export var sword_offset_y: float     = -15.0  # How much to move sword up during fall
 
+# Air camera panning tunables
+@export var air_camera_offset_y: float = 60.0  # How much to move camera down when in air
+@export var air_camera_transition_speed: float = 4.0  # Slower, smoother camera transition
+@export var air_camera_pan_delay: float = 0.1  # Seconds to wait before camera starts panning down in air
+
 # Wall sliding tunables
 @export var wall_slide_gravity_scale: float = 0.8  # Reduced gravity when wall sliding
 @export var wall_slide_max_fall_speed: float = 200.0  # Maximum fall speed while wall sliding
@@ -37,6 +42,12 @@ var enhanced_control_multiplier: float = 1.0
 
 # Wall sliding state tracking
 var is_currently_wall_sliding: bool = false
+
+# Air camera panning state tracking
+var original_camera_offset: Vector2
+var target_camera_offset: Vector2
+var air_timer: float = 0.0
+var camera_tween: Tween  # For smooth camera transitions
 # ----------------------------------------------------------------------
 
 var original_sword_position: Vector2
@@ -46,6 +57,18 @@ func enter() -> void:
 	print("Entering fall state")
 	# Reset wall sliding state
 	is_currently_wall_sliding = false
+	# Reset air timer for camera panning
+	air_timer = 0.0
+	
+	# Store original camera offset and set target for air panning
+	if parent.camera:
+		original_camera_offset = parent.camera.offset
+		target_camera_offset = original_camera_offset + Vector2(0, air_camera_offset_y)
+		
+		# Kill any existing camera tween
+		if camera_tween:
+			camera_tween.kill()
+	
 	# Store original sword position and move it up slightly during fall
 	if parent.sword:
 		original_sword_position = parent.sword.position
@@ -54,12 +77,33 @@ func enter() -> void:
 func exit() -> void:
 	# Reset wall sliding state
 	is_currently_wall_sliding = false
+	
+	# Smoothly reset camera offset when exiting fall state
+	if parent.camera and camera_tween:
+		camera_tween.kill()
+		camera_tween = parent.create_tween()
+		camera_tween.set_ease(Tween.EASE_OUT)
+		camera_tween.set_trans(Tween.TRANS_QUART)
+		camera_tween.tween_property(parent.camera, "offset", original_camera_offset, 0.4)
+	elif parent.camera:
+		parent.camera.offset = original_camera_offset
+	
 	# Reset sword position when exiting fall, but let player handle direction
 	if parent.sword:
 		parent.sword.position.y = original_sword_position.y  # Reset Y position only
 		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 func process_frame(delta: float) -> State:
+	# Update air timer for camera panning
+	air_timer += delta
+	
+	# Start smooth camera panning after the delay
+	if parent.camera and air_timer >= air_camera_pan_delay and not camera_tween:
+		camera_tween = parent.create_tween()
+		camera_tween.set_ease(Tween.EASE_OUT)
+		camera_tween.set_trans(Tween.TRANS_QUART)
+		camera_tween.tween_property(parent.camera, "offset", target_camera_offset, 0.5)  # Smooth 0.5 second transition
+	
 	# Update animation based on whether player is fast falling
 	if Input.is_action_pressed("crouch"):
 		parent.animations.play("crouch")

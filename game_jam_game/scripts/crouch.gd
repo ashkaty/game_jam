@@ -7,9 +7,9 @@ extends State
 @export var dash_state: State
 # ---- Tunables --------------------------------------------------------
 @export var crouch_fall_gravity_scale: float = 4.0  # Faster fall when crouching
-@export var camera_offset_y: float = 40.0  # How much to move camera down
-@export var camera_transition_speed: float = 8.0  # Speed of camera transition
-@export var camera_pan_delay: float = 0.1  # Seconds to wait before camera starts panning down
+@export var camera_offset_y: float = 80.0  # How much to move camera down (increased for better view while falling)
+@export var camera_transition_speed: float = 4.0  # Slower, smoother camera transition
+@export var camera_pan_delay: float = 0.05  # Shorter delay for more responsive feel
 @export var sword_offset_y: float = 30.0  # How much to move sword down when crouching
 
 # ----------------------------------------------------------------------
@@ -18,22 +18,35 @@ var original_camera_offset: Vector2
 var target_camera_offset: Vector2
 var original_sword_position: Vector2
 var crouch_timer: float = 0.0
+var camera_tween: Tween  # For smooth camera transitions
 
 func enter() -> void:
 	parent.animations.play("crouch")
 	crouch_timer = 0.0  # Reset timer when entering crouch
+	
 	# Store original camera offset and set target
 	if parent.camera:
 		original_camera_offset = parent.camera.offset
 		target_camera_offset = original_camera_offset + Vector2(0, camera_offset_y)
+		
+		# Kill any existing camera tween
+		if camera_tween:
+			camera_tween.kill()
+	
 	# Store original sword position and move it down slightly
 	if parent.sword:
 		original_sword_position = parent.sword.position
 		parent.sword.position = original_sword_position + Vector2(0, sword_offset_y)
 
 func exit() -> void:
-	# Reset camera offset when exiting crouch
-	if parent.camera:
+	# Smoothly reset camera offset when exiting crouch
+	if parent.camera and camera_tween:
+		camera_tween.kill()
+		camera_tween = parent.create_tween()
+		camera_tween.set_ease(Tween.EASE_OUT)
+		camera_tween.set_trans(Tween.TRANS_QUART)
+		camera_tween.tween_property(parent.camera, "offset", original_camera_offset, 0.3)
+	elif parent.camera:
 		parent.camera.offset = original_camera_offset
 
 	# Reset sword position when exiting crouch
@@ -118,7 +131,10 @@ func process_frame(delta: float) -> State:
 	# Update crouch timer
 	crouch_timer += delta
 	
-	# Only start panning camera down after the delay
-	if parent.camera and crouch_timer >= camera_pan_delay:
-		parent.camera.offset = parent.camera.offset.move_toward(target_camera_offset, camera_transition_speed * delta * 60)
+	# Start smooth camera panning after the delay
+	if parent.camera and crouch_timer >= camera_pan_delay and not camera_tween:
+		camera_tween = parent.create_tween()
+		camera_tween.set_ease(Tween.EASE_OUT)
+		camera_tween.set_trans(Tween.TRANS_QUART)
+		camera_tween.tween_property(parent.camera, "offset", target_camera_offset, 0.6)  # Smooth 0.6 second transition
 	return null

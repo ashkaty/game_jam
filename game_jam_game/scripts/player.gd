@@ -11,6 +11,14 @@ extends CharacterBody2D
 var last_flip_h: bool = false
 var original_sword_position: Vector2
 
+# Motion blur effect variables
+@export var motion_blur_enabled: bool = true
+@export var motion_blur_threshold: float = 300.0  # Minimum velocity to start blur
+@export var motion_blur_max_velocity: float = 1500.0  # Velocity for maximum blur
+@export var motion_blur_max_intensity: float = 0.4  # Maximum blur intensity (0.0 to 1.0)
+@export var motion_blur_smoothing: float = 0.1  # How quickly blur changes (lower = smoother)
+var current_blur_intensity: float = 0.0
+
 # Player stats for UI display
 var health: int = 100
 var max_health: int = 100
@@ -118,6 +126,11 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	state_machine.process_frame(delta)
+	
+	# Update motion blur based on velocity
+	if motion_blur_enabled:
+		update_motion_blur(delta)
+	
 	if animations.flip_h != last_flip_h:
 		update_sword_position()
 
@@ -134,10 +147,83 @@ func update_sword_position() -> void:
 		sword.scale.x = 1
 		sword.position.x = abs(sword.position.x)
 
+func update_motion_blur(delta: float) -> void:
+	"""Update motion blur effect based on player velocity"""
+	if not animations:
+		return
+	
+	# Calculate total velocity magnitude
+	var velocity_magnitude = velocity.length()
+	
+	# Calculate target blur intensity based on velocity
+	var target_intensity = 0.0
+	if velocity_magnitude > motion_blur_threshold:
+		var velocity_ratio = (velocity_magnitude - motion_blur_threshold) / (motion_blur_max_velocity - motion_blur_threshold)
+		velocity_ratio = clamp(velocity_ratio, 0.0, 1.0)
+		target_intensity = velocity_ratio * motion_blur_max_intensity
+	
+	# Enhance blur for fast falling (when crouching and falling fast)
+	if Input.is_action_pressed("crouch") and velocity.y > 800.0:
+		target_intensity = min(target_intensity * 1.5, motion_blur_max_intensity)
+	
+	# Smoothly interpolate current blur towards target
+	current_blur_intensity = lerp(current_blur_intensity, target_intensity, motion_blur_smoothing)
+	
+	# Apply blur effect through material modulation and slight scale effects
+	if current_blur_intensity > 0.01:
+		# Create motion blur through subtle visual effects
+		var blur_factor = current_blur_intensity
+		
+		# Subtle scale effect for speed sensation (horizontal stretch for horizontal movement)
+		var horizontal_velocity_ratio = abs(velocity.x) / velocity_magnitude if velocity_magnitude > 0 else 0
+		var vertical_velocity_ratio = abs(velocity.y) / velocity_magnitude if velocity_magnitude > 0 else 0
+		
+		var scale_x = 1.0 + (blur_factor * horizontal_velocity_ratio * 0.08)  # Horizontal stretch
+		var scale_y = 1.0 + (blur_factor * vertical_velocity_ratio * 0.04)  # Slight vertical stretch
+		animations.scale = Vector2(scale_x, scale_y)
+		
+		# Slight transparency effect for motion blur illusion
+		var alpha = 1.0 - (blur_factor * 0.15)  # Subtle transparency
+		animations.modulate.a = alpha
+		
+		# Add slight color shift for high-speed effect
+		var speed_tint = 1.0 - (blur_factor * 0.1)
+		animations.modulate.b = speed_tint  # Slight blue reduction for warm speed tint
+		
+	else:
+		# Reset effects when not moving fast
+		animations.scale = Vector2(1.0, 1.0)
+		animations.modulate = Color.WHITE
+
+func trigger_motion_blur_burst(intensity: float = 0.8, duration: float = 0.2) -> void:
+	"""Trigger a temporary motion blur effect for special actions like dashes or impacts"""
+	if not animations or not motion_blur_enabled:
+		return
+	
+	var burst_tween = create_tween()
+	burst_tween.set_parallel(true)
+	
+	# Temporary intense blur effect
+	var burst_scale = Vector2(1.0 + intensity * 0.15, 1.0 + intensity * 0.05)
+	var burst_alpha = 1.0 - intensity * 0.3
+	
+	# Apply burst effect
+	burst_tween.tween_property(animations, "scale", burst_scale, duration * 0.3)
+	burst_tween.tween_property(animations, "modulate:a", burst_alpha, duration * 0.3)
+	
+	# Return to normal
+	burst_tween.tween_property(animations, "scale", Vector2(1.0, 1.0), duration * 0.7)
+	burst_tween.tween_property(animations, "modulate:a", 1.0, duration * 0.7)
+
 func update_coyote_time(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
 	
 	if currently_on_floor:
+		# Add motion blur effect for high-speed landings
+		if not was_on_floor and abs(velocity.y) > motion_blur_threshold:
+			var impact_intensity = clamp(abs(velocity.y) / 1200.0, 0.2, 0.8)
+			trigger_motion_blur_burst(impact_intensity, 0.3)
+		
 		# Reset timer and availability when on ground
 		coyote_timer = coyote_time_duration
 		coyote_available = true
@@ -335,10 +421,65 @@ func perform_head_bonk():
 	# Visual feedback: briefly flash the sprite
 	flash_sprite()
 	
+	# Add motion blur burst effect for head bonk
+	trigger_motion_blur_burst(0.6, 0.3)
+	
 	# Emit signal for any listeners (particles, UI feedback, etc.)
 	head_bonk_occurred.emit(actual_boost, direction)
 	
 	return
+
+# Camera shake function for damage feedback
+func shake_camera_for_damage(damage_amount: int):
+	"""Shake the camera based on damage amount - more damage = stronger shake"""
+	var game_camera = get_tree().get_first_node_in_group("game_camera")
+	var player_camera = camera
+	
+	# Calculate shake intensity based on damage (scale from 1-50 damage to 2-15 shake strength)
+	var base_shake = 5.0
+	var max_shake = 45.0
+	var max_damage_for_scaling = 50.0
+	var damage_ratio = clamp(float(damage_amount) / max_damage_for_scaling, 0.0, 1.0)
+	var shake_strength = lerp(base_shake, max_shake, damage_ratio)
+	
+	# Calculate duration based on damage (0.1 to 0.4 seconds)
+	var base_duration = 0.1
+	var max_duration = 0.4
+	var shake_duration = lerp(base_duration, max_duration, damage_ratio)
+	
+	print("Camera shake for ", damage_amount, " damage - strength: ", shake_strength, ", duration: ", shake_duration)
+	
+	# Add motion blur burst effect based on damage amount
+	var blur_intensity = clamp(damage_ratio * 0.5, 0.1, 0.7)
+	trigger_motion_blur_burst(blur_intensity, 0.25)
+	
+	# Shake both cameras if they exist
+	for target_camera in [game_camera, player_camera]:
+		if target_camera:
+			_perform_camera_shake(target_camera, shake_strength, shake_duration)
+
+func _perform_camera_shake(target_camera: Camera2D, shake_strength: float, duration: float):
+	"""Perform the actual camera shake on a specific camera"""
+	var original_offset = target_camera.offset
+	var shake_tween = create_tween()
+	shake_tween.set_parallel(true)
+	
+	var shake_steps = int(duration * 20)  # 20 steps per second for smooth shake
+	var step_duration = duration / shake_steps
+	
+	for i in range(shake_steps):
+		var progress = float(i) / shake_steps
+		var falloff = 1.0 - progress  # Gradually reduce shake intensity
+		var current_strength = shake_strength * falloff
+		
+		var random_offset = Vector2(
+			randf_range(-current_strength, current_strength),
+			randf_range(-current_strength, current_strength)
+		)
+		shake_tween.tween_property(target_camera, "offset", original_offset + random_offset, step_duration)
+	
+	# Return to original position at the end
+	shake_tween.tween_property(target_camera, "offset", original_offset, step_duration)
 
 # Visual feedback for head bonk
 func flash_sprite():
@@ -351,20 +492,7 @@ func flash_sprite():
 		var tween = create_tween()
 		tween.tween_property(animations, "modulate", original_modulate, 0.2)
 		
-		# Optional: Add a slight screen shake effect
-		if camera:
-			var original_offset = camera.offset
-			var shake_strength = 3.0
-			var shake_tween = create_tween()
-			shake_tween.set_parallel(true)  # Allow multiple tweens
-			
-			# Shake in random directions
-			for i in range(3):
-				var random_offset = Vector2(
-					randf_range(-shake_strength, shake_strength),
-					randf_range(-shake_strength, shake_strength)
-				)
-				shake_tween.tween_property(camera, "offset", original_offset + random_offset, 0.05)
-				shake_tween.tween_property(camera, "offset", original_offset, 0.05)
+		# Use the new shake system for head bonk feedback
+		shake_camera_for_damage(15)  # Moderate shake for head bonk
 		
 	return

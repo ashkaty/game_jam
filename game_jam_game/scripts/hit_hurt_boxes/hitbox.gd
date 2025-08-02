@@ -20,7 +20,14 @@ func get_damage() -> int:
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_method("get_fast_fall_damage_multiplier"):
 		var multiplier = player.get_fast_fall_damage_multiplier()
-		return int(damage * multiplier)
+		var final_damage = int(damage * multiplier)
+		
+		# Trigger motion blur for high-damage attacks
+		if player.has_method("trigger_motion_blur_burst") and final_damage > damage * 2.0:
+			var blur_intensity = clamp((multiplier - 1.0) * 0.3, 0.1, 0.6)
+			player.trigger_motion_blur_burst(blur_intensity, 0.2)
+		
+		return final_damage
 	else:
 		return damage
 	

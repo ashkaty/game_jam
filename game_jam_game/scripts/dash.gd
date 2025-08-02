@@ -34,6 +34,10 @@ func enter() -> void:
 	super()
 	print("Entering dash state")
 	
+	# Trigger motion blur for dash
+	if parent.has_method("trigger_motion_blur_burst"):
+		parent.trigger_motion_blur_burst(0.6, 0.15)
+	
 	# Set dash direction based on which way player is facing
 	dash_direction = 1 if not parent.animations.flip_h else -1
 	
