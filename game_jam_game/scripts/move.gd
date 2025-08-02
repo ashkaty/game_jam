@@ -22,6 +22,9 @@ func process_input(_event: InputEvent) -> State:
 			else:
 				print("Coyote jump from move state!")
 			return jump_state
+		else:
+			# Can't jump right now, but buffer the input
+			parent.buffer_jump()
 	if Input.is_action_just_pressed('attack'):
 		return attack_state
 	if Input.is_action_just_pressed('crouch'):
@@ -46,6 +49,12 @@ func process_physics(delta: float) -> State:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, deceleration * delta)
 
 	parent.move_and_slide()
+
+	# Check for buffered jump that can now be executed
+	if parent.has_valid_jump_buffer() and parent.can_jump():
+		print("Executing buffered jump from move state!")
+		parent.consume_jump_buffer()
+		return jump_state
 
 	# State transitions ---------------------------------------------------------
 	if input_axis == 0.0 and parent.is_on_floor() and abs(parent.velocity.x) < idle_transition_vel:

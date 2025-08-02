@@ -30,6 +30,11 @@ var jumped_off_ground: bool = false  # Track if player jumped off ground (vs wal
 var jump_cooldown_timer: float = 0.0
 var can_jump_again: bool = true
 
+# Jump buffer variables
+@export var jump_buffer_duration: float = 0.15  # Time window to buffer jump input
+var jump_buffer_timer: float = 0.0
+var has_buffered_jump: bool = false
+
 # Head bonk mechanic variables
 @export var head_bonk_speed_boost: float = 300.0  # Horizontal speed added when hitting head
 @export var head_bonk_grace_period: float = 0.1   # Time after jump start to allow head bonk
@@ -63,6 +68,10 @@ func _ready() -> void:
 	jump_cooldown_timer = 0.0
 	can_jump_again = true
 	
+	# Initialize jump buffer state
+	has_buffered_jump = false
+	jump_buffer_timer = 0.0
+	
 	# Add player to a group so the UI can find it
 	add_to_group("player")
 
@@ -80,6 +89,13 @@ func _physics_process(delta: float) -> void:
 		if jump_cooldown_timer <= 0.0:
 			can_jump_again = true
 			print("Jump cooldown expired - can jump again")
+	
+	# Update jump buffer timer
+	if has_buffered_jump:
+		jump_buffer_timer -= delta
+		if jump_buffer_timer <= 0.0:
+			has_buffered_jump = false
+			print("Jump buffer expired")
 	
 	# Update coyote time BEFORE state machine processing
 	update_coyote_time(delta)
@@ -161,6 +177,22 @@ func can_ground_jump() -> bool:
 # Check if player can perform any type of jump (ground or coyote)
 func can_jump() -> bool:
 	return can_ground_jump() or can_coyote_jump()
+
+# Buffer a jump input for later execution
+func buffer_jump():
+	has_buffered_jump = true
+	jump_buffer_timer = jump_buffer_duration
+	print("Jump buffered! Timer: ", jump_buffer_timer)
+
+# Check if there's a buffered jump that should be executed
+func has_valid_jump_buffer() -> bool:
+	return has_buffered_jump and jump_buffer_timer > 0.0
+
+# Consume the jump buffer (call this when a buffered jump is executed)
+func consume_jump_buffer():
+	has_buffered_jump = false
+	jump_buffer_timer = 0.0
+	print("Jump buffer consumed!")
 
 # Player stats getter methods for UI
 func get_health() -> int:

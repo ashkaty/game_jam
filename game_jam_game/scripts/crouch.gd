@@ -43,6 +43,10 @@ func exit() -> void:
 
 
 func process_input(_event: InputEvent) -> State:
+	# Handle jump input - buffer it since we can't jump while crouching
+	if Input.is_action_just_pressed('jump'):
+		parent.buffer_jump()
+		
 	# Exit crouch when key is released
 	if Input.is_action_pressed("attack"):
 		return ground_attack_state
@@ -79,6 +83,17 @@ func process_physics(delta: float) -> State:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, 600.0 * delta)
 	
 	parent.move_and_slide()
+	
+	# Check for buffered jump that can now be executed (but only if we're on floor and can jump)
+	if parent.has_valid_jump_buffer() and parent.is_on_floor() and parent.can_jump():
+		print("Executing buffered jump from crouch state!")
+		parent.consume_jump_buffer()
+		# Exit crouch and let the state machine handle the jump in the next state
+		# Reuse the input_axis variable already declared above
+		if input_axis != 0.0:
+			return move_state
+		else:
+			return idle_state
 	
 	# Transition to fall if not on floor
 	if !parent.is_on_floor():

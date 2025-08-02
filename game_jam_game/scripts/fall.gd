@@ -82,6 +82,9 @@ func process_input(_event: InputEvent) -> State:
 		elif parent.can_coyote_jump():
 			print("Coyote jump from fall state!")
 			return jump_state
+		else:
+			# Can't jump right now, but buffer the input
+			parent.buffer_jump()
 			
 	if Input.is_action_just_pressed('attack'):
 		return air_attack_state
@@ -170,6 +173,12 @@ func process_physics(delta: float) -> State:
 			parent.velocity.x = move_toward(parent.velocity.x, 0.0, air_friction * delta)
 
 	parent.move_and_slide()
+	
+	# Check for buffered jump that can now be executed
+	if parent.has_valid_jump_buffer() and parent.can_jump():
+		print("Executing buffered jump from fall state!")
+		parent.consume_jump_buffer()
+		return jump_state
 	
 	# Check for head bonk during fall (rare but possible)
 	# This can happen if player hits ceiling while falling upward from a bounce or something
