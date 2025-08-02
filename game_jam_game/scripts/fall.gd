@@ -14,7 +14,8 @@ extends State
 @export var terminal_velocity: float  = 1500.0
 @export var fast_fall_terminal_velocity: float = 3000.0  # Higher terminal velocity for fast fall
 @export var air_accel: float          = 100.0
-@export var air_friction: float       = 0.0
+@export var air_friction: float       = 200.0  # Increased from 0.0 for better air control
+@export var air_direction_change_multiplier: float = 1.5  # Extra braking force when changing directions in air
 @export var max_air_speed: float      = 2000.0
 @export var fast_fall_air_speed: float = 150.0  # Reduced air control during fast fall
 @export var sword_offset_y: float     = -15.0  # How much to move sword up during fall
@@ -54,7 +55,7 @@ var original_sword_position: Vector2
 
 func enter() -> void:
 	super()
-	print("Entering fall state")
+	# print("Entering fall state")
 	# Reset wall sliding state
 	is_currently_wall_sliding = false
 	# Reset air timer for camera panning
@@ -175,7 +176,7 @@ func process_physics(delta: float) -> State:
 		# Check if player is falling and still sufficiently overlapping with wall
 		if moving_towards_wall and parent.velocity.y > 0 and is_player_overlapping_wall():
 			is_wall_sliding = true
-			print("Wall sliding activated!")
+			# print("Wall sliding activated!")
 	
 	# Update wall sliding state tracking
 	is_currently_wall_sliding = is_wall_sliding
@@ -200,9 +201,11 @@ func process_physics(delta: float) -> State:
 	
 	# Debug output for wall sliding (can be removed later)
 	if is_wall_sliding:
-		print("Wall sliding! Velocity: ", parent.velocity.y, " | Gravity scale: ", gravity_scale)
+		# print("Wall sliding! Velocity: ", parent.velocity.y, " | Gravity scale: ", gravity_scale)
+		pass  # Debug output disabled
 	elif is_fast_falling and parent.velocity.y > 0:
-		print("Fast falling with crouch! Velocity: ", parent.velocity.y)
+		# print("Fast falling with crouch! Velocity: ", parent.velocity.y)
+		pass  # Debug output disabled
 	
 	# Gravity with clamp
 	parent.velocity.y = min(
@@ -222,12 +225,20 @@ func process_physics(delta: float) -> State:
 		
 		if enhanced_control_timer <= 0.0:
 			enhanced_air_control = false
-			print("Enhanced air control expired in fall state")
+			# print("Enhanced air control expired in fall state")
 
 	var target: float = axis * air_speed_limit
 
 	if axis != 0:
-		parent.velocity.x = move_toward(parent.velocity.x, target, current_air_accel * delta)
+		# Check if we're changing direction in air (input and current velocity have opposite signs)
+		var is_changing_direction = (axis > 0 and parent.velocity.x < 0) or (axis < 0 and parent.velocity.x > 0)
+		
+		# Apply stronger braking force when changing directions in air
+		var effective_air_accel = current_air_accel
+		if is_changing_direction:
+			effective_air_accel = current_air_accel * air_direction_change_multiplier
+		
+		parent.velocity.x = move_toward(parent.velocity.x, target, effective_air_accel * delta)
 		parent.animations.flip_h = axis < 0
 	else:
 		# Don't apply friction when wall sliding to maintain contact with wall
@@ -238,14 +249,15 @@ func process_physics(delta: float) -> State:
 	
 	# Check for buffered jump that can now be executed
 	if parent.has_valid_jump_buffer() and parent.can_jump():
-		print("Executing buffered jump from fall state!")
+		# print("Executing buffered jump from fall state!")
 		parent.consume_jump_buffer()
 		return jump_state
 	
 	# Check for head bonk during fall (rare but possible)
 	# This can happen if player hits ceiling while falling upward from a bounce or something
 	if parent.velocity.y < 0 and parent.check_and_handle_head_bonk():
-		print("Head bonk during fall state!")
+		# print("Head bonk during fall state!")
+		pass  # Head bonk handling is done in the check function
 
 	if parent.is_on_floor():
 		return land_state

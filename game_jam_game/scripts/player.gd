@@ -98,10 +98,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	for action in input_actions:
 		if event.is_action_pressed(action):
 			input_hold_start_times[action] = total_time
-			print(action.capitalize(), " hold started at: ", total_time)
+			# print(action.capitalize(), " hold started at: ", total_time)
 		elif event.is_action_released(action):
 			input_hold_start_times[action] = 0.0
-			print(action.capitalize(), " hold reset - button released")
+			# print(action.capitalize(), " hold reset - button released")
 	
 	# Keep calling process_input for states that haven't been converted to polling yet
 	state_machine.process_input(event)
@@ -115,7 +115,7 @@ func _physics_process(delta: float) -> void:
 		jump_cooldown_timer -= delta
 		if jump_cooldown_timer <= 0.0:
 			can_jump_again = true
-			print("Jump cooldown expired - can jump again")
+			# print("Jump cooldown expired - can jump again")
 	
 	# Update jump buffer timer
 	update_input_buffers(delta)
@@ -340,9 +340,10 @@ func buffer_input(action: String):
 		var hold_start = input_hold_start_times.get(action, current_time)
 		input_buffer_hold_times[action] = current_time - hold_start
 		
-		print(action.capitalize(), " buffered! Timer: ", input_buffers[action], " Hold time: ", input_buffer_hold_times[action], " at time: ", current_time)
+		# print(action.capitalize(), " buffered! Timer: ", input_buffers[action], " Hold time: ", input_buffer_hold_times[action], " at time: ", current_time)
 	else:
-		print(action.capitalize(), " buffer refresh on cooldown, ignoring input")
+		# print(action.capitalize(), " buffer refresh on cooldown, ignoring input")
+		pass  # Do nothing when buffer refresh is on cooldown
 
 # Check if there's a buffered input that should be executed
 func has_valid_input_buffer(action: String) -> bool:
@@ -371,7 +372,7 @@ func consume_input_buffer(action: String):
 	input_buffer_hold_times.erase(action)
 	last_buffer_times.erase(action)
 	
-	print(action.capitalize(), " buffer consumed! Was held for: ", hold_time, " seconds")
+	# print(action.capitalize(), " buffer consumed! Was held for: ", hold_time, " seconds")
 	return hold_time  # Return the hold time for states to use
 
 # Legacy jump buffer functions for compatibility

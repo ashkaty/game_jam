@@ -101,18 +101,28 @@ func process_physics(delta: float) -> State:
 	# Handle horizontal movement while crouching (reduced)
 	var input_axis: float = Input.get_axis("move_left", "move_right")
 	var crouch_move_speed = 100.0  # Slower movement while crouching
+	var crouch_acceleration = 400.0
+	var crouch_deceleration = 800.0  # Increased for more responsive crouching
 	
 	if input_axis != 0.0:
-		parent.velocity.x = move_toward(parent.velocity.x, input_axis * crouch_move_speed, 400.0 * delta)
+		# Check if we're changing direction (input and current velocity have opposite signs)
+		var is_changing_direction = (input_axis > 0 and parent.velocity.x < 0) or (input_axis < 0 and parent.velocity.x > 0)
+		
+		# Apply stronger braking force when changing directions while crouching
+		var effective_acceleration = crouch_acceleration
+		if is_changing_direction:
+			effective_acceleration = crouch_acceleration * 1.8  # Strong braking for precise crouch movement
+		
+		parent.velocity.x = move_toward(parent.velocity.x, input_axis * crouch_move_speed, effective_acceleration * delta)
 		parent.animations.flip_h = input_axis < 0
 	else:
-		parent.velocity.x = move_toward(parent.velocity.x, 0.0, 600.0 * delta)
+		parent.velocity.x = move_toward(parent.velocity.x, 0.0, crouch_deceleration * delta)
 	
 	parent.move_and_slide()
 	
 	# Check for buffered jump that can now be executed (but only if we're on floor and can jump)
 	if parent.has_valid_jump_buffer() and parent.is_on_floor() and parent.can_jump():
-		print("Executing buffered jump from crouch state!")
+		# print("Executing buffered jump from crouch state!")
 		parent.consume_jump_buffer()
 		# Exit crouch and let the state machine handle the jump in the next state
 		# Reuse the input_axis variable already declared above

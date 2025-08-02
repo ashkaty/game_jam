@@ -24,7 +24,8 @@ extends State
 # ── Shared air control ──────────────────────────────────────────
 @export var inherit_ground_vel_mult: float	= 1.0
 @export var air_accel: float				= 600.0
-@export var air_friction: float				= 0.0
+@export var air_friction: float				= 200.0  # Increased for better air control
+@export var air_direction_change_multiplier: float = 1.5  # Extra braking force when changing directions in air
 @export var max_air_speed: float			= 300.0
 @export var sword_offset_y: float			= -20.0		# How much to move sword up during jump
 
@@ -49,8 +50,8 @@ var camera_tween: Tween  # For smooth camera transitions
 
 func enter() -> void:
 	super()
-	print("JUMP STATE ENTERED")
-	print("Initial hold time: ", _hold_time, " threshold: ", long_hop_threshold, " was fresh: ", _was_fresh_press)
+	# print("JUMP STATE ENTERED")
+	# print("Initial hold time: ", _hold_time, " threshold: ", long_hop_threshold, " was fresh: ", _was_fresh_press)
 	
 	# Check if this should start as a long jump based on initial hold time
 	var should_start_as_long = _hold_time >= long_hop_threshold and _was_fresh_press
@@ -59,12 +60,12 @@ func enter() -> void:
 		# Start with long jump force
 		parent.velocity.y = -long_hop_force
 		_is_long = true
-		print("Started as buffered long jump! Hold time: ", _hold_time)
+		# print("Started as buffered long jump! Hold time: ", _hold_time)
 	else:
 		# Start with short hop, can upgrade to long jump if held
 		parent.velocity.y = -short_hop_force
 		_is_long = false
-		print("Started as short jump, hold time: ", _hold_time)
+		# print("Started as short jump, hold time: ", _hold_time)
 	
 	
 	parent.velocity.x *= inherit_ground_vel_mult			# carry runway speed
@@ -171,7 +172,7 @@ func process_physics(delta: float) -> State:
 			# Set full long jump velocity instead of adding boost
 			parent.velocity.y = -long_hop_force
 			_is_long = true
-			print("Upgraded to long jump (fresh press: ", _was_fresh_press, ")")
+			# print("Upgraded to long jump (fresh press: ", _was_fresh_press, ")")
 	
 	# Use appropriate gravity scale based on jump type
 	var current_gravity_scale = short_gravity_scale
@@ -190,10 +191,18 @@ func process_physics(delta: float) -> State:
 		
 		if head_bonk_control_timer <= 0.0:
 			head_bonk_enhanced_control = false
-			print("Enhanced air control expired")
+			# print("Enhanced air control expired")
 
 	if axis != 0:
-		parent.velocity.x = move_toward(parent.velocity.x, target, current_air_accel * delta)
+		# Check if we're changing direction in air (input and current velocity have opposite signs)
+		var is_changing_direction = (axis > 0 and parent.velocity.x < 0) or (axis < 0 and parent.velocity.x > 0)
+		
+		# Apply stronger braking force when changing directions in air
+		var effective_air_accel = current_air_accel
+		if is_changing_direction:
+			effective_air_accel = current_air_accel * air_direction_change_multiplier
+		
+		parent.velocity.x = move_toward(parent.velocity.x, target, effective_air_accel * delta)
 		parent.animations.flip_h = axis < 0
 	else:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, air_friction * delta)
