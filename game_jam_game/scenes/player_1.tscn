@@ -1,8 +1,35 @@
-[gd_scene load_steps=4 format=3 uid="uid://b4baaffqm4i8r"]
+[gd_scene load_steps=6 format=3 uid="uid://b4baaffqm4i8r"]
 
 [ext_resource type="Texture2D" uid="uid://cu6p1lcapdupf" path="res://assets/sprites/MC_Atlas.png" id="2_f7tsm"]
 [ext_resource type="Texture2D" uid="uid://cb33vb02h1qhp" path="res://assets/sprites/MC_Jacket.png" id="2_vod78"]
 [ext_resource type="Texture2D" uid="uid://q7b4akfwcu8m" path="res://assets/sprites/MC_Face.png" id="3_wqd30"]
+
+[sub_resource type="SkeletonModification2DCCDIK" id="SkeletonModification2DCCDIK_f7tsm"]
+target_nodepath = NodePath("../IKTargets/LFootTarget")
+tip_nodepath = NodePath("Hips/LUpperThigh/LLowerThigh/LFoot")
+ccdik_data_chain_length = 2
+joint_data/0/bone_index = 19
+joint_data/0/bone2d_node = NodePath("Hips/LUpperThigh")
+joint_data/0/rotate_from_joint = false
+joint_data/0/enable_constraint = true
+joint_data/0/constraint_angle_min = 133.493
+joint_data/0/constraint_angle_max = 289.798
+joint_data/0/constraint_angle_invert = false
+joint_data/0/constraint_in_localspace = true
+joint_data/0/editor_draw_gizmo = true
+joint_data/1/bone_index = 20
+joint_data/1/bone2d_node = NodePath("Hips/LUpperThigh/LLowerThigh")
+joint_data/1/rotate_from_joint = false
+joint_data/1/enable_constraint = true
+joint_data/1/constraint_angle_min = -258.388
+joint_data/1/constraint_angle_max = -81.29
+joint_data/1/constraint_angle_invert = true
+joint_data/1/constraint_in_localspace = true
+joint_data/1/editor_draw_gizmo = true
+
+[sub_resource type="SkeletonModificationStack2D" id="SkeletonModificationStack2D_wqd30"]
+modification_count = 1
+modifications/0 = SubResource("SkeletonModification2DCCDIK_f7tsm")
 
 [node name="CharacterBody2D" type="CharacterBody2D"]
 
@@ -215,6 +242,7 @@ internal_vertex_count = 1
 
 [node name="Skeleton2D" type="Skeleton2D" parent="."]
 rotation = 0.0103938
+modification_stack = SubResource("SkeletonModificationStack2D_wqd30")
 
 [node name="Hips" type="Bone2D" parent="Skeleton2D"]
 position = Vector2(622, -784)
@@ -236,7 +264,6 @@ rest = Transform2D(1, 0, 0, 1, 16.8252, -86.3997)
 
 [node name="Jacket_Body2" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
 position = Vector2(4.57583, 79.9191)
-scale = Vector2(1, 1)
 rest = Transform2D(1, 0, 0, 1, 4.57583, 79.9191)
 
 [node name="Head" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
@@ -252,17 +279,18 @@ rest = Transform2D(-0.0451771, -0.998979, 0.998979, -0.0451771, 69.0708, -41.943
 [node name="LEyebrow" type="Bone2D" parent="Skeleton2D/Hips/Torso/Head"]
 position = Vector2(87.2647, -29.6964)
 rotation = -1.15524
-scale = Vector2(1, 1)
 rest = Transform2D(0.403701, -0.914891, 0.914891, 0.403701, 87.2647, -29.6964)
 
 [node name="REyebrow" type="Bone2D" parent="Skeleton2D/Hips/Torso/Head"]
 position = Vector2(82.9635, 13.193)
-rotation = 1.25778
+rotation = 1.25779
+scale = Vector2(1, 1)
 rest = Transform2D(0.307925, 0.951411, -0.951411, 0.307925, 82.9635, 13.193)
 
 [node name="REye" type="Bone2D" parent="Skeleton2D/Hips/Torso/Head"]
 position = Vector2(66.9972, 17.5607)
 rotation = 1.93309
+scale = Vector2(1, 1)
 rest = Transform2D(-0.354416, 0.935088, -0.935088, -0.354416, 66.9972, 17.5607)
 
 [node name="RShoulder" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
@@ -272,11 +300,13 @@ rest = Transform2D(1, 0, 0, 1, 87.9854, 66.81)
 [node name="RArm" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder"]
 position = Vector2(-25.2832, 29.1506)
 rotation = 2.01651
+scale = Vector2(1, 1)
 rest = Transform2D(-0.431099, 0.902305, -0.902305, -0.431099, -25.2832, 29.1506)
 
 [node name="RForearm" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm"]
 position = Vector2(113.596, 63.4354)
-rotation = -1.86799
+rotation = -1.868
+scale = Vector2(1, 1)
 rest = Transform2D(-0.292843, -0.956161, 0.956161, -0.292843, 113.596, 63.4354)
 
 [node name="RHand" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm/RForearm"]
@@ -286,11 +316,13 @@ rest = Transform2D(1, 0, 0, 1, 220.457, -19.3542)
 [node name="Guitar" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm/RForearm/RHand"]
 position = Vector2(-11.0987, -90.2542)
 rotation = -1.93881
+scale = Vector2(1, 1)
 rest = Transform2D(-0.359766, -0.933043, 0.933043, -0.359766, -11.0987, -90.2542)
 
 [node name="LShoulder" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
 position = Vector2(100.708, -131.894)
 rotation = -2.37219
+scale = Vector2(1, 1)
 rest = Transform2D(-0.718326, -0.695707, 0.695707, -0.718326, 100.708, -131.894)
 
 [node name="LArm" type="Bone2D" parent="Skeleton2D/Hips/Torso/LShoulder"]
@@ -305,13 +337,14 @@ rest = Transform2D(0.0314262, -0.999506, 0.999506, 0.0314262, 163.106, 1.12717)
 
 [node name="LHand" type="Bone2D" parent="Skeleton2D/Hips/Torso/LShoulder/LArm/LForearm"]
 position = Vector2(176.908, -24.0308)
-rotation = -0.33618
+rotation = -0.336181
 scale = Vector2(1, 1)
 rest = Transform2D(0.944022, -0.329884, 0.329884, 0.944022, 176.908, -24.0308)
 
 [node name="LUpperThigh" type="Bone2D" parent="Skeleton2D/Hips"]
 position = Vector2(-34.1934, -37.3069)
 rotation = -2.46462
+scale = Vector2(1, 1)
 rest = Transform2D(-0.779474, -0.626435, 0.626435, -0.779474, -34.1934, -37.3069)
 
 [node name="LLowerThigh" type="Bone2D" parent="Skeleton2D/Hips/LUpperThigh"]
@@ -321,20 +354,29 @@ rest = Transform2D(1, 0, 0, 1, 238.718, -89.2277)
 [node name="LFoot" type="Bone2D" parent="Skeleton2D/Hips/LUpperThigh/LLowerThigh"]
 position = Vector2(309.143, -65.45)
 rotation = -0.996427
+scale = Vector2(1, 1)
 rest = Transform2D(0.543305, -0.839535, 0.839535, 0.543305, 309.143, -65.45)
 
 [node name="RUpperThigh" type="Bone2D" parent="Skeleton2D/Hips"]
 position = Vector2(-47.0699, 85.2785)
-rotation = 2.92929
+rotation = 2.99787
 scale = Vector2(1, 1)
 rest = Transform2D(-0.98969, 0.143228, -0.143228, -0.98969, -47.0699, 85.2785)
 
 [node name="RLowerThigh" type="Bone2D" parent="Skeleton2D/Hips/RUpperThigh"]
 position = Vector2(284.568, -5.55924)
 rotation = 0.573052
+scale = Vector2(1, 1)
 rest = Transform2D(0.84025, 0.542199, -0.542199, 0.84025, 284.568, -5.55924)
 
 [node name="RFoot" type="Bone2D" parent="Skeleton2D/Hips/RUpperThigh/RLowerThigh"]
 position = Vector2(327.697, -16.7178)
 rotation = -1.18094
+scale = Vector2(1, 1)
 rest = Transform2D(0.380057, -0.924963, 0.924963, 0.380057, 327.697, -16.7178)
+
+[node name="IKTargets" type="Node2D" parent="."]
+
+[node name="LFootTarget" type="Node2D" parent="IKTargets"]
+
+[node name="RFootTarget" type="Node2D" parent="IKTargets"]
