@@ -14,9 +14,9 @@ class_name CassetteButtonlessUI
 
 # Hearts References
 @onready var hearts_container: HBoxContainer = $HeartsContainer
-@onready var heart1: ColorRect = $HeartsContainer/Heart1
-@onready var heart2: ColorRect = $HeartsContainer/Heart2
-@onready var heart3: ColorRect = $HeartsContainer/Heart3
+@onready var heart1: Sprite2D = $HeartsContainer/Container/Heart1
+@onready var heart2: Sprite2D = $HeartsContainer/Container2/Heart2
+@onready var heart3: Sprite2D = $HeartsContainer/Container3/Heart3
 
 # Audio Reference
 @onready var button_click_audio: AudioStreamPlayer2D = $AudioStreamPlayer2D
@@ -67,7 +67,7 @@ var default_track_time: float = 60.0  # Default time for new tracks
 # Health system
 var player_health: int = 3
 var max_health: int = 3
-var hearts: Array[ColorRect] = []
+var hearts: Array[Sprite2D] = []
 
 signal ui_toggled(visible: bool)
 signal timer_finished()
@@ -86,12 +86,12 @@ func _update_hearts_display():
 	for i in range(hearts.size()):
 		if hearts[i]:
 			if i < player_health:
-				# Full heart - bright red
-				hearts[i].color = Color(1, 0.2, 0.2, 1)
+				# Full heart - normal appearance
+				hearts[i].modulate = Color(1, 1, 1, 1)  # Full opacity, normal color
 				hearts[i].visible = true
 			else:
-				# Empty heart - dark/transparent
-				hearts[i].color = Color(0.3, 0.1, 0.1, 0.5)
+				# Empty heart - dimmed/hidden
+				hearts[i].modulate = Color(0.3, 0.3, 0.3, 0.5)  # Dark and translucent
 				hearts[i].visible = true
 
 func take_damage(amount: int = 1):
@@ -116,6 +116,13 @@ func heal(amount: int = 1):
 func get_health() -> int:
 	"""Get current player health"""
 	return player_health
+
+func update_hearts(new_health: int) -> void:
+	"""Update hearts display from external health system (called by player)"""
+	player_health = clamp(new_health, 0, max_health)
+	_update_hearts_display()
+	health_changed.emit(player_health)
+	print("UI: Hearts updated to ", player_health, "/", max_health)
 
 func get_max_health() -> int:
 	"""Get maximum player health"""
@@ -427,11 +434,19 @@ func _find_player():
 	
 	if player:
 		print("CassetteButtonlessUI: Found player - ", player.name)
+		
+		# Set up the connection between player and UI for health system
+		if player.has_method("set_ui_reference"):
+			player.set_ui_reference(self)
+			print("CassetteButtonlessUI: Connected to player health system")
+		
+		# Initialize hearts system
+		_initialize_hearts()
 	else:
 		print("CassetteButtonlessUI: Player not found")
 
 func _search_for_player(node: Node) -> Node:
-	if node.name == "Player" or node is Player:
+	if node.name == "Player":
 		return node
 	
 	for child in node.get_children():

@@ -191,7 +191,7 @@ func _find_player():
 		print("CassetteUIV2: Player not found")
 
 func _search_for_player(node: Node) -> Node:
-	if node.name == "Player" or node is Player:
+	      if node.name == "Player":
 		return node
 	
 	for child in node.get_children():

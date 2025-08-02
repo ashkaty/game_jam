@@ -48,6 +48,11 @@ var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 
 # Head bonk mechanic variables
 @export var head_bonk_speed_boost: float = 300.0  # Horizontal speed added when hitting head
+
+# Health system variables
+@export var max_health: int = 3  # Player starts with 3 hearts
+var current_health: int = 3
+var ui_reference: Control = null  # Reference to the UI for health updates
 @export var head_bonk_grace_period: float = 0.1   # Time after jump start to allow head bonk
 @export var head_bonk_vertical_impulse: float = 50.0  # Small downward push after bonk
 @export var head_bonk_minimum_upward_velocity: float = -100.0  # Must be moving up fast enough
@@ -571,11 +576,6 @@ func apply_knockback(knockback_force: Vector2):
 	
 	print("Player received knockback: ", knockback_force, " | New velocity: ", velocity, " | On floor: ", is_on_floor())
 
-func die():
-	print("Player died!")
-	# Add death logic here
-
-
 # Fast fall damage calculation
 func get_fast_fall_damage_multiplier() -> float:
 	# Check if player is fast falling (holding crouch) and moving downward fast enough
@@ -710,3 +710,61 @@ func flash_sprite():
 		shake_camera_for_damage(15)  # Moderate shake for head bonk
 		
 	return
+
+# Health System Functions
+func take_damage(damage_amount: int) -> void:
+	"""Called when player takes damage - reduces health and updates UI"""
+	if current_health <= 0:
+		return  # Player is already dead
+	
+	current_health = max(0, current_health - damage_amount)
+	print("Player took ", damage_amount, " damage! Health: ", current_health, "/", max_health)
+	
+	# Update UI to reflect health change
+	update_health_ui()
+	
+	# Trigger camera shake for damage feedback
+	shake_camera_for_damage(damage_amount * 10)  # Scale up for better feedback
+	
+	# Check if player died
+	if current_health <= 0:
+		die()
+
+func heal(heal_amount: int) -> void:
+	"""Heal the player by the specified amount"""
+	if current_health >= max_health:
+		return  # Already at full health
+	
+	current_health = min(max_health, current_health + heal_amount)
+	print("Player healed for ", heal_amount, "! Health: ", current_health, "/", max_health)
+	
+	# Update UI to reflect health change
+	update_health_ui()
+
+func update_health_ui() -> void:
+	"""Update the UI to show current health"""
+	if ui_reference and ui_reference.has_method("update_hearts"):
+		ui_reference.update_hearts(current_health)
+
+func set_ui_reference(ui: Control) -> void:
+	"""Set the reference to the UI for health updates"""
+	ui_reference = ui
+	# Initialize UI with current health
+	update_health_ui()
+
+func die() -> void:
+	"""Called when player health reaches 0"""
+	print("Player died! Restarting game...")
+	
+	# Add a brief delay before restarting to let death effects play
+	await get_tree().create_timer(1.0).timeout
+	
+	# Restart the current scene
+	get_tree().reload_current_scene()
+	update_health_ui()
+	
+	# You can add more death effects here:
+	# - Play death animation
+	# - Reset player position
+	# - Show game over screen
+	# - Reload scene

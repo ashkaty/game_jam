@@ -163,7 +163,7 @@ shape = SubResource("WorldBoundaryShape2D_e2o6t")
 
 [node name="Player" parent="." instance=ExtResource("1_uwrxv")]
 unique_name_in_owner = true
-position = Vector2(11, -7)
+position = Vector2(-1000, -7)
 script = ExtResource("2_u5sy4")
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
