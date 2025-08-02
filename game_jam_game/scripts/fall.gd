@@ -94,26 +94,7 @@ func exit() -> void:
 		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 func process_frame(delta: float) -> State:
-	# Update air timer for camera panning
-	air_timer += delta
-	
-	# Start smooth camera panning after the delay
-	if parent.camera and air_timer >= air_camera_pan_delay and not camera_tween:
-		camera_tween = parent.create_tween()
-		camera_tween.set_ease(Tween.EASE_OUT)
-		camera_tween.set_trans(Tween.TRANS_QUART)
-		camera_tween.tween_property(parent.camera, "offset", target_camera_offset, 0.5)  # Smooth 0.5 second transition
-	
-	# Update animation based on whether player is fast falling
-	if parent.is_action_pressed_polling("crouch"):
-		parent.animations.play("crouch")
-	else:
-		# You can add a specific fall animation here if one exists
-		# For now, we'll let the default animation play
-		pass
-	return null
-
-func process_input(_event: InputEvent) -> State:
+	# Handle input processing every frame using polling system
 	if parent.is_action_just_pressed_once("jump"):
 		# Check if we're wall sliding and can perform a wall jump
 		if is_currently_wall_sliding:
@@ -141,7 +122,36 @@ func process_input(_event: InputEvent) -> State:
 		if dash_state and dash_state.is_dash_available() and dash_state.air_dash_enabled:
 			return dash_state
 		else:
-			print("Air dash on cooldown or disabled!")
+			print("Air dash on cooldown! Buffering dash input...")
+			parent.buffer_dash()
+	
+	# Check for buffered inputs that can now be executed
+	if parent.has_valid_dash_buffer() and dash_state and dash_state.is_dash_available():
+		print("Executing buffered dash!")
+		parent.consume_dash_buffer()
+		return dash_state
+	
+	# Update air timer for camera panning
+	air_timer += delta
+	
+	# Start smooth camera panning after the delay
+	if parent.camera and air_timer >= air_camera_pan_delay and not camera_tween:
+		camera_tween = parent.create_tween()
+		camera_tween.set_ease(Tween.EASE_OUT)
+		camera_tween.set_trans(Tween.TRANS_QUART)
+		camera_tween.tween_property(parent.camera, "offset", target_camera_offset, 0.5)  # Smooth 0.5 second transition
+	
+	# Update animation based on whether player is fast falling
+	if parent.is_action_pressed_polling("crouch"):
+		parent.animations.play("crouch")
+	else:
+		# You can add a specific fall animation here if one exists
+		# For now, we'll let the default animation play
+		pass
+	return null
+
+func process_input(_event: InputEvent) -> State:
+	# Input processing moved to process_frame for polling system
 	return null
 
 func process_physics(delta: float) -> State:

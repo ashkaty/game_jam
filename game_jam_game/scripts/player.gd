@@ -45,14 +45,13 @@ var jumped_off_ground: bool = false  # Track if player jumped off ground (vs wal
 var jump_cooldown_timer: float = 0.0
 var can_jump_again: bool = true
 
-# Jump buffer variables
-@export var jump_buffer_duration: float = 0.15  # Shorter buffer duration for rapid jumps
-@export var jump_buffer_refresh_cooldown: float = 0.02  # Very short refresh cooldown for continuous jumping
-var jump_buffer_timer: float = 0.0
-var has_buffered_jump: bool = false
-var last_buffer_time: float = 0.0  # Track when buffer was last set
-var buffered_jump_hold_time: float = 0.0  # Track how long jump was held when buffered
-var jump_hold_start_time: float = 0.0  # Track when jump button was first pressed
+# Generalized input buffer system
+@export var input_buffer_duration: float = 0.15  # Buffer duration for input responsiveness
+@export var input_buffer_refresh_cooldown: float = 0.02  # Cooldown before buffer can be refreshed
+var input_buffers: Dictionary = {}  # Stores buffered inputs with their timers
+var input_buffer_hold_times: Dictionary = {}  # Stores how long inputs were held when buffered
+var input_hold_start_times: Dictionary = {}  # Track when input buttons were first pressed
+var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 
 # Head bonk mechanic variables
 @export var head_bonk_speed_boost: float = 300.0  # Horizontal speed added when hitting head
@@ -87,24 +86,22 @@ func _ready() -> void:
 	jump_cooldown_timer = 0.0
 	can_jump_again = true
 	
-	# Initialize jump buffer state
-	has_buffered_jump = false
-	jump_buffer_timer = 0.0
-	last_buffer_time = 0.0
+	# Input buffer system is initialized automatically via Dictionary declarations
+	# No manual initialization needed for the generalized buffer system
 	
 	# Add player to a group so the UI can find it
 	add_to_group("player")
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Track when jump button is first pressed for long jump buffering
-	if event.is_action_pressed("jump"):
-		jump_hold_start_time = total_time
-		print("Jump hold started at: ", jump_hold_start_time)
-	# Reset hold time when jump button is released
-	elif event.is_action_released("jump"):
-		jump_hold_start_time = 0.0
-		print("Jump hold reset - button released")
+	# Track when input buttons are first pressed for hold time calculation
+	for action in input_actions:
+		if event.is_action_pressed(action):
+			input_hold_start_times[action] = total_time
+			print(action.capitalize(), " hold started at: ", total_time)
+		elif event.is_action_released(action):
+			input_hold_start_times[action] = 0.0
+			print(action.capitalize(), " hold reset - button released")
 	
 	# Keep calling process_input for states that haven't been converted to polling yet
 	state_machine.process_input(event)
@@ -121,11 +118,7 @@ func _physics_process(delta: float) -> void:
 			print("Jump cooldown expired - can jump again")
 	
 	# Update jump buffer timer
-	if has_buffered_jump:
-		jump_buffer_timer -= delta
-		if jump_buffer_timer <= 0.0:
-			has_buffered_jump = false
-			print("Jump buffer expired")
+	update_input_buffers(delta)
 	
 	# Update coyote time BEFORE state machine processing
 	update_coyote_time(delta)
@@ -154,7 +147,12 @@ func poll_inputs() -> void:
 	
 	# Poll all input actions and store their just_pressed state
 	for action in input_actions:
-		input_just_pressed[action] = Input.is_action_just_pressed(action)
+		var just_pressed = Input.is_action_just_pressed(action)
+		input_just_pressed[action] = just_pressed
+		
+		# Auto-buffer inputs when they're pressed for improved responsiveness
+		if just_pressed:
+			buffer_input(action)
 
 # Public method for states to check if an action was just pressed this frame
 # Returns true only once per frame, even if called multiple times
@@ -313,43 +311,143 @@ func mark_jumped_off_ground():
 func can_ground_jump() -> bool:
 	return is_on_floor() and can_jump_again
 
-# Check if player can perform any type of jump (ground or coyote)
-func can_jump() -> bool:
-	return can_ground_jump() or can_coyote_jump()
+# Update all input buffers - call this every physics frame
+func update_input_buffers(delta: float) -> void:
+	var expired_buffers = []
+	
+	for action in input_buffers.keys():
+		input_buffers[action] -= delta
+		if input_buffers[action] <= 0.0:
+			expired_buffers.append(action)
+			print(action.capitalize(), " buffer expired")
+	
+	# Remove expired buffers
+	for action in expired_buffers:
+		input_buffers.erase(action)
+		input_buffer_hold_times.erase(action)
 
-# Buffer a jump input for later execution
-func buffer_jump():
+# Buffer any input for later execution
+func buffer_input(action: String):
 	# Allow refreshing the buffer if enough time has passed or if no buffer exists
 	var current_time = total_time
-	if not has_buffered_jump or (current_time - last_buffer_time) >= jump_buffer_refresh_cooldown:
-		has_buffered_jump = true
-		jump_buffer_timer = jump_buffer_duration
-		last_buffer_time = current_time
+	var last_time = last_buffer_times.get(action, 0.0)
+	
+	if not input_buffers.has(action) or (current_time - last_time) >= input_buffer_refresh_cooldown:
+		input_buffers[action] = input_buffer_duration
+		last_buffer_times[action] = current_time
 		
-		# Calculate how long the jump button has been held when buffering
-		buffered_jump_hold_time = current_time - jump_hold_start_time
+		# Calculate how long the input has been held when buffering
+		var hold_start = input_hold_start_times.get(action, current_time)
+		input_buffer_hold_times[action] = current_time - hold_start
 		
-		print("Jump buffered! Timer: ", jump_buffer_timer, " Hold time: ", buffered_jump_hold_time, " at time: ", current_time)
+		print(action.capitalize(), " buffered! Timer: ", input_buffers[action], " Hold time: ", input_buffer_hold_times[action], " at time: ", current_time)
 	else:
-		print("Buffer refresh on cooldown, ignoring input")
+		print(action.capitalize(), " buffer refresh on cooldown, ignoring input")
+
+# Check if there's a buffered input that should be executed
+func has_valid_input_buffer(action: String) -> bool:
+	return input_buffers.has(action) and input_buffers[action] > 0.0
+
+# Get the hold time of a buffered input
+func get_buffered_input_hold_time(action: String) -> float:
+	return input_buffer_hold_times.get(action, 0.0)
+
+# Get current hold time for any input (how long it's been held since press)
+func get_current_input_hold_time(action: String) -> float:
+	var hold_start = input_hold_start_times.get(action, 0.0)
+	if hold_start > 0.0:
+		return total_time - hold_start
+	return 0.0
+
+# Legacy helper for jump hold time (for backward compatibility)
+func get_current_jump_hold_time() -> float:
+	return get_current_input_hold_time("jump")
+
+# Consume an input buffer (call this when a buffered input is executed)
+func consume_input_buffer(action: String):
+	var hold_time = input_buffer_hold_times.get(action, 0.0)
+	
+	input_buffers.erase(action)
+	input_buffer_hold_times.erase(action)
+	last_buffer_times.erase(action)
+	
+	print(action.capitalize(), " buffer consumed! Was held for: ", hold_time, " seconds")
+	return hold_time  # Return the hold time for states to use
+
+# Legacy jump buffer functions for compatibility
+func buffer_jump():
+	buffer_input("jump")
 
 # Check if there's a buffered jump that should be executed
 func has_valid_jump_buffer() -> bool:
-	return has_buffered_jump and jump_buffer_timer > 0.0
+	return has_valid_input_buffer("jump")
 
 # Get the hold time of the buffered jump
 func get_buffered_jump_hold_time() -> float:
-	return buffered_jump_hold_time
+	return get_buffered_input_hold_time("jump")
 
 # Consume the jump buffer (call this when a buffered jump is executed)
 func consume_jump_buffer():
-	has_buffered_jump = false
-	jump_buffer_timer = 0.0
-	last_buffer_time = 0.0  # Reset the buffer time tracking
-	var hold_time = buffered_jump_hold_time
-	buffered_jump_hold_time = 0.0  # Reset buffered hold time
-	print("Jump buffer consumed! Was held for: ", hold_time, " seconds")
-	return hold_time  # Return the hold time for the jump state to use
+	return consume_input_buffer("jump")
+
+# Convenience methods for buffering common actions
+func buffer_attack():
+	buffer_input("attack")
+
+func buffer_dash():
+	buffer_input("dash")
+
+func buffer_crouch():
+	buffer_input("crouch")
+
+func has_valid_attack_buffer() -> bool:
+	return has_valid_input_buffer("attack")
+
+func has_valid_dash_buffer() -> bool:
+	return has_valid_input_buffer("dash")
+
+func has_valid_crouch_buffer() -> bool:
+	return has_valid_input_buffer("crouch")
+
+func consume_attack_buffer():
+	return consume_input_buffer("attack")
+
+func consume_dash_buffer():
+	return consume_input_buffer("dash")
+
+func consume_crouch_buffer():
+	return consume_input_buffer("crouch")
+
+# Clear all input buffers (useful for state resets or special conditions)
+func clear_all_input_buffers():
+	input_buffers.clear()
+	input_buffer_hold_times.clear()
+	last_buffer_times.clear()
+	print("All input buffers cleared")
+
+# Clear a specific input buffer
+func clear_input_buffer(action: String):
+	input_buffers.erase(action)
+	input_buffer_hold_times.erase(action)
+	last_buffer_times.erase(action)
+	print(action.capitalize(), " buffer cleared")
+
+# Debug function to see currently buffered inputs
+func get_buffered_inputs() -> Array:
+	return input_buffers.keys()
+
+# Debug function to print all current buffers
+func print_buffer_status():
+	if input_buffers.is_empty():
+		print("No inputs currently buffered")
+	else:
+		print("Currently buffered inputs:")
+		for action in input_buffers.keys():
+			print("  ", action.capitalize(), ": ", input_buffers[action], "s remaining")
+
+# Check if player can perform any type of jump (ground or coyote)
+func can_jump() -> bool:
+	return can_ground_jump() or can_coyote_jump()
 
 # Player stats getter methods for UI
 func get_health() -> int:

@@ -29,7 +29,7 @@ func process_frame(delta: float) -> State:
 				print("Coyote jump from move state!")
 			jump_state.set_fresh_press(true)  # Mark as fresh press
 			# Use the time already held from player tracking instead of resetting
-			var current_hold_time = parent.total_time - parent.jump_hold_start_time if parent.jump_hold_start_time > 0 else 0.0
+			var current_hold_time = parent.get_current_jump_hold_time()
 			jump_state.set_initial_hold_time(current_hold_time)
 			return jump_state
 		else:
@@ -41,7 +41,7 @@ func process_frame(delta: float) -> State:
 			print("Repetitive jump from move state!")
 			jump_state.set_fresh_press(false)  # Mark as held input
 			# For repetitive jumps, use current hold time
-			var current_hold_time = parent.total_time - parent.jump_hold_start_time if parent.jump_hold_start_time > 0 else 0.0
+			var current_hold_time = parent.get_current_jump_hold_time()
 			jump_state.set_initial_hold_time(current_hold_time)
 			return jump_state
 		else:
@@ -56,7 +56,15 @@ func process_frame(delta: float) -> State:
 		if dash_state and dash_state.is_dash_available():
 			return dash_state
 		else:
-			print("Dash on cooldown!")
+			print("Dash on cooldown! Buffering dash input...")
+			parent.buffer_dash()
+	
+	# Check for buffered inputs that can now be executed
+	if parent.has_valid_dash_buffer() and dash_state and dash_state.is_dash_available():
+		print("Executing buffered dash!")
+		parent.consume_dash_buffer()
+		return dash_state
+	
 	return null
 
 func process_physics(delta: float) -> State:
@@ -93,6 +101,12 @@ func process_physics(delta: float) -> State:
 		jump_state.set_initial_hold_time(buffered_hold_time)
 		
 		return jump_state
+	
+	# Check for buffered dash that can now be executed
+	if parent.has_valid_dash_buffer() and dash_state and dash_state.is_dash_available():
+		print("Executing buffered dash from move state!")
+		parent.consume_dash_buffer()
+		return dash_state
 
 	# State transitions ---------------------------------------------------------
 	if input_axis == 0.0 and parent.is_on_floor() and abs(parent.velocity.x) < idle_transition_vel:
