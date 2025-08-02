@@ -1,0 +1,50 @@
+[gd_scene load_steps=7 format=3 uid="uid://5utxsmxaf4j5"]
+
+[ext_resource type="Texture2D" uid="uid://0hlcavja38jn" path="res://assets/sprites/Cassette Buttonless.png" id="1_cassette_buttonless"]
+[ext_resource type="Texture2D" uid="uid://y4ombgtpnee" path="res://assets/sprites/Red Button.png" id="2_red_button"]
+[ext_resource type="Texture2D" uid="uid://cvkhxffxj25ky" path="res://assets/sprites/Yellow Button.png" id="3_yellow_button"]
+[ext_resource type="Texture2D" uid="uid://bibdxp10f6tnn" path="res://assets/sprites/Blue Button.png" id="4_blue_button"]
+[ext_resource type="Texture2D" uid="uid://d25vf5hr3eaf1" path="res://assets/sprites/Green Button.png" id="5_green_button"]
+[ext_resource type="Script" uid="uid://d2borc3v3jjc2" path="res://scripts/cassette_buttonless_ui.gd" id="7_script"]
+
+[node name="CassetteButtonlessUI" type="Control"]
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -150.0
+offset_right = 320.0
+offset_bottom = -20.0
+grow_vertical = 0
+script = ExtResource("7_script")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(537, -236)
+texture = ExtResource("1_cassette_buttonless")
+region_enabled = true
+region_rect = Rect2(33.1022, 260.974, 1006.99, 554.789)
+
+[node name="RedButton" type="Sprite2D" parent="Background"]
+position = Vector2(-332, -314)
+texture = ExtResource("2_red_button")
+region_enabled = true
+region_rect = Rect2(83.2007, 161.481, 240.332, 126.15)
+
+[node name="BlueButton" type="Sprite2D" parent="Background"]
+position = Vector2(-122, -311)
+texture = ExtResource("4_blue_button")
+region_enabled = true
+region_rect = Rect2(306.76, 175.012, 222.292, 108.977)
+
+[node name="YellowButton" type="Sprite2D" parent="Background"]
+position = Vector2(93, -306)
+texture = ExtResource("3_yellow_button")
+region_enabled = true
+region_rect = Rect2(513.546, 178.012, 233.637, 111.17)
+
+[node name="GreenButton" type="Sprite2D" parent="Background"]
+position = Vector2(321, -307)
+texture = ExtResource("5_green_button")
+region_enabled = true
+region_rect = Rect2(733.533, 178.54, 221.883, 106.815)

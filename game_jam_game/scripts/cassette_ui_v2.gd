@@ -10,6 +10,12 @@ class_name CassetteUIV2
 @onready var exp_text: Label = $MainContainer/RightPanel/StatusInfo/ExpSection/ExpText
 @onready var close_button: Button = $Controls/CloseButton
 
+# Button References
+@onready var red_button: TextureRect = $ButtonContainer/RedButton
+@onready var yellow_button: TextureRect = $ButtonContainer/YellowButton
+@onready var blue_button: TextureRect = $ButtonContainer/BlueButton
+@onready var green_button: TextureRect = $ButtonContainer/GreenButton
+
 # Player reference
 var player: Node = null
 
@@ -19,10 +25,16 @@ var slide_tween: Tween
 var original_position: Vector2
 var hidden_position: Vector2
 
+# Button animation
+var button_tweens: Array[Tween] = []
+var button_original_positions: Array[Vector2] = []
+var button_pressed_offset: float = 5.0  # How much buttons move down when pressed (reduced for smaller buttons)
+
 # Animation settings
 const SLIDE_DURATION: float = 0.3
 const SLIDE_EASE_TYPE = Tween.EASE_OUT
 const SLIDE_TRANS_TYPE = Tween.TRANS_BACK
+const BUTTON_ANIM_DURATION: float = 0.1
 
 signal ui_toggled(visible: bool)
 
@@ -30,6 +42,12 @@ func _ready():
 	# Store original positions for animation
 	original_position = position
 	hidden_position = Vector2(original_position.x, get_viewport().get_visible_rect().size.y + 50)
+	
+	# Wait for the next frame to ensure all nodes are properly initialized
+	await get_tree().process_frame
+	
+	# Store button original positions
+	_store_button_positions()
 	
 	# Start hidden
 	position = hidden_position
@@ -44,6 +62,63 @@ func _ready():
 	
 	# Initial update
 	_update_display()
+
+func _store_button_positions():
+	button_original_positions.clear()
+	var buttons = [red_button, yellow_button, blue_button, green_button]
+	for button in buttons:
+		if button:
+			button_original_positions.append(button.position)
+
+func _input(event):
+	# Handle UI toggle
+	if event.is_action_pressed("toggle_cassette_ui") or (event is InputEventKey and event.pressed and event.keycode == KEY_TAB):
+		toggle_ui()
+	
+	# Handle button animations when UI is visible
+	if not is_visible:
+		return
+		
+	if event is InputEventKey and event.pressed:
+		var key_code = event.keycode
+		match key_code:
+			KEY_1:
+				_animate_button_press(0)  # Red button
+			KEY_2:
+				_animate_button_press(1)  # Yellow button
+			KEY_3:
+				_animate_button_press(2)  # Blue button
+			KEY_4:
+				_animate_button_press(3)  # Green button
+
+func _animate_button_press(button_index: int):
+	var buttons = [red_button, yellow_button, blue_button, green_button]
+	if button_index < 0 or button_index >= buttons.size():
+		return
+		
+	var button = buttons[button_index]
+	if not button:
+		return
+	
+	# Stop any existing tween for this button
+	if button_index < button_tweens.size() and button_tweens[button_index]:
+		button_tweens[button_index].kill()
+	
+	# Ensure we have enough tween slots
+	while button_tweens.size() <= button_index:
+		button_tweens.append(null)
+	
+	# Create new tween
+	button_tweens[button_index] = create_tween()
+	var tween = button_tweens[button_index]
+	
+	# Get original position
+	var original_pos = button_original_positions[button_index]
+	var pressed_pos = Vector2(original_pos.x, original_pos.y + button_pressed_offset)
+	
+	# Animate button press (down then back up)
+	tween.tween_property(button, "position", pressed_pos, BUTTON_ANIM_DURATION)
+	tween.tween_property(button, "position", original_pos, BUTTON_ANIM_DURATION)
 
 func _find_player():
 	# Try multiple methods to find the player
@@ -74,10 +149,6 @@ func _search_for_player(node: Node) -> Node:
 			return result
 	
 	return null
-
-func _input(event):
-	if event.is_action_pressed("toggle_cassette_ui"):
-		toggle_ui()
 
 func toggle_ui():
 	"""Toggle the visibility of the cassette UI with smooth animation"""
@@ -208,3 +279,16 @@ func _on_slide_animation_finished():
 	else:
 		# UI is now fully shown
 		pass
+
+# Public methods for external scripts to control button animations
+func animate_red_button():
+	_animate_button_press(0)
+
+func animate_yellow_button():
+	_animate_button_press(1)
+
+func animate_blue_button():
+	_animate_button_press(2)
+
+func animate_green_button():
+	_animate_button_press(3)
