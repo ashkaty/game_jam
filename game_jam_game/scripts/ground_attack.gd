@@ -21,14 +21,18 @@ func enter() -> void:
 	#var sword_hitbox = parent.get_node("Sword/Sprite/Hitbox")  as Area2D
 
 func process_input(_event: InputEvent) -> State:
+	# Input processing moved to process_frame for polling system
+	return null
+
+func process_frame(delta: float) -> State:
 	sword_anim = parent.get_node("AnimatedSprite2D/Sword/AnimationPlayer") as AnimationPlayer
 	
 		# … then look at what the player is holding **right now**.
-	if Input.is_action_pressed("up"):
+	if parent.is_action_pressed_polling("up"):
 		sword_anim.play("up_ward_swing")
 		print("Playing Upward Swing Animation")
 		return idle_state
-	elif Input.is_action_pressed("crouch"):	# or "down"
+	elif parent.is_action_pressed_polling("crouch"):	# or "down"
 		sword_anim.play("down_ward_swing")
 		print("Playing Downward Swing Animation")
 		return crouch_state

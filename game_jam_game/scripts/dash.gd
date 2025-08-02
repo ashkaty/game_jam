@@ -88,11 +88,11 @@ func process_frame(delta: float) -> State:
 
 func process_input(_event: InputEvent) -> State:
 	# Allow attack during dash
-	if Input.is_action_just_pressed('attack'):
+	if parent.is_action_just_pressed_once('attack'):
 		return air_attack_state
 	
 	# Handle crouch input during dash - immediately slow down and transition to crouch
-	if Input.is_action_just_pressed('crouch'):
+	if parent.is_action_just_pressed_once('crouch'):
 		# Reduce velocity significantly to simulate immediate slowdown
 		parent.velocity.x *= 0.3  # Reduce horizontal speed to 30% of current
 		dash_slowed_by_crouch = true  # Mark that dash was slowed

@@ -25,12 +25,16 @@ func enter() -> void:
 	
 
 func process_input(_event: InputEvent):
+	# Input processing moved to process_frame for polling system
+	return null
+
+func process_frame(delta: float) -> State:
 	sword_anim = parent.get_node("AnimatedSprite2D/Sword/AnimationPlayer") as AnimationPlayer
-	if Input.is_action_pressed("up"):
+	if parent.is_action_pressed_polling("up"):
 		sword_anim.play("up_ward_swing")
 		print("Playing Upward Air Attack Animation")
 		return idle_state
-	elif Input.is_action_pressed("crouch"):	# or "down"
+	elif parent.is_action_pressed_polling("crouch"):	# or "down"
 		sword_anim.play("down_ward_swing")
 		print("Playing Downward Air Attack Animation - FAST FALL ATTACK!")
 		
@@ -43,6 +47,8 @@ func process_input(_event: InputEvent):
 		sword_anim.play("swing")
 		print("Playing Attack Animation")
 		return idle_state
+	
+	return null
 
 func process_physics(delta: float) -> State:
 	# Apply reduced gravity during air attack

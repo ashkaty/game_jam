@@ -19,35 +19,45 @@ func enter() -> void:
 	parent.velocity.x = 0
 
 func process_input(_event: InputEvent) -> State:
-	if Input.is_action_just_pressed('jump'):
+	# Input processing moved to process_frame for polling system
+	return null
+
+func process_frame(delta: float) -> State:
+	# Handle input processing every frame using polling system
+	if parent.is_action_just_pressed_once('jump'):
 		if parent.can_jump():
 			if parent.can_ground_jump():
 				print("Normal ground jump from idle state!")
 			else:
 				print("Coyote jump from idle state!")
 			jump_state.set_fresh_press(true)  # Mark as fresh press
-			jump_state.reset_hold_time()  # Reset hold time for fresh jump
+			# Use the time already held from player tracking instead of resetting
+			var current_hold_time = parent.total_time - parent.jump_hold_start_time if parent.jump_hold_start_time > 0 else 0.0
+			print("Jump from idle - hold start time: ", parent.jump_hold_start_time, " current time: ", parent.total_time, " calculated hold: ", current_hold_time)
+			jump_state.set_initial_hold_time(current_hold_time)
 			return jump_state
 		else:
 			# Can't jump right now, but buffer the input
 			parent.buffer_jump()
 	# Check for held jump input for repetitive jumping
-	elif Input.is_action_pressed('jump'):
+	elif parent.is_action_pressed_polling('jump'):
 		if parent.can_jump():
 			print("Repetitive jump from idle state!")
 			jump_state.set_fresh_press(false)  # Mark as held input
-			jump_state.reset_hold_time()  # Reset hold time even for held jumps
+			# For repetitive jumps, use current hold time
+			var current_hold_time = parent.total_time - parent.jump_hold_start_time if parent.jump_hold_start_time > 0 else 0.0
+			jump_state.set_initial_hold_time(current_hold_time)
 			return jump_state
 		else:
 			# Can't jump right now, but buffer the input
 			parent.buffer_jump()
-	if Input.is_action_just_pressed('move_left') or Input.is_action_just_pressed('move_right'):
+	if parent.is_action_pressed_polling('move_left') or parent.is_action_pressed_polling('move_right'):
 		return move_state
-	if Input.is_action_just_pressed('attack'):
+	if parent.is_action_just_pressed_once('attack'):
 		return attack_state
-	if Input.is_action_just_pressed('crouch'):
+	if parent.is_action_just_pressed_once('crouch'):
 		return crouch_state
-	if Input.is_action_just_pressed('dash'):
+	if parent.is_action_just_pressed_once('dash'):
 		# Check if dash is available (cooldown check)
 		if dash_state and dash_state.is_dash_available():
 			return dash_state

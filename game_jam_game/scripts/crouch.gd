@@ -58,11 +58,11 @@ func exit() -> void:
 
 func process_input(_event: InputEvent) -> State:
 	# Handle jump input - buffer it since we can't jump while crouching
-	if Input.is_action_just_pressed('jump'):
+	if parent.is_action_just_pressed_once('jump'):
 		parent.buffer_jump()
 		
 	# Handle dash input - can dash from crouch
-	if Input.is_action_just_pressed('dash'):
+	if parent.is_action_just_pressed_once('dash'):
 		# Check if dash is available
 		if dash_state and dash_state.is_dash_available():
 			return dash_state
@@ -70,7 +70,7 @@ func process_input(_event: InputEvent) -> State:
 			print("Dash on cooldown!")
 		
 	# Exit crouch when key is released
-	if Input.is_action_pressed("attack"):
+	if parent.is_action_just_pressed_once("attack"):
 		return ground_attack_state
 	if Input.is_action_just_released('crouch'):
 		if parent.is_on_floor():

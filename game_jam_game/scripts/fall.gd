@@ -105,7 +105,7 @@ func process_frame(delta: float) -> State:
 		camera_tween.tween_property(parent.camera, "offset", target_camera_offset, 0.5)  # Smooth 0.5 second transition
 	
 	# Update animation based on whether player is fast falling
-	if Input.is_action_pressed("crouch"):
+	if parent.is_action_pressed_polling("crouch"):
 		parent.animations.play("crouch")
 	else:
 		# You can add a specific fall animation here if one exists
@@ -114,7 +114,7 @@ func process_frame(delta: float) -> State:
 	return null
 
 func process_input(_event: InputEvent) -> State:
-	if Input.is_action_just_pressed("jump"):
+	if parent.is_action_just_pressed_once("jump"):
 		# Check if we're wall sliding and can perform a wall jump
 		if is_currently_wall_sliding:
 			perform_wall_jump()
@@ -127,16 +127,16 @@ func process_input(_event: InputEvent) -> State:
 			# Can't jump right now, but buffer the input
 			parent.buffer_jump()
 			
-	if Input.is_action_just_pressed('attack'):
+	if parent.is_action_just_pressed_once('attack'):
 		return air_attack_state
 		
 	# Don't transition to crouch state if already holding crouch
 	# This prevents unnecessary state switching between fall and crouch
-	if Input.is_action_just_pressed('crouch'):
+	if parent.is_action_just_pressed_once('crouch'):
 		return crouch_state
 		
 	# Allow air dash
-	if Input.is_action_just_pressed('dash'):
+	if parent.is_action_just_pressed_once('dash'):
 		# Check if dash is available and air dash is enabled
 		if dash_state and dash_state.is_dash_available() and dash_state.air_dash_enabled:
 			return dash_state
@@ -150,7 +150,7 @@ func process_physics(delta: float) -> State:
 		dash_state.update_cooldown(delta)
 		
 	# Check if player is holding crouch for fast fall
-	var is_fast_falling = Input.is_action_pressed("crouch")
+	var is_fast_falling = parent.is_action_pressed_polling("crouch")
 	
 	# Get input axis for wall sliding detection
 	var axis := Input.get_axis("move_left","move_right")

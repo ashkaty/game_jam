@@ -50,6 +50,7 @@ var camera_tween: Tween  # For smooth camera transitions
 func enter() -> void:
 	super()
 	print("JUMP STATE ENTERED")
+	print("Initial hold time: ", _hold_time, " threshold: ", long_hop_threshold, " was fresh: ", _was_fresh_press)
 	
 	# Check if this should start as a long jump based on initial hold time
 	var should_start_as_long = _hold_time >= long_hop_threshold and _was_fresh_press
@@ -63,6 +64,8 @@ func enter() -> void:
 		# Start with short hop, can upgrade to long jump if held
 		parent.velocity.y = -short_hop_force
 		_is_long = false
+		print("Started as short jump, hold time: ", _hold_time)
+	
 	
 	parent.velocity.x *= inherit_ground_vel_mult			# carry runway speed
 	jump_start_time = parent.total_time
@@ -122,15 +125,31 @@ func exit() -> void:
 		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 func process_input(_event: InputEvent) -> State:
-	if Input.is_action_just_pressed('attack'):
+	# Input processing moved to process_frame for polling system
+	return null
+
+func process_frame(delta: float) -> State:
+	# Handle input processing every frame using polling system
+	if parent.is_action_just_pressed_once('attack'):
 		return air_attack_state
 	# Allow air dash during jump
-	if Input.is_action_just_pressed('dash'):
+	if parent.is_action_just_pressed_once('dash'):
 		# Check if dash is available and air dash is enabled
 		if dash_state and dash_state.is_dash_available() and dash_state.air_dash_enabled:
 			return dash_state
 		else:
 			print("Air dash on cooldown or disabled!")
+	
+	# Update air timer for camera panning
+	air_timer += delta
+	
+	# Start smooth camera panning after the delay (longer delay for jumps than falls)
+	if parent.camera and air_timer >= air_camera_pan_delay and not camera_tween:
+		camera_tween = parent.create_tween()
+		camera_tween.set_ease(Tween.EASE_OUT)
+		camera_tween.set_trans(Tween.TRANS_QUART)
+		camera_tween.tween_property(parent.camera, "offset", target_camera_offset, 0.4)  # Smooth 0.4 second transition
+	
 	return null
 
 func process_physics(delta: float) -> State:
@@ -139,7 +158,7 @@ func process_physics(delta: float) -> State:
 		dash_state.update_cooldown(delta)
 		
 	# Track how long the jump key is held for long jump upgrade
-	if Input.is_action_pressed("jump"):
+	if parent.is_action_pressed_polling("jump"):
 		_hold_time += delta
 		# Only upgrade to long jump if:
 		# 1. Not already a long jump
@@ -204,17 +223,4 @@ func process_physics(delta: float) -> State:
 		return fall_state
 	if parent.is_on_floor():
 		return land_state
-	return null
-
-func process_frame(delta: float) -> State:
-	# Update air timer for camera panning
-	air_timer += delta
-	
-	# Start smooth camera panning after the delay (longer delay for jumps than falls)
-	if parent.camera and air_timer >= air_camera_pan_delay and not camera_tween:
-		camera_tween = parent.create_tween()
-		camera_tween.set_ease(Tween.EASE_OUT)
-		camera_tween.set_trans(Tween.TRANS_QUART)
-		camera_tween.tween_property(parent.camera, "offset", target_camera_offset, 0.4)  # Smooth 0.4 second transition
-	
 	return null

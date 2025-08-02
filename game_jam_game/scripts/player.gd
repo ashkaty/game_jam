@@ -11,6 +11,13 @@ extends CharacterBody2D
 var last_flip_h: bool = false
 var original_sword_position: Vector2
 
+# Input polling system - ensures inputs are only processed once per frame
+var input_just_pressed: Dictionary = {}
+var input_consumed: Dictionary = {}
+var input_actions: Array[String] = [
+	"jump", "attack", "crouch", "dash", "move_left", "move_right", "up"
+]
+
 # Motion blur effect variables
 @export var motion_blur_enabled: bool = true
 @export var motion_blur_threshold: float = 300.0  # Minimum velocity to start blur
@@ -99,6 +106,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		jump_hold_start_time = 0.0
 		print("Jump hold reset - button released")
 	
+	# Keep calling process_input for states that haven't been converted to polling yet
 	state_machine.process_input(event)
 
 func _physics_process(delta: float) -> void:
@@ -125,6 +133,9 @@ func _physics_process(delta: float) -> void:
 	state_machine.process_physics(delta)
 
 func _process(delta: float) -> void:
+	# Poll inputs first to ensure they're captured for this frame
+	poll_inputs()
+	
 	state_machine.process_frame(delta)
 	
 	# Update motion blur based on velocity
@@ -135,6 +146,34 @@ func _process(delta: float) -> void:
 		update_sword_position()
 
 		last_flip_h = animations.flip_h
+
+# Input polling system - call this every frame to capture inputs
+func poll_inputs() -> void:
+	# Reset consumed flags for new frame
+	input_consumed.clear()
+	
+	# Poll all input actions and store their just_pressed state
+	for action in input_actions:
+		input_just_pressed[action] = Input.is_action_just_pressed(action)
+
+# Public method for states to check if an action was just pressed this frame
+# Returns true only once per frame, even if called multiple times
+func is_action_just_pressed_once(action: String) -> bool:
+	if not input_just_pressed.has(action):
+		return false
+	
+	if input_consumed.get(action, false):
+		return false  # Already consumed this frame
+	
+	if input_just_pressed[action]:
+		input_consumed[action] = true  # Mark as consumed
+		return true
+	
+	return false
+
+# Public method for states to check if an action is currently pressed
+func is_action_pressed_polling(action: String) -> bool:
+	return Input.is_action_pressed(action)
 
 func update_sword_position() -> void:
 	# Flip the sword's x position when the sprite flips
@@ -163,7 +202,7 @@ func update_motion_blur(delta: float) -> void:
 		target_intensity = velocity_ratio * motion_blur_max_intensity
 	
 	# Enhance blur for fast falling (when crouching and falling fast)
-	if Input.is_action_pressed("crouch") and velocity.y > 800.0:
+	if is_action_pressed_polling("crouch") and velocity.y > 800.0:
 		target_intensity = min(target_intensity * 1.5, motion_blur_max_intensity)
 	
 	# Smoothly interpolate current blur towards target
@@ -365,7 +404,7 @@ func check_level_up():
 # Fast fall damage calculation
 func get_fast_fall_damage_multiplier() -> float:
 	# Check if player is fast falling (holding crouch) and moving downward fast enough
-	var is_fast_falling = Input.is_action_pressed("crouch")
+	var is_fast_falling = is_action_pressed_polling("crouch")
 	
 	if not is_fast_falling or velocity.y <= fast_fall_minimum_speed:
 		return 1.0  # No bonus damage
