@@ -12,6 +12,12 @@ class_name CassetteButtonlessUI
 @onready var timer_label: Label = $TimerContainer/VBoxContainer/TimerLabel
 @onready var timer_progress_bar: ProgressBar = $ProgressBar
 
+# Hearts References
+@onready var hearts_container: HBoxContainer = $HeartsContainer
+@onready var heart1: ColorRect = $HeartsContainer/Heart1
+@onready var heart2: ColorRect = $HeartsContainer/Heart2
+@onready var heart3: ColorRect = $HeartsContainer/Heart3
+
 # Audio Reference
 @onready var button_click_audio: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
@@ -58,9 +64,66 @@ var track_timers: Dictionary = {}  # Stores time remaining for each track
 var current_track: int = 1  # Currently active track (1-4)
 var default_track_time: float = 60.0  # Default time for new tracks
 
+# Health system
+var player_health: int = 3
+var max_health: int = 3
+var hearts: Array[ColorRect] = []
+
 signal ui_toggled(visible: bool)
 signal timer_finished()
 signal track_timer_finished(track_number: int)
+signal health_changed(new_health: int)
+
+func _initialize_hearts():
+	"""Initialize the hearts display system"""
+	hearts = [heart1, heart2, heart3]
+	player_health = max_health
+	_update_hearts_display()
+	print("Hearts system initialized with ", max_health, " hearts")
+
+func _update_hearts_display():
+	"""Update the visual display of hearts based on current health"""
+	for i in range(hearts.size()):
+		if hearts[i]:
+			if i < player_health:
+				# Full heart - bright red
+				hearts[i].color = Color(1, 0.2, 0.2, 1)
+				hearts[i].visible = true
+			else:
+				# Empty heart - dark/transparent
+				hearts[i].color = Color(0.3, 0.1, 0.1, 0.5)
+				hearts[i].visible = true
+
+func take_damage(amount: int = 1):
+	"""Player takes damage, reducing health"""
+	if player_health > 0:
+		player_health = max(0, player_health - amount)
+		_update_hearts_display()
+		health_changed.emit(player_health)
+		print("Player took ", amount, " damage. Health: ", player_health, "/", max_health)
+		
+		if player_health <= 0:
+			print("Player died!")
+
+func heal(amount: int = 1):
+	"""Player heals, increasing health"""
+	if player_health < max_health:
+		player_health = min(max_health, player_health + amount)
+		_update_hearts_display()
+		health_changed.emit(player_health)
+		print("Player healed ", amount, " health. Health: ", player_health, "/", max_health)
+
+func get_health() -> int:
+	"""Get current player health"""
+	return player_health
+
+func get_max_health() -> int:
+	"""Get maximum player health"""
+	return max_health
+
+func is_alive() -> bool:
+	"""Check if player is still alive"""
+	return player_health > 0
 
 func _ready():
 	# Store original positions for animation
@@ -101,6 +164,9 @@ func _ready():
 	
 	# Initialize track timers
 	_initialize_track_timers()
+	
+	# Initialize hearts system
+	_initialize_hearts()
 	
 	# Start the countdown timer for track 1
 	switch_to_track(1)
@@ -155,6 +221,12 @@ func _input(event):
 					button_click_audio.play()
 				switch_to_track(4)
 				_set_only_button_dropped("green")
+			KEY_H:
+				# Test heal (H key)
+				heal(1)
+			KEY_J:
+				# Test damage (J key)  
+				take_damage(1)
 
 func _animate_button_press(button_index: int):
 	var buttons = [red_button, yellow_button, blue_button, green_button]
@@ -435,8 +507,31 @@ func _process(delta):
 			timer_finished.emit()
 			track_timer_finished.emit(current_track)
 			
-			# Stop timer for this track but don't auto-switch
-			# User needs to manually switch to continue with other tracks
+			# Auto-progress to next track
+			_auto_progress_to_next_track()
+
+func _auto_progress_to_next_track():
+	"""Automatically move to the next track when current one finishes"""
+	var next_track = current_track + 1
+	
+	# If we've completed all tracks (1-4), stop the timer system
+	if next_track > 4:
+		is_timer_running = false
+		print("All tracks completed! Timer system stopped.")
+		return
+	
+	# Move to next track
+	print("Auto-progressing from track ", current_track, " to track ", next_track)
+	switch_to_track(next_track)
+	
+	# Update button display to show new active track
+	match next_track:
+		2:
+			_set_only_button_dropped("yellow")
+		3:
+			_set_only_button_dropped("blue")
+		4:
+			_set_only_button_dropped("green")
 
 func _update_timer_display():
 	"""Update the timer label with current time"""

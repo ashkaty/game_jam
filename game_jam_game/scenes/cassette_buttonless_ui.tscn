@@ -96,3 +96,29 @@ step = 1.0
 value = 100.0
 rounded = true
 show_percentage = false
+
+[node name="HeartsContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 50.0
+offset_right = 650.0
+offset_bottom = 100.0
+alignment = 1
+
+[node name="Heart1" type="ColorRect" parent="HeartsContainer"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+color = Color(1, 0.2, 0.2, 1)
+
+[node name="Heart2" type="ColorRect" parent="HeartsContainer"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+color = Color(1, 0.2, 0.2, 1)
+
+[node name="Heart3" type="ColorRect" parent="HeartsContainer"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+color = Color(1, 0.2, 0.2, 1)

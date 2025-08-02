@@ -7,6 +7,10 @@ extends CharacterBody2D
 @export var friction: float = 0.8   # Ground friction for sliding
 @export var air_friction: float = 0.98  # Air resistance
 
+# Collision prevention
+@export var collision_safety_margin: float = 2.0  # Extra margin to prevent getting stuck
+@export var max_horizontal_penetration: float = 5.0  # Max allowed horizontal penetration before correction
+
 # Knockback variables
 @export var knockback_resistance: float = 1.0  # How much knockback to apply (0.0 = no knockback, 1.0 = full knockback)
 @export var max_knockback_velocity: float = 800.0  # Maximum knockback speed
@@ -26,6 +30,18 @@ func _physics_process(delta):
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	
+	# Check for and resolve horizontal collisions to prevent getting jammed
+	if is_on_wall():
+		# Detect if dummy is penetrating into wall geometry
+		var collision_info = move_and_collide(Vector2.ZERO, true)
+		if collision_info:
+			var penetration_depth = collision_info.get_travel().length()
+			if penetration_depth > max_horizontal_penetration:
+				# Push dummy away from wall to prevent jamming
+				var push_direction = collision_info.get_normal()
+				global_position += push_direction * (collision_safety_margin + penetration_depth)
+				velocity.x *= 0.5  # Reduce horizontal velocity to prevent bouncing
+	
 	# Apply friction/air resistance
 	if is_on_floor():
 		# Ground friction
@@ -38,6 +54,14 @@ func _physics_process(delta):
 	
 	# Move with physics and handle collisions
 	move_and_slide()
+	
+	# Additional safety check: if dummy is still overlapping significantly, move it out
+	if get_slide_collision_count() > 0:
+		for i in get_slide_collision_count():
+			var collision = get_slide_collision(i)
+			if collision and collision.get_travel().length() > max_horizontal_penetration:
+				# Force push away from collision
+				global_position += collision.get_normal() * collision_safety_margin
 
 func take_damage(amount: int) -> void:
 	current_health = max(0, current_health - amount)
