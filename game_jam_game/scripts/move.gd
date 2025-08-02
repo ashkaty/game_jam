@@ -6,6 +6,7 @@ extends State
 @export var jump_state: State
 @export var attack_state: State
 @export var crouch_state: State
+@export var dash_state: State
 # -- Tunable movement parameters ------------------------------------------------
 @export var max_speed: float = 150.0               # Units per second (top horizontal speed)
 @export var acceleration: float = 600.0            # Units per second² when pressing a direction
@@ -41,10 +42,21 @@ func process_input(_event: InputEvent) -> State:
 		return attack_state
 	if Input.is_action_just_pressed('crouch'):
 		return crouch_state
+	if Input.is_action_just_pressed('dash'):
+		# Check if dash is available (cooldown check)
+		if dash_state and dash_state.is_dash_available():
+			return dash_state
+		else:
+			print("Dash on cooldown!")
 	return null
 
 func process_physics(delta: float) -> State:
 	print("moving " + str(parent.velocity.x))
+	
+	# Update dash cooldown
+	if dash_state:
+		dash_state.update_cooldown(delta)
+	
 	# Apply gravity
 	parent.velocity.y += gravity * delta
 

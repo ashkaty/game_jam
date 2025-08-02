@@ -4,6 +4,7 @@ extends State
 @export var move_state: State
 @export var fall_state: State
 @export var ground_attack_state: State
+@export var dash_state: State
 # ---- Tunables --------------------------------------------------------
 @export var crouch_fall_gravity_scale: float = 4.0  # Faster fall when crouching
 @export var camera_offset_y: float = 40.0  # How much to move camera down
@@ -47,6 +48,14 @@ func process_input(_event: InputEvent) -> State:
 	if Input.is_action_just_pressed('jump'):
 		parent.buffer_jump()
 		
+	# Handle dash input - can dash from crouch
+	if Input.is_action_just_pressed('dash'):
+		# Check if dash is available
+		if dash_state and dash_state.is_dash_available():
+			return dash_state
+		else:
+			print("Dash on cooldown!")
+		
 	# Exit crouch when key is released
 	if Input.is_action_pressed("attack"):
 		return ground_attack_state
@@ -65,6 +74,10 @@ func process_input(_event: InputEvent) -> State:
 	return null
 
 func process_physics(delta: float) -> State:
+	# Update dash cooldown
+	if dash_state:
+		dash_state.update_cooldown(delta)
+		
 	# Apply enhanced gravity for fast fall
 	if parent.is_on_floor():
 		parent.velocity.y += gravity * delta

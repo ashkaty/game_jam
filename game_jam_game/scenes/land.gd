@@ -21,8 +21,8 @@ func process_physics(delta: float) -> State:
 	print("landing " + str(parent.velocity.x))
 	_t += delta
 
-	# Check if player is holding crouch or shift for reduced sliding
-	var is_crouching = Input.is_action_pressed("crouch") or Input.is_action_pressed("shift")
+	# Check if player is holding crouch for reduced sliding
+	var is_crouching = Input.is_action_pressed("crouch")
 	var friction_to_use = crouch_land_friction if is_crouching else land_friction
 	
 	# Smoothly reduce leftover x-speed so big aerial dashes feel weighty

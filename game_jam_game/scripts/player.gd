@@ -278,8 +278,8 @@ func check_level_up():
 
 # Fast fall damage calculation
 func get_fast_fall_damage_multiplier() -> float:
-	# Check if player is fast falling (holding crouch or shift) and moving downward fast enough
-	var is_fast_falling = Input.is_action_pressed("crouch") or Input.is_action_pressed("shift")
+	# Check if player is fast falling (holding crouch) and moving downward fast enough
+	var is_fast_falling = Input.is_action_pressed("crouch")
 	
 	if not is_fast_falling or velocity.y <= fast_fall_minimum_speed:
 		return 1.0  # No bonus damage

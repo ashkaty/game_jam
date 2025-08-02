@@ -5,6 +5,7 @@ extends State
 @export var move_state: State
 @export var idle_state: State
 @export var air_attack_state: State
+@export var dash_state: State
 
 
 # ── Jump variants ───────────────────────────────────────────────
@@ -89,9 +90,20 @@ func exit() -> void:
 func process_input(_event: InputEvent) -> State:
 	if Input.is_action_just_pressed('attack'):
 		return air_attack_state
+	# Allow air dash during jump
+	if Input.is_action_just_pressed('dash'):
+		# Check if dash is available and air dash is enabled
+		if dash_state and dash_state.is_dash_available() and dash_state.air_dash_enabled:
+			return dash_state
+		else:
+			print("Air dash on cooldown or disabled!")
 	return null
 
 func process_physics(delta: float) -> State:
+	# Update dash cooldown
+	if dash_state:
+		dash_state.update_cooldown(delta)
+		
 	# Track how long the jump key is held for long jump upgrade
 	if Input.is_action_pressed("jump"):
 		_hold_time += delta

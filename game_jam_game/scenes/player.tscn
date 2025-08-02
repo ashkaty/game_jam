@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://c35ujxap2j06r" path="res://scripts/ground_attack.gd" id="8_qwkas"]
 [ext_resource type="Script" uid="uid://placeholder" path="res://scripts/air_attack.gd" id="9_air_attack"]
 [ext_resource type="Script" uid="uid://cmi6yhkd03cmy" path="res://scripts/crouch.gd" id="10_crouch"]
+[ext_resource type="Script" path="res://scripts/dash.gd" id="11_dash"]
 [ext_resource type="Script" uid="uid://be2h8sxopel4k" path="res://scripts/state_machine/state.gd" id="12_3v2ag"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_crouch"]
@@ -152,22 +153,24 @@ shape = SubResource("RectangleShape2D_fc0e3")
 script = ExtResource("2_tuyoq")
 starting_state = NodePath("idle")
 
-[node name="idle" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "jump_state", "move_state", "attack_state", "crouch_state")]
+[node name="idle" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "jump_state", "move_state", "attack_state", "crouch_state", "dash_state")]
 script = ExtResource("3_fjrip")
 fall_state = NodePath("../fall")
 jump_state = NodePath("../jump")
 move_state = NodePath("../move")
 attack_state = NodePath("../ground_attack")
 crouch_state = NodePath("../crouch")
+dash_state = NodePath("../dash")
 animation_name = "idle"
 
-[node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "land_state", "move_state", "idle_state", "air_attack_state")]
+[node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "land_state", "move_state", "idle_state", "air_attack_state", "dash_state")]
 script = ExtResource("4_smehm")
 fall_state = NodePath("../fall")
 land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
 air_attack_state = NodePath("../air_attack")
+dash_state = NodePath("../dash")
 short_hop_force = 1500.0
 long_hop_force = 2500.0
 short_gravity_scale = 5.0
@@ -177,7 +180,7 @@ air_friction = 0.0
 max_air_speed = 1600.0
 animation_name = "jump"
 
-[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state", "jump_state", "air_attack_state", "crouch_state")]
+[node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state", "jump_state", "air_attack_state", "crouch_state", "dash_state")]
 script = ExtResource("5_ur7pv")
 land_state = NodePath("../land")
 move_state = NodePath("../move")
@@ -185,19 +188,21 @@ idle_state = NodePath("../idle")
 jump_state = NodePath("../jump")
 air_attack_state = NodePath("../air_attack")
 crouch_state = NodePath("../crouch")
+dash_state = NodePath("../dash")
 fall_gravity_scale = 8.0
 air_accel = 2000.0
 air_friction = 0.0
 max_air_speed = 1600.0
 animation_name = "fall"
 
-[node name="move" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "jump_state", "attack_state", "crouch_state")]
+[node name="move" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "jump_state", "attack_state", "crouch_state", "dash_state")]
 script = ExtResource("6_y4r1p")
 fall_state = NodePath("../fall")
 idle_state = NodePath("../idle")
 jump_state = NodePath("../jump")
 attack_state = NodePath("../ground_attack")
 crouch_state = NodePath("../crouch")
+dash_state = NodePath("../dash")
 max_speed = 1600.0
 acceleration = 6400.0
 deceleration = 12800.0
@@ -226,12 +231,23 @@ idle_state = NodePath("../idle")
 move_state = NodePath("../move")
 animation_name = "swing"
 
-[node name="crouch" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state", "ground_attack_state")]
+[node name="crouch" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state", "ground_attack_state", "dash_state")]
 script = ExtResource("10_crouch")
 idle_state = NodePath("../idle")
 move_state = NodePath("../move")
 fall_state = NodePath("../fall")
 ground_attack_state = NodePath("../ground_attack")
+dash_state = NodePath("../dash")
+
+[node name="dash" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state", "land_state", "jump_state", "air_attack_state", "crouch_state")]
+script = ExtResource("11_dash")
+idle_state = NodePath("../idle")
+move_state = NodePath("../move")
+fall_state = NodePath("../fall")
+land_state = NodePath("../land")
+jump_state = NodePath("../jump")
+air_attack_state = NodePath("../air_attack")
+crouch_state = NodePath("../crouch")
 
 [node name="State" type="Node" parent="state_machine"]
 script = ExtResource("12_3v2ag")

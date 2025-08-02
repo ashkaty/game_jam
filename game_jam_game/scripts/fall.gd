@@ -6,6 +6,7 @@ extends State
 @export var jump_state: State
 @export var air_attack_state: State
 @export var crouch_state: State
+@export var dash_state: State
 
 # ---- Tunables --------------------------------------------------------
 @export var fall_gravity_scale: float = 3000.0
@@ -62,10 +63,6 @@ func process_frame(delta: float) -> State:
 	# Update animation based on whether player is fast falling
 	if Input.is_action_pressed("crouch"):
 		parent.animations.play("crouch")
-	elif Input.is_action_pressed("shift"):
-		# You can add a specific fast fall animation here if one exists
-		# For now, we'll let the default animation play or use crouch
-		parent.animations.play("crouch")  # Using crouch animation for shift fast fall too
 	else:
 		# You can add a specific fall animation here if one exists
 		# For now, we'll let the default animation play
@@ -93,11 +90,23 @@ func process_input(_event: InputEvent) -> State:
 	# This prevents unnecessary state switching between fall and crouch
 	if Input.is_action_just_pressed('crouch'):
 		return crouch_state
+		
+	# Allow air dash
+	if Input.is_action_just_pressed('dash'):
+		# Check if dash is available and air dash is enabled
+		if dash_state and dash_state.is_dash_available() and dash_state.air_dash_enabled:
+			return dash_state
+		else:
+			print("Air dash on cooldown or disabled!")
 	return null
 
 func process_physics(delta: float) -> State:
-	# Check if player is holding crouch or shift for fast fall
-	var is_fast_falling = Input.is_action_pressed("crouch") or Input.is_action_pressed("shift")
+	# Update dash cooldown
+	if dash_state:
+		dash_state.update_cooldown(delta)
+		
+	# Check if player is holding crouch for fast fall
+	var is_fast_falling = Input.is_action_pressed("crouch")
 	
 	# Get input axis for wall sliding detection
 	var axis := Input.get_axis("move_left","move_right")
@@ -139,8 +148,7 @@ func process_physics(delta: float) -> State:
 	if is_wall_sliding:
 		print("Wall sliding! Velocity: ", parent.velocity.y, " | Gravity scale: ", gravity_scale)
 	elif is_fast_falling and parent.velocity.y > 0:
-		var fall_type = "crouch" if Input.is_action_pressed("crouch") else "shift"
-		print("Fast falling with ", fall_type, "! Velocity: ", parent.velocity.y)
+		print("Fast falling with crouch! Velocity: ", parent.velocity.y)
 	
 	# Gravity with clamp
 	parent.velocity.y = min(

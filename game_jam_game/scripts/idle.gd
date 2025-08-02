@@ -11,6 +11,8 @@ var move_state: State
 var attack_state: State
 @export
 var crouch_state: State
+@export
+var dash_state: State
 
 func enter() -> void:
 	super()
@@ -45,9 +47,19 @@ func process_input(_event: InputEvent) -> State:
 		return attack_state
 	if Input.is_action_just_pressed('crouch'):
 		return crouch_state
+	if Input.is_action_just_pressed('dash'):
+		# Check if dash is available (cooldown check)
+		if dash_state and dash_state.is_dash_available():
+			return dash_state
+		else:
+			print("Dash on cooldown!")
 	return null
 
 func process_physics(delta: float) -> State:
+	# Update dash cooldown
+	if dash_state:
+		dash_state.update_cooldown(delta)
+		
 	parent.velocity.y += gravity * delta
 	parent.move_and_slide()
 	
