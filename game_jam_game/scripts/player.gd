@@ -150,29 +150,28 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 
-        if is_replaying:
-                if track1.length == 0:
-                        return
-                var tick = track1.get_at(track_replay_index)
-                self.position = tick.position
-                self.velocity = tick.velocity
-                self.input_just_pressed = tick.input
-                track_replay_index = (track_replay_index + 1) % track1.length
-                return
-        else:
-                track1.push({
-                "input" : input_just_pressed,
-                "seconds" : total_time,
-                "health" : current_health,  # Use actual current health
-                "position": self.position,
-                "velocity": self.velocity
-        })
-                if track1.is_full():
-                        track_replay_index = 0
-                        is_replaying = true
-                        emit_signal("loop_started")
+	if is_replaying:
+		if track1.length == 0:
+			return
+		var tick = track1.get_at(track_replay_index)
+		self.position = tick.position
+		self.velocity = tick.velocity
+		self.input_just_pressed = tick.input
+		track_replay_index = (track_replay_index + 1) % track1.length
+		return
+	else:
+		track1.push({
+				"input" : input_just_pressed,
+				"seconds" : total_time,
+				"health" : current_health,  # Use actual current health
+				"position": self.position,
+				"velocity": self.velocity
+		})
+		if track1.is_full():
+			track_replay_index = 0
+			is_replaying = true
+			emit_signal("loop_started")
 
-	
 	# Update invincibility timer and flashing effect
 	update_invincibility(delta)
 	
@@ -205,12 +204,12 @@ func _physics_process(delta: float) -> void:
 func buffer_jump():
 	buffer_input("jump")
 func _process(delta: float) -> void:
-        # Poll inputs first to ensure they're captured for this frame
-        poll_inputs()
-        if is_replaying:
-                return
+	# Poll inputs first to ensure they're captured for this frame
+	poll_inputs()
+	if is_replaying:
+		return
 
-        state_machine.process_frame(delta)
+	state_machine.process_frame(delta)
 	
 
 	if animations.flip_h != last_flip_h:
@@ -218,8 +217,6 @@ func _process(delta: float) -> void:
 
 		last_flip_h = animations.flip_h
 
-
-	
 # Input polling system - call this every frame to capture inputs
 func poll_inputs() -> void:
 	
