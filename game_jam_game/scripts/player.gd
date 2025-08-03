@@ -1,5 +1,4 @@
 class_name Player
-
 extends CharacterBody2D
 
 # -- Set up ring buffer -- #
@@ -57,11 +56,11 @@ var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 var current_health: int = 3
 
 func get_health() -> int:
-        return current_health
+		return current_health
 
 func set_health(value: int) -> void:
-        current_health = clamp(value, 0, max_health)
-        health_changed.emit(current_health)
+		current_health = clamp(value, 0, max_health)
+		health_changed.emit(current_health)
 
 # Ghost mode system - when player dies, becomes a ghost until timer ends
 var is_ghost_mode: bool = false
@@ -134,8 +133,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			print("Debug: Manually exited ghost mode")
 		else:
 			print("Debug: Simulating player death for testing...")
-                        set_health(0)
-                        die()
+						set_health(0)
+						die()
 		
 	# Track when input buttons are first pressed for hold time calculation
 	for action in input_actions:
@@ -689,8 +688,8 @@ func take_damage(damage_amount: int) -> void:
 	if current_health <= 0:
 		return  # Player is already dead
 	
-        set_health(current_health - damage_amount)
-        print("Player took ", damage_amount, " damage! Health: ", current_health, "/", max_health)
+		set_health(current_health - damage_amount)
+		print("Player took ", damage_amount, " damage! Health: ", current_health, "/", max_health)
 	
 	# Start invincibility frames
 	start_invincibility()
@@ -772,18 +771,10 @@ func set_ghost_mode(ghost: bool) -> void:
 			hurtbox.collision_mask = 4   # Detect hitboxes on layer 3
 		
 		# Reset health when exiting ghost mode (for next track)
-                set_health(max_health)
+		set_health(max_health)
 		
 		print("Ghost mode deactivated - player restored to normal state")
 
 func is_in_ghost_mode() -> bool:
 	"""Check if player is currently in ghost mode"""
 	return is_ghost_mode
-
-# ═══════════════════════════════════════════════════════════════════════════════
-	
-	# You can add more death effects here:
-	# - Play death animation
-	# - Reset player position
-	# - Show game over screen
-	# - Reload scene

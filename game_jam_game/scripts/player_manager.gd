@@ -5,14 +5,14 @@ class_name PlayerManager
 @export var track_scene: PackedScene
 @export var track_count: int = 4
 
+# Reference to the UI (can be set in editor or found at runtime)
+@export var cassette_ui: CassetteButtonlessUI
+
 # Holds the instantiated Player tracks
 var tracks: Array[Player] = []
 
 # Index of the currently active track
 var active_track_idx: int = 0
-
-# Reference to the UI
-var cassette_ui: Node = null
 
 # Reference to the camera
 @onready var main_camera: Camera2D = $Camera2D
@@ -158,6 +158,10 @@ func _find_and_connect_ui() -> void:
 		if cassette_ui.has_signal("track_timer_finished"):
 			cassette_ui.connect("track_timer_finished", Callable(self, "_on_track_timer_finished"))
 		
+		# Connect to cassette events following the requested pattern
+		if cassette_ui.has_signal("cassette_event"):
+			cassette_ui.connect("cassette_event", Callable(self, "_on_cassette_event"))
+		
 		# Override the UI's track switching to also switch player visibility
 		_setup_ui_track_switching()
 	else:
@@ -200,6 +204,57 @@ func _on_track_timer_finished(track_number: int) -> void:
 	if track_number == 1:
 		print("[PlayerManager] Track 1 finished - any ghost players will be restored when switching to track 2")
 
+# Handle cassette events following the requested pattern
+func _on_cassette_event(event_type: String) -> void:
+	print("[PlayerManager] Received cassette event: ", event_type)
+	
+	# Handle different cassette events
+	match event_type:
+		"play":
+			# Start/resume playback
+			_handle_play_event()
+		"stop":
+			_handle_stop_event()
+		"pause":
+			_handle_pause_event()
+		"rewind":
+			_handle_rewind_event()
+		"fast_forward":
+			_handle_fast_forward_event()
+		"damage":
+			# Handle damage event - make UI lose a heart
+			_handle_damage_event()
+		_:
+			print("[PlayerManager] Unknown cassette event: ", event_type)
+
+func _handle_play_event():
+	print("[PlayerManager] Handling play event")
+	# Add play logic here
+
+func _handle_stop_event():
+	print("[PlayerManager] Handling stop event")
+	# Add stop logic here
+
+func _handle_pause_event():
+	print("[PlayerManager] Handling pause event")
+	# Add pause logic here
+
+func _handle_rewind_event():
+	print("[PlayerManager] Handling rewind event")
+	# Add rewind logic here
+
+func _handle_fast_forward_event():
+	print("[PlayerManager] Handling fast forward event")
+	# Add fast forward logic here
+
+func _handle_damage_event():
+	print("[PlayerManager] Handling damage event - player took damage")
+	# Make the UI lose a heart following the requested pattern
+	if cassette_ui and cassette_ui.has_method("lose_heart"):
+		cassette_ui.lose_heart()
+	else:
+		print("[PlayerManager] Warning: UI doesn't have lose_heart method")
+
 
 
 # Public method to get the active track
@@ -220,3 +275,19 @@ func _update_camera_follow() -> void:
 # Process function to keep camera following the active player
 func _process(_delta: float) -> void:
 	_update_camera_follow()
+
+# Public method to trigger damage events following the requested pattern
+func take_damage():
+	"""Called when the player takes damage - emits damage signal to UI"""
+	if cassette_ui:
+		cassette_ui.trigger_cassette_action("damage")
+	else:
+		print("[PlayerManager] Warning: No UI reference for damage event")
+
+# Public method to trigger other cassette events
+func trigger_cassette_event(event_type: String):
+	"""Public method to trigger any cassette event"""
+	if cassette_ui:
+		cassette_ui.trigger_cassette_action(event_type)
+	else:
+		print("[PlayerManager] Warning: No UI reference for event: ", event_type)

@@ -137,6 +137,24 @@ z_index = -1
 collision_layer = 2
 floor_snap_length = 8.1
 script = ExtResource("1_oprun")
+coyote_time_duration = null
+jump_cooldown_duration = null
+input_buffer_duration = null
+input_buffer_refresh_cooldown = null
+max_health = null
+ghost_transparency = null
+ghost_color_tint = null
+invincibility_duration = null
+invincibility_flash_rate = null
+fast_fall_damage_multiplier = null
+fast_fall_minimum_speed = null
+max_fast_fall_damage_multiplier = null
+allow_movement_cancel = null
+allow_jump_cancel = null
+allow_dash_cancel = null
+action_cancel_window = null
+dash_cancel_window = null
+use_animation_cancel_points = null
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(54, -149)
