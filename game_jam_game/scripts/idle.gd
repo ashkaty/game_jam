@@ -13,6 +13,7 @@ var attack_state: State
 var crouch_state: State
 @export
 var dash_state: State
+@export var animation_name: String = "Idle"
 
 func enter() -> void:
 	super()
