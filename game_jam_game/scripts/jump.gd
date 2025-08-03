@@ -6,6 +6,7 @@ extends State
 @export var idle_state: State
 @export var air_attack_state: State
 @export var dash_state: State
+@export var animation_name: String = "jump"
 
 
 # ── Jump variants ───────────────────────────────────────────────
@@ -204,7 +205,7 @@ func process_physics(delta: float) -> State:
 			effective_air_accel = current_air_accel * air_direction_change_multiplier
 		
 		parent.velocity.x = move_toward(parent.velocity.x, target, effective_air_accel * delta)
-		parent.animations.flip_h = axis < 0
+                parent.set_facing_left(axis < 0)
 	else:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, air_friction * delta)
 
