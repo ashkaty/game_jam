@@ -11,6 +11,7 @@ signal loop_started
  
 @onready var animations: AnimationPlayer = $AnimationPlayer
 @onready var sprite: Node2D = $Polygons
+@onready var skeleton: Node2D = $Skeleton2D
 @onready var sword: Node2D = get_node_or_null("Sword")
 @onready var camera: Camera2D = $Camera2D
 
@@ -240,8 +241,13 @@ func update_sword_position() -> void:
 
 
 func set_facing_left(is_left: bool) -> void:
-		facing_left = is_left
-		scale.x = -1 if is_left else 1
+	if facing_left == is_left:
+		return
+	var center := skeleton.global_position
+	facing_left = is_left
+	scale.x = -1 if is_left else 1
+	var new_center := skeleton.global_position
+	global_position += center - new_center
 
 
 func is_facing_left() -> bool:
