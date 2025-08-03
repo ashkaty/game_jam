@@ -12,7 +12,7 @@ class_name PlayerManager
 var tracks: Array[Player] = []
 
 # Index of the currently active track
-var active_track_idx: int = 0
+var active_track_idx: int = -1
 
 # Reference to the camera
 @onready var main_camera: Camera2D = $Camera2D
@@ -40,15 +40,20 @@ func _ready() -> void:
 			player.get_node("Camera2D").enabled = false
 
 		# Activate the first track by default
-		active_track_idx = -1
+		#active_track_idx = 0
 		activate_track(0)
 	
 	# Find and connect to the UI
 	_find_and_connect_ui()
 
 # Intercept unhandled input and forward only to the active track
+#func _unhandled_input(event: InputEvent) -> void:
+#	tracks[active_track_idx]._unhandled_input(event)
+
 func _unhandled_input(event: InputEvent) -> void:
-	tracks[active_track_idx]._unhandled_input(event)
+	if active_track_idx >= 0 and active_track_idx < tracks.size():
+		tracks[active_track_idx]._unhandled_input(event)
+
 
 # Called when a track's ring buffer becomes full and starts replaying
 func _on_loop_started(looping_track_idx: int) -> void:
@@ -60,39 +65,7 @@ func _on_loop_started(looping_track_idx: int) -> void:
 		# Switch control to the next track while keeping previous tracks visible
 		activate_track(next_idx)
 
-# Enable input on the chosen track, disable on the others
-
-func _ready2() -> void:
-	# Instantiate and set up each track
-	for i in range(track_count):
-		var player = track_scene.instantiate() as Player
-		player.name = "Track%d" % i
-		
-		player.position = Vector2( i * 32, 0 )  # 32-pixel horizontal offset per track
-		add_child(player)
-		# Listen for when the player’s ring buffer starts looping
-		player.connect("loop_started", Callable(self, "_on_loop_started").bind(i))
-		tracks.append(player)
-		# Disable input on all until we activate one
-		player.set_process_input(false)
-
-	# Activate the first track by default
-	active_track_idx = 0
-	activate_track(active_track_idx)
-
-# Intercept unhandled input and forward only to the active track
-func _unhandled_input2(event: InputEvent) -> void:
-	tracks[active_track_idx]._unhandled_input(event)
-
-# Called when a track’s ring buffer becomes full and starts replaying
-func _on_loop_started2(looping_track_idx: int) -> void:
-	# Only switch if it’s from the active track
-	if looping_track_idx != active_track_idx:
-		return
-	# Compute next track index (wraps around)
-	var next_idx = (active_track_idx + 1) % tracks.size()
-	activate_track(next_idx)
-
+# 
 # Enable input on the chosen track, disable on the others
 func activate_track(idx: int) -> void:
 	# Check if we're already on this track to prevent unnecessary work
@@ -100,16 +73,18 @@ func activate_track(idx: int) -> void:
 		return
 		
 		for i in range(tracks.size()):
-				var is_active = (i == idx)
-				tracks[i].set_process_input(is_active)
-				tracks[i].visible = i <= idx  # Keep completed tracks visible
+			var is_active = i == idx
+			#tracks[i].set_process_input(is_active)
+				
+			tracks[i].visible = i <= idx  # Keep completed tracks visible
 		
-		# Handle ghost mode transitions
-		if is_active:
-			# When activating a track, exit ghost mode if the player was a ghost
-			if tracks[i].has_method("set_ghost_mode"):
+			# Handle ghost mode transitions
+			if is_active and tracks[i].has_method("set_ghost_mode"):
+				# When activating a track, exit ghost mode if the player was a ghost
 				tracks[i].set_ghost_mode(false)
-				print("[PlayerManager] Restored player from ghost mode on track %d" % i)
+				#if tracks[i].has_method("set_ghost_mode"):
+				#	tracks[i].set_ghost_mode(false)
+				#	print("[PlayerManager] Restored player from ghost mode on track %d" % i)
 	
 	active_track_idx = idx
 	
