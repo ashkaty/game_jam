@@ -1,22 +1,20 @@
-[gd_scene load_steps=12 format=4 uid="uid://mlw2l1yadiqx"]
+[gd_scene load_steps=11 format=4 uid="uid://cyjvyijr5gowj"]
 
-[ext_resource type="Script" path="res://scripts/damage_particle_manager.gd" id="1_2md8r"]
-[ext_resource type="Texture2D" uid="uid://yd0fewno8rv" path="res://assets/Background.png" id="2_m3yqx"]
-[ext_resource type="Texture2D" uid="uid://dahffv78lp0gc" path="res://assets/sprites/TileSet-0.png" id="3_m3yqx"]
-[ext_resource type="PackedScene" uid="uid://dvvyxv8mj7fho" path="res://scenes/player_manager.tscn" id="4_0hpob"]
-[ext_resource type="PackedScene" uid="uid://cwx82i6utmfir" path="res://scenes/level_tools/Clear_level_gate.tscn" id="5_cccdn"]
-[ext_resource type="PackedScene" uid="uid://danvou28qfbsk" path="res://scenes/levels/level 2.tscn" id="6_2md8r"]
-[ext_resource type="PackedScene" uid="uid://cb62xk1707e3g" path="res://scenes/level_tools/ScrambledText.tscn" id="7_m3yqx"]
+[ext_resource type="Script" path="res://scripts/damage_particle_manager.gd" id="1_upo60"]
+[ext_resource type="Texture2D" uid="uid://yd0fewno8rv" path="res://assets/Background.png" id="2_bkjrq"]
+[ext_resource type="Texture2D" uid="uid://dahffv78lp0gc" path="res://assets/sprites/TileSet-0.png" id="3_ai7kb"]
+[ext_resource type="PackedScene" uid="uid://dvvyxv8mj7fho" path="res://scenes/player_manager.tscn" id="4_3rxdu"]
+[ext_resource type="PackedScene" uid="uid://cwx82i6utmfir" path="res://scenes/level_tools/Clear_level_gate.tscn" id="5_k46yq"]
+[ext_resource type="PackedScene" uid="uid://cb62xk1707e3g" path="res://scenes/level_tools/ScrambledText.tscn" id="9_hljtj"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_1dfd8"]
 distance = 256.0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bva85"]
-texture = ExtResource("3_m3yqx")
+texture = ExtResource("3_ai7kb")
 margins = Vector2i(4, 0)
 texture_region_size = Vector2i(390, 390)
 63:50/0 = 0
-25:25/size_in_atlas = Vector2i(25, 25)
 25:25/0 = 0
 0:3/0 = 0
 1:3/0 = 0
@@ -39,7 +37,7 @@ texture_region_size = Vector2i(390, 390)
 0:4/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0hpob"]
-texture = ExtResource("3_m3yqx")
+texture = ExtResource("3_ai7kb")
 0:0/0 = 0
 1:0/0 = 0
 2:0/0 = 0
@@ -12306,7 +12304,7 @@ sources/1 = SubResource("TileSetAtlasSource_0hpob")
 [node name="tutorial level 1" type="Node2D"]
 
 [node name="DamageParticleManager" type="Node" parent="."]
-script = ExtResource("1_2md8r")
+script = ExtResource("1_upo60")
 
 [node name="WorldBorder" type="StaticBody2D" parent="."]
 position = Vector2(-36, 116)
@@ -12321,7 +12319,7 @@ z_index = -4
 [node name="BackgroundAsset1" type="Sprite2D" parent="Background"]
 position = Vector2(396, -2000)
 scale = Vector2(4.29049, 4.49677)
-texture = ExtResource("2_m3yqx")
+texture = ExtResource("2_bkjrq")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="."]
 physics_interpolation_mode = 1
@@ -12330,31 +12328,32 @@ scale = Vector2(0.5, 0.5)
 tile_map_data = PackedByteArray("AAD3/wAAAAABAAMAAAD4/wAAAAABAAMAAAD5/wAAAAABAAMAAAD6/wAAAAABAAMAAAD7/wAAAAABAAMAAAD8/wAAAAABAAMAAAD9/wAAAAABAAMAAAD+/wAAAAABAAMAAAD//wAAAAABAAMAAAACAAAAAAABAAMAAAADAAAAAAABAAMAAAAEAAAAAAABAAMAAAAFAAAAAAABAAMAAAAGAAAAAAABAAMAAAD2/wAAAAABAAMAAADt/wAAAAABAAMAAADu/wAAAAABAAMAAADv/wAAAAABAAMAAADw/wAAAAABAAMAAADx/wAAAAABAAMAAADy/wAAAAABAAMAAADz/wAAAAABAAMAAAD0/wAAAAABAAMAAAD1/wAAAAABAAMAAAAAAAAAAAABAAMAAAABAAAAAAABAAMAAAAHAAAAAAABAAMAAAAIAAAAAAABAAMAAAAJAAAAAAABAAMAAAAKAAAAAAABAAMAAAALAAAAAAABAAMAAAAMAAAAAAABAAMAAAANAAAAAAABAAMAAADt/wEAAAAAAAMAAADu/wEAAAAAAAMAAADv/wEAAAAAAAMAAADw/wEAAAAAAAMAAADx/wEAAAAAAAMAAADy/wEAAAAAAAMAAADz/wEAAAAAAAMAAAD0/wIAAAAAAAMAAAD1/wIAAAAAAAMAAAD2/wIAAAAAAAMAAAD3/wIAAAAAAAMAAAD4/wIAAAAAAAMAAAD5/wIAAAAAAAMAAAD6/wIAAAAAAAMAAAD7/wEAAAAAAAMAAAD8/wEAAAAAAAMAAAD9/wEAAAAAAAMAAAD+/wEAAAAAAAMAAAD//wEAAAAAAAMAAAAAAAEAAAAAAAMAAAABAAEAAAAAAAMAAAACAAEAAAAAAAMAAAADAAEAAAAAAAMAAAAEAAEAAAAAAAMAAAAFAAEAAAAAAAMAAAAGAAEAAAAAAAMAAAAHAAEAAAAAAAMAAAAIAAEAAAAAAAMAAAAJAAEAAAAAAAMAAAAKAAEAAAAAAAMAAAALAAEAAAAAAAMAAAAMAAEAAAAAAAMAAAANAAEAAAAAAAMAAAANAAIAAAAAAAMAAAANAAMAAAAAAAQAAAAMAAMAAAAAAAMAAAALAAMAAAAAAAMAAAAKAAMAAAAAAAMAAAAJAAMAAAAAAAMAAAAIAAMAAAAAAAMAAAAHAAMAAAAAAAMAAAAGAAMAAAAAAAMAAAAFAAMAAAAAAAMAAAAEAAMAAAAAAAMAAAADAAMAAAAAAAMAAAACAAMAAAAAAAMAAAABAAMAAAAAAAMAAAAAAAMAAAAAAAMAAAD//wMAAAAAAAMAAAD+/wMAAAAAAAMAAAD9/wMAAAAAAAMAAAD8/wMAAAAAAAMAAAD7/wIAAAAAAAMAAAD2/wMAAAAAAAMAAAD1/wMAAAAAAAMAAAD0/wMAAAAAAAMAAADz/wMAAAAAAAMAAADy/wMAAAAAAAMAAADx/wMAAAAAAAMAAADw/wMAAAAAAAMAAADv/wMAAAAAAAMAAADu/wMAAAAAAAMAAADt/wMAAAAAAAMAAADt/wIAAAAAAAMAAADw/wIAAAAAAAMAAADx/wIAAAAAAAMAAADy/wIAAAAAAAMAAADz/wIAAAAAAAMAAAD8/wIAAAAAAAMAAAD9/wIAAAAAAAMAAAD+/wIAAAAAAAMAAAD//wIAAAAAAAMAAAAAAAIAAAAAAAMAAAABAAIAAAAAAAMAAAACAAIAAAAAAAMAAAADAAIAAAAAAAMAAAAEAAIAAAAAAAMAAAAFAAIAAAAAAAMAAAAGAAIAAAAAAAMAAAAHAAIAAAAAAAMAAAAIAAIAAAAAAAMAAAAJAAIAAAAAAAMAAAAKAAIAAAAAAAMAAAALAAIAAAAAAAMAAAAMAAIAAAAAAAMAAADv/wIAAAAAAAMAAADu/wIAAAAAAAMAAAD0/wEAAAAAAAMAAAD1/wEAAAAAAAMAAAD2/wEAAAAAAAMAAAD3/wEAAAAAAAMAAAD4/wEAAAAAAAMAAAD5/wEAAAAAAAMAAAD6/wEAAAAAAAMAAAD3/wMAAAAAAAMAAAD4/wMAAAAAAAMAAAD5/wMAAAAAAAMAAAD6/wMAAAAAAAMAAAD7/wMAAAAAAAMAAAANAAQAAAAAAAQAAAAMAAQAAAAAAAMAAAALAAQAAAAAAAMAAAAKAAQAAAAAAAMAAAAJAAQAAAAAAAMAAAAIAAQAAAAAAAMAAAAHAAQAAAAAAAMAAAAGAAQAAAAAAAMAAAAFAAQAAAAAAAMAAAAEAAQAAAAAAAMAAAADAAQAAAAAAAMAAAACAAQAAAAAAAMAAAABAAQAAAAAAAMAAAAAAAQAAAAAAAMAAAD//wQAAAAAAAMAAAD+/wQAAAAAAAMAAAD9/wQAAAAAAAMAAAD8/wQAAAAAAAMAAAD7/wQAAAAAAAMAAAD6/wQAAAAAAAMAAAD5/wQAAAAAAAMAAAD4/wQAAAAAAAMAAAD3/wQAAAAAAAMAAAD2/wQAAAAAAAMAAAD1/wQAAAAAAAMAAAD0/wQAAAAAAAMAAADz/wQAAAAAAAMAAADy/wQAAAAAAAMAAADx/wQAAAAAAAMAAADw/wQAAAAAAAMAAADv/wQAAAAAAAMAAADu/wQAAAAAAAMAAADt/wQAAAAAAAMAAAAOAAAAAAABAAMAAAAPAAAAAAABAAMAAAAQAAAAAAABAAMAAAARAAAAAAABAAMAAAASAAAAAAABAAMAAAATAAAAAAABAAMAAAAUAAAAAAABAAMAAAAVAAAAAAABAAMAAAAWAAAAAAABAAMAAAAOAAEAAAAAAAQAAAAPAAEAAAAAAAQAAAAQAAEAAAAAAAQAAAARAAEAAAAAAAQAAAASAAEAAAAAAAQAAAATAAEAAAAAAAQAAAAUAAEAAAAAAAQAAAAVAAEAAAAAAAQAAAAWAAEAAAAAAAQAAAAWAAIAAAAAAAQAAAAWAAMAAAAAAAQAAAAVAAMAAAAAAAQAAAAUAAMAAAAAAAQAAAATAAMAAAAAAAQAAAASAAMAAAAAAAQAAAARAAMAAAAAAAQAAAAQAAMAAAAAAAQAAAAPAAMAAAAAAAQAAAAOAAMAAAAAAAQAAAAOAAQAAAAAAAQAAAAPAAQAAAAAAAQAAAAQAAQAAAAAAAQAAAARAAQAAAAAAAQAAAASAAQAAAAAAAQAAAATAAQAAAAAAAQAAAAUAAQAAAAAAAQAAAAVAAQAAAAAAAQAAAAWAAQAAAAAAAQAAAAVAAIAAAAAAAQAAAAUAAIAAAAAAAQAAAATAAIAAAAAAAQAAAASAAIAAAAAAAQAAAARAAIAAAAAAAQAAAAQAAIAAAAAAAQAAAAPAAIAAAAAAAQAAAAOAAIAAAAAAAQAAAA=")
 tile_set = SubResource("TileSet_cccdn")
 
-[node name="PlayerManager" parent="." instance=ExtResource("4_0hpob")]
+[node name="PlayerManager" parent="." instance=ExtResource("4_3rxdu")]
 
-[node name="clear_level" parent="." instance=ExtResource("5_cccdn")]
+[node name="clear_level" parent="." instance=ExtResource("5_k46yq")]
 position = Vector2(3373, -411)
-next_level = ExtResource("6_2md8r")
+next_level = null
 
-[node name="Top text" parent="." instance=ExtResource("7_m3yqx")]
+[node name="Top text" parent="." instance=ExtResource("9_hljtj")]
 offset_left = -101.0
 offset_top = -550.0
 offset_right = -61.0
 offset_bottom = -510.0
+text = "You get 4 tracks."
 font_size = 96
 
-[node name="Bottom text" parent="." instance=ExtResource("7_m3yqx")]
+[node name="Bottom text" parent="." instance=ExtResource("9_hljtj")]
 offset_left = -7.0
 offset_top = -426.0
 offset_right = 33.0
 offset_bottom = -386.0
-text = "... Are you just gonna sit back and take it?"
+text = "When each new track starts,"
 font_size = 96
 
-[node name="Control" parent="." instance=ExtResource("7_m3yqx")]
-offset_left = 1952.0
-offset_top = -295.0
-offset_right = 1992.0
-offset_bottom = -255.0
-text = "Press enter to bash his skull in"
-font_size = 64
+[node name="Bottomest text" parent="." instance=ExtResource("9_hljtj")]
+offset_left = -3.0
+offset_top = -366.0
+offset_right = 37.0
+offset_bottom = -326.0
+text = "all the previous ones loop underneath it"
+font_size = 96

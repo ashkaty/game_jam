@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://dvvyxv8mj7fho"]
 
 [ext_resource type="Script" uid="uid://b731k62kmmpbx" path="res://scripts/player_manager.gd" id="1_ve51y"]
-[ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="2_1aieh"]
+[ext_resource type="PackedScene" uid="uid://b4baaffqm4i8r" path="res://scenes/player.tscn" id="2_1aieh"]
 [ext_resource type="PackedScene" uid="uid://5utxsmxaf4j5" path="res://scenes/cassette_buttonless_ui.tscn" id="4_oav6u"]
 
 [sub_resource type="GDScript" id="GDScript_1aieh"]
@@ -28,7 +28,9 @@ pivot_offset = Vector2(3, -800)
 metadata/_edit_use_anchors_ = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(-0.155, 33.345)
 rotation = -3.14159
 scale = Vector2(14.5833, -3.6697)
-zoom = Vector2(0.4, 0.4)
+offset = Vector2(0, -1000)
+zoom = Vector2(0.265, 0.265)
 script = SubResource("GDScript_1aieh")
