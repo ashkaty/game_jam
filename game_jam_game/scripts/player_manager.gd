@@ -18,6 +18,7 @@ var track_colors: Array[Color] = [
 
 # Holds the instantiated Player tracks
 var tracks: Array[Player] = []
+var ghost_flags: Array[bool] = []
 
 # Index of the currently active track
 var active_track_idx: int = -1
@@ -38,6 +39,10 @@ func _ready() -> void:
 		# Listen for when the player's ring buffer starts looping
 		player.connect("loop_started", Callable(self, "_on_loop_started").bind(i))
 		tracks.append(player)
+                ghost_flags.append(false)
+
+                if player.has_signal("died"):
+                        player.connect("died", Callable(self, "_on_player_died").bind(i))
 		# Disable input on all until we activate one
 		player.set_process_input(false)
 
@@ -77,18 +82,19 @@ func _on_loop_started(looping_track_idx: int) -> void:
 # 
 # Enable input on the chosen track, disable on the others
 func activate_track(idx: int) -> void:
-	# Check if we're already on this track to prevent unnecessary work
-	if active_track_idx == idx:
-		return
+        # Check if we're already on this track to prevent unnecessary work
+        if active_track_idx == idx:
+                return
 
-	for i in range(tracks.size()):
-		var is_active := i == idx
-		tracks[i].set_process_input(is_active)
-		tracks[i].visible = i <= idx  # keep current and prior tracks visible
+        for i in range(tracks.size()):
+                var is_active := i == idx
+                tracks[i].set_process_input(is_active)
+                tracks[i].visible = i <= idx  # keep current and prior tracks visible
 
-		# Handle ghost mode transitions
-		if tracks[i].has_method("set_ghost_mode"):
-			tracks[i].set_ghost_mode(i < idx)
+                # Handle ghost mode transitions
+                if tracks[i].has_method("set_ghost_mode"):
+                        var should_ghost = ghost_flags[i] and i != idx
+                        tracks[i].set_ghost_mode(should_ghost)
 
 	active_track_idx = idx
 
@@ -274,3 +280,8 @@ func trigger_cassette_event(event_type: String):
 		cassette_ui.trigger_cassette_action(event_type)
 	else:
 		print("[PlayerManager] Warning: No UI reference for event: ", event_type)
+
+func _on_player_died(idx: int) -> void:
+        if idx >= 0 and idx < ghost_flags.size():
+                ghost_flags[idx] = true
+
