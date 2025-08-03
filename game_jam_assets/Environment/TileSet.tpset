@@ -1,0 +1,348 @@
+{
+	"textures": [
+		{
+			"image": "TileSet-0.png",
+			"size": {
+				"w": 1743,
+				"h": 1975
+			},
+			"sprites": [
+				{
+					"filename": "Acid_Edge_L.png",
+					"region": {
+						"x": 1,
+						"y": 1,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Acid_Edge_M.png",
+					"region": {
+						"x": 1,
+						"y": 396,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Acid_Edge_R.png",
+					"region": {
+						"x": 1,
+						"y": 791,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Building_L.png",
+					"region": {
+						"x": 1,
+						"y": 1186,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Building_Mid.png",
+					"region": {
+						"x": 1,
+						"y": 1581,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Building_R.png",
+					"region": {
+						"x": 396,
+						"y": 1,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Building_Top_L.png",
+					"region": {
+						"x": 396,
+						"y": 396,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Building_Top_Mid.png",
+					"region": {
+						"x": 396,
+						"y": 791,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Building_Top_R.png",
+					"region": {
+						"x": 396,
+						"y": 1186,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Building_Window.png",
+					"region": {
+						"x": 396,
+						"y": 1581,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Bottom_L.png",
+					"region": {
+						"x": 791,
+						"y": 1,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Bottom_Middle.png",
+					"region": {
+						"x": 791,
+						"y": 396,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Bottom_R 1.png",
+					"region": {
+						"x": 791,
+						"y": 791,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Bottom_R.png",
+					"region": {
+						"x": 791,
+						"y": 1186,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Top_Edge_R 1.png",
+					"region": {
+						"x": 791,
+						"y": 1581,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Top_Edge_R.png",
+					"region": {
+						"x": 1186,
+						"y": 1,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Top_L.png",
+					"region": {
+						"x": 1186,
+						"y": 396,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Top_Mid.png",
+					"region": {
+						"x": 1186,
+						"y": 791,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Floor_Top_R.png",
+					"region": {
+						"x": 1186,
+						"y": 1186,
+						"w": 393,
+						"h": 393
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "Platform_Mid.png",
+					"region": {
+						"x": 1186,
+						"y": 1581,
+						"w": 393,
+						"h": 181
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 212
+					}
+				},
+				{
+					"filename": "Platform_L.png",
+					"region": {
+						"x": 1186,
+						"y": 1764,
+						"w": 277,
+						"h": 181
+					},
+					"margin": {
+						"x": 116,
+						"y": 0,
+						"w": 116,
+						"h": 212
+					}
+				},
+				{
+					"filename": "Platform_R.png",
+					"region": {
+						"x": 1465,
+						"y": 1764,
+						"w": 277,
+						"h": 181
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 116,
+						"h": 212
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "1.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:158f4907575111814fabe713a8304984:a98310aee51dea329ee70cc1536cc545:97196b834798bd58455e48277bdd7253$"
+	}
+}
