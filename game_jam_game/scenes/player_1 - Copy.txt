@@ -1,125 +1,10 @@
-[gd_scene load_steps=16 format=3 uid="uid://b4baaffqm4i8r"]
+[gd_scene load_steps=14 format=3 uid="uid://b4baaffqm4i8r"]
 
 [ext_resource type="Texture2D" uid="uid://cu6p1lcapdupf" path="res://assets/sprites/MC_Atlas.png" id="2_f7tsm"]
 [ext_resource type="Texture2D" uid="uid://cb33vb02h1qhp" path="res://assets/sprites/MC_Jacket.png" id="2_vod78"]
 [ext_resource type="Texture2D" uid="uid://q7b4akfwcu8m" path="res://assets/sprites/MC_Face.png" id="3_wqd30"]
 
-[sub_resource type="SkeletonModification2DCCDIK" id="SkeletonModification2DCCDIK_f7tsm"]
-target_nodepath = NodePath("../IKTargets/LFootTarget")
-tip_nodepath = NodePath("Hips/LUpperThigh/LLowerThigh/LFoot")
-ccdik_data_chain_length = 2
-joint_data/0/bone_index = 19
-joint_data/0/bone2d_node = NodePath("Hips/LUpperThigh")
-joint_data/0/rotate_from_joint = false
-joint_data/0/enable_constraint = true
-joint_data/0/constraint_angle_min = 133.493
-joint_data/0/constraint_angle_max = 289.798
-joint_data/0/constraint_angle_invert = false
-joint_data/0/constraint_in_localspace = true
-joint_data/0/editor_draw_gizmo = true
-joint_data/1/bone_index = 20
-joint_data/1/bone2d_node = NodePath("Hips/LUpperThigh/LLowerThigh")
-joint_data/1/rotate_from_joint = false
-joint_data/1/enable_constraint = true
-joint_data/1/constraint_angle_min = -258.388
-joint_data/1/constraint_angle_max = -81.29
-joint_data/1/constraint_angle_invert = true
-joint_data/1/constraint_in_localspace = true
-joint_data/1/editor_draw_gizmo = true
-
-[sub_resource type="SkeletonModification2DCCDIK" id="SkeletonModification2DCCDIK_vod78"]
-target_nodepath = NodePath("../IKTargets/RFootTarget")
-tip_nodepath = NodePath("Hips/RUpperThigh/RLowerThigh/RFoot")
-ccdik_data_chain_length = 2
-joint_data/0/bone_index = 22
-joint_data/0/bone2d_node = NodePath("Hips/RUpperThigh")
-joint_data/0/rotate_from_joint = false
-joint_data/0/enable_constraint = true
-joint_data/0/constraint_angle_min = 116.033
-joint_data/0/constraint_angle_max = 232.066
-joint_data/0/constraint_angle_invert = false
-joint_data/0/constraint_in_localspace = true
-joint_data/0/editor_draw_gizmo = true
-joint_data/1/bone_index = 23
-joint_data/1/bone2d_node = NodePath("Hips/RUpperThigh/RLowerThigh")
-joint_data/1/rotate_from_joint = false
-joint_data/1/enable_constraint = true
-joint_data/1/constraint_angle_min = -41.653
-joint_data/1/constraint_angle_max = 106.917
-joint_data/1/constraint_angle_invert = true
-joint_data/1/constraint_in_localspace = true
-joint_data/1/editor_draw_gizmo = true
-
-[sub_resource type="SkeletonModification2DCCDIK" id="SkeletonModification2DCCDIK_wqd30"]
-target_nodepath = NodePath("../IKTargets/RHandTarget")
-tip_nodepath = NodePath("Hips/Torso/RShoulder/RArm/RForearm/RHand")
-ccdik_data_chain_length = 3
-joint_data/0/bone_index = 10
-joint_data/0/bone2d_node = NodePath("Hips/Torso/RShoulder")
-joint_data/0/rotate_from_joint = false
-joint_data/0/enable_constraint = true
-joint_data/0/constraint_angle_min = 130.909
-joint_data/0/constraint_angle_max = -116.113
-joint_data/0/constraint_angle_invert = true
-joint_data/0/constraint_in_localspace = true
-joint_data/0/editor_draw_gizmo = true
-joint_data/1/bone_index = 11
-joint_data/1/bone2d_node = NodePath("Hips/Torso/RShoulder/RArm")
-joint_data/1/rotate_from_joint = false
-joint_data/1/enable_constraint = true
-joint_data/1/constraint_angle_min = 0.0
-joint_data/1/constraint_angle_max = 196.363
-joint_data/1/constraint_angle_invert = false
-joint_data/1/constraint_in_localspace = true
-joint_data/1/editor_draw_gizmo = true
-joint_data/2/bone_index = 12
-joint_data/2/bone2d_node = NodePath("Hips/Torso/RShoulder/RArm/RForearm")
-joint_data/2/rotate_from_joint = false
-joint_data/2/enable_constraint = true
-joint_data/2/constraint_angle_min = -211.144
-joint_data/2/constraint_angle_max = 360.0
-joint_data/2/constraint_angle_invert = false
-joint_data/2/constraint_in_localspace = true
-joint_data/2/editor_draw_gizmo = true
-
-[sub_resource type="SkeletonModification2DCCDIK" id="SkeletonModification2DCCDIK_f2c3w"]
-target_nodepath = NodePath("../IKTargets/LHandTarget")
-tip_nodepath = NodePath("Hips/Torso/LShoulder/LArm/LForearm/LHand")
-ccdik_data_chain_length = 3
-joint_data/0/bone_index = 15
-joint_data/0/bone2d_node = NodePath("Hips/Torso/LShoulder")
-joint_data/0/rotate_from_joint = false
-joint_data/0/enable_constraint = true
-joint_data/0/constraint_angle_min = 98.282
-joint_data/0/constraint_angle_max = 360.0
-joint_data/0/constraint_angle_invert = false
-joint_data/0/constraint_in_localspace = true
-joint_data/0/editor_draw_gizmo = true
-joint_data/1/bone_index = 16
-joint_data/1/bone2d_node = NodePath("Hips/Torso/LShoulder/LArm")
-joint_data/1/rotate_from_joint = false
-joint_data/1/enable_constraint = true
-joint_data/1/constraint_angle_min = 92.261
-joint_data/1/constraint_angle_max = 178.512
-joint_data/1/constraint_angle_invert = true
-joint_data/1/constraint_in_localspace = true
-joint_data/1/editor_draw_gizmo = true
-joint_data/2/bone_index = 17
-joint_data/2/bone2d_node = NodePath("Hips/Torso/LShoulder/LArm/LForearm")
-joint_data/2/rotate_from_joint = false
-joint_data/2/enable_constraint = true
-joint_data/2/constraint_angle_min = 232.066
-joint_data/2/constraint_angle_max = 360.0
-joint_data/2/constraint_angle_invert = false
-joint_data/2/constraint_in_localspace = true
-joint_data/2/editor_draw_gizmo = true
-
 [sub_resource type="SkeletonModificationStack2D" id="SkeletonModificationStack2D_wqd30"]
-modification_count = 4
-modifications/0 = SubResource("SkeletonModification2DCCDIK_f7tsm")
-modifications/1 = SubResource("SkeletonModification2DCCDIK_vod78")
-modifications/2 = SubResource("SkeletonModification2DCCDIK_wqd30")
-modifications/3 = SubResource("SkeletonModification2DCCDIK_f2c3w")
 
 [sub_resource type="Animation" id="Animation_vod78"]
 resource_name = "Idle"
@@ -406,7 +291,6 @@ tracks/23/enabled = true
 tracks/23/path = NodePath("Skeleton2D/Hips/Torso:position")
 tracks/23/interp = 1
 tracks/23/loop_wrap = true
-tracks/23/keys = {
 "times": PackedFloat32Array(0.0333333, 0.5, 0.933333),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
@@ -3752,6 +3636,13 @@ _data = {
 &"up_attack": SubResource("Animation_f2c3w")
 }
 
+[sub_resource type="AnimationNodeBlendSpace1D" id="AnimationNodeBlendSpace1D_jkihx"]
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_qgfdq"]
+states/run/node = SubResource("AnimationNodeBlendSpace1D_jkihx")
+states/run/position = Vector2(364, 27)
+graph_offset = Vector2(-489.745, 0)
+
 [node name="CharacterBody2D" type="CharacterBody2D"]
 
 [node name="Polygons" type="Node2D" parent="."]
@@ -3769,6 +3660,7 @@ bones = ["Hips", PackedFloat32Array(1, 1, 1, 1, 1, 1, 1), "Hips/Torso", PackedFl
 internal_vertex_count = 1
 
 [node name="RLowerThigh" type="Polygon2D" parent="Polygons"]
+z_index = -4
 position = Vector2(-493, -2454)
 texture = ExtResource("2_f7tsm")
 skeleton = NodePath("../../Skeleton2D")
@@ -3826,7 +3718,9 @@ bones = ["Hips", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), "Hips/Tors
 internal_vertex_count = 1
 
 [node name="RArm" type="Polygon2D" parent="Polygons"]
+z_index = -2
 position = Vector2(-593, -2079)
+rotation = 0.00416041
 texture = ExtResource("2_f7tsm")
 skeleton = NodePath("../../Skeleton2D")
 polygon = PackedVector2Array(1273.01, 1079.87, 1283.87, 1026.94, 1355.37, 1036.41, 1416.01, 1100.2, 1482.95, 1146.81, 1462.26, 1239.33, 1358.53, 1189.22, 1337.18, 1161.93)
@@ -3943,7 +3837,7 @@ bones = ["Hips", PackedFloat32Array(0, 0, 0, 0, 0, 0), "Hips/Torso", PackedFloat
 internal_vertex_count = 1
 
 [node name="LFoot" type="Polygon2D" parent="Polygons"]
-position = Vector2(-149, -2676)
+position = Vector2(-185.123, -2627.26)
 texture = ExtResource("2_f7tsm")
 skeleton = NodePath("../../Skeleton2D")
 polygon = PackedVector2Array(640.094, 2444.63, 730.923, 2496.97, 681.146, 2545.21, 735.032, 2584.21, 698.085, 2667.34, 535.927, 2626.29, 530.795, 2539.56, 559.019, 2514.42)
@@ -3952,6 +3846,7 @@ polygons = [PackedInt32Array(2, 0, 1), PackedInt32Array(7, 2, 0), PackedInt32Arr
 bones = ["Hips", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/Jacket_Body", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/Jacket_Body2", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/Jackey_Back", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/Head", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/Head/REyebrow", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/Head/LEyebrow", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/Head/REye", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/Head/LEye", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/RShoulder", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/RShoulder/RArm", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/RShoulder/RArm/RForearm", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/RShoulder/RArm/RForearm/RHand", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/RShoulder/RArm/RForearm/RHand/Guitar", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/LShoulder", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/LShoulder/LArm", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/LShoulder/LArm/LForearm", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso/LShoulder/LArm/LForearm/LHand", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/RUpperThigh", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/RUpperThigh/RLowerThigh", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/RUpperThigh/RLowerThigh/RFoot", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/LUpperThigh", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0), "Hips/LUpperThigh/LLowerThigh", PackedFloat32Array(0.12, 0.12, 0.24, 0, 0, 0, 0, 0.12), "Hips/LUpperThigh/LLowerThigh/LFoot", PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1)]
 
 [node name="RFoot" type="Polygon2D" parent="Polygons"]
+z_index = -3
 position = Vector2(-433, -2579)
 texture = ExtResource("2_f7tsm")
 skeleton = NodePath("../../Skeleton2D")
@@ -3962,7 +3857,8 @@ bones = ["Hips", PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0), "Hips/Torso", Pa
 internal_vertex_count = 1
 
 [node name="Skeleton2D" type="Skeleton2D" parent="."]
-rotation = 0.0103938
+position = Vector2(-39, 38)
+rotation = -0.0308429
 modification_stack = SubResource("SkeletonModificationStack2D_wqd30")
 
 [node name="Hips" type="Bone2D" parent="Skeleton2D"]
@@ -3972,27 +3868,25 @@ scale = Vector2(0.999998, 0.999998)
 rest = Transform2D(-0.168794, -0.985651, 0.985651, -0.168794, 622, -784)
 
 [node name="Torso" type="Bone2D" parent="Skeleton2D/Hips"]
-position = Vector2(157.034, 26.865)
-rotation = 0.0451913
-scale = Vector2(0.999993, 0.999993)
+position = Vector2(162.801, 26.8653)
 rest = Transform2D(1, 0, 0, 1, 162.801, 26.8653)
 
 [node name="Jacket_Back" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
-position = Vector2(213.281, -60.972)
+position = Vector2(189.004, -60.9722)
 rest = Transform2D(1, 0, 0, 1, 189.004, -60.9722)
 
 [node name="Jacket_Body" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
-position = Vector2(31.6953, -100.891)
+position = Vector2(16.8252, -86.3997)
 rest = Transform2D(1, 0, 0, 1, 16.8252, -86.3997)
 
 [node name="Jacket_Body2" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
-position = Vector2(10.333, 79.919)
+position = Vector2(4.57583, 79.9191)
 rest = Transform2D(1, 0, 0, 1, 4.57583, 79.9191)
 
 [node name="Head" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
-position = Vector2(194.4, 5.93798)
-rotation = -0.0854365
-scale = Vector2(0.999993, 0.999993)
+position = Vector2(188.705, 5.93751)
+rotation = 0.00105789
+scale = Vector2(1, 1)
 rest = Transform2D(1, 0, 0, 1, 188.705, 5.93751)
 
 [node name="LEye" type="Bone2D" parent="Skeleton2D/Hips/Torso/Head"]
@@ -4002,12 +3896,13 @@ scale = Vector2(1, 1)
 rest = Transform2D(-0.0451771, -0.998979, 0.998979, -0.0451771, 69.0708, -41.9431)
 
 [node name="LEyebrow" type="Bone2D" parent="Skeleton2D/Hips/Torso/Head"]
-position = Vector2(89.4017, -29.696)
+position = Vector2(87.2647, -29.6964)
 rotation = -1.15524
+scale = Vector2(1, 1)
 rest = Transform2D(0.403701, -0.914891, 0.914891, 0.403701, 87.2647, -29.6964)
 
 [node name="REyebrow" type="Bone2D" parent="Skeleton2D/Hips/Torso/Head"]
-position = Vector2(87.0693, 13.193)
+position = Vector2(82.9635, 13.193)
 rotation = 1.25779
 scale = Vector2(1, 1)
 rest = Transform2D(0.307925, 0.951411, -0.951411, 0.307925, 82.9635, 13.193)
@@ -4015,22 +3910,24 @@ rest = Transform2D(0.307925, 0.951411, -0.951411, 0.307925, 82.9635, 13.193)
 [node name="REye" type="Bone2D" parent="Skeleton2D/Hips/Torso/Head"]
 position = Vector2(66.9972, 17.5607)
 rotation = 1.93309
+scale = Vector2(1, 1)
 rest = Transform2D(-0.354416, 0.935088, -0.935088, -0.354416, 66.9972, 17.5607)
 
 [node name="RShoulder" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
-position = Vector2(100.379, 66.81)
-rotation = -0.015655
-scale = Vector2(0.999993, 0.999993)
+position = Vector2(87.9861, 66.8103)
+rotation = 0.0278502
 rest = Transform2D(1, 0, 0, 1, 87.9854, 66.81)
 
 [node name="RArm" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder"]
 position = Vector2(-25.2833, 29.1512)
 rotation = 1.43438
+scale = Vector2(1, 1)
 rest = Transform2D(-0.431099, 0.902305, -0.902305, -0.431099, -25.2832, 29.1506)
 
 [node name="RForearm" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm"]
 position = Vector2(113.604, 63.4353)
 rotation = -1.64734
+scale = Vector2(1, 1)
 rest = Transform2D(-0.292843, -0.956161, 0.956161, -0.292843, 113.596, 63.4354)
 
 [node name="RHand" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm/RForearm"]
@@ -4040,23 +3937,26 @@ rest = Transform2D(1, 0, 0, 1, 220.457, -19.3542)
 
 [node name="Guitar" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm/RForearm/RHand"]
 position = Vector2(-11.0987, -90.2542)
-rotation = -1.98263
+rotation = -1.93881
 scale = Vector2(1, 1)
 rest = Transform2D(-0.359766, -0.933043, 0.933043, -0.359766, -11.0987, -90.2542)
 
 [node name="LShoulder" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
 position = Vector2(100.708, -131.894)
 rotation = -2.47949
+scale = Vector2(1, 1)
 rest = Transform2D(-0.718326, -0.695707, 0.695707, -0.718326, 100.708, -131.894)
 
 [node name="LArm" type="Bone2D" parent="Skeleton2D/Hips/Torso/LShoulder"]
 position = Vector2(31.4036, 5.17743)
 rotation = 0.230659
+scale = Vector2(0.999999, 0.999999)
 rest = Transform2D(1, 0, 0, 1, 31.4038, 5.17697)
 
 [node name="LForearm" type="Bone2D" parent="Skeleton2D/Hips/Torso/LShoulder/LArm"]
 position = Vector2(163.107, 1.12723)
 rotation = -1.68566
+scale = Vector2(1, 1)
 rest = Transform2D(0.0314262, -0.999506, 0.999506, 0.0314262, 163.106, 1.12717)
 
 [node name="LHand" type="Bone2D" parent="Skeleton2D/Hips/Torso/LShoulder/LArm/LForearm"]
@@ -4066,50 +3966,57 @@ scale = Vector2(1, 1)
 rest = Transform2D(0.944022, -0.329884, 0.329884, 0.944022, 176.908, -24.0308)
 
 [node name="LUpperThigh" type="Bone2D" parent="Skeleton2D/Hips"]
-position = Vector2(-50.7199, -37.308)
-rotation = -2.58456
-scale = Vector2(0.999997, 0.999997)
+position = Vector2(-34.193, -37.3079)
+rotation = -2.40926
+scale = Vector2(1, 1)
 rest = Transform2D(-0.779474, -0.626435, 0.626435, -0.779474, -34.1934, -37.3069)
 
 [node name="LLowerThigh" type="Bone2D" parent="Skeleton2D/Hips/LUpperThigh"]
 position = Vector2(238.717, -89.2279)
-rotation = 0.158335
-scale = Vector2(0.999991, 0.999991)
+rotation = -0.149067
+scale = Vector2(1, 1)
 rest = Transform2D(1, 0, 0, 1, 238.718, -89.2277)
 
 [node name="LFoot" type="Bone2D" parent="Skeleton2D/Hips/LUpperThigh/LLowerThigh"]
-position = Vector2(299.43, -58.7519)
-rotation = -1.17256
-scale = Vector2(0.999996, 0.999996)
+position = Vector2(309.143, -65.45)
+rotation = -0.996427
+scale = Vector2(0.999999, 0.999999)
 rest = Transform2D(0.543305, -0.839535, 0.839535, 0.543305, 309.143, -65.45)
 
 [node name="RUpperThigh" type="Bone2D" parent="Skeleton2D/Hips"]
-position = Vector2(-56.3551, 85.276)
-rotation = -3.06456
-scale = Vector2(0.999992, 0.999992)
+position = Vector2(-47.0685, 85.2762)
+rotation = -2.93225
+scale = Vector2(1, 1)
 rest = Transform2D(-0.98969, 0.143228, -0.143228, -0.98969, -47.0699, 85.2785)
 
 [node name="RLowerThigh" type="Bone2D" parent="Skeleton2D/Hips/RUpperThigh"]
 position = Vector2(284.57, -5.55933)
-rotation = 0.250979
-scale = Vector2(0.999993, 0.999993)
+rotation = 0.0314394
+scale = Vector2(0.99994, 0.99994)
 rest = Transform2D(0.84025, 0.542199, -0.542199, 0.84025, 284.568, -5.55924)
 
 [node name="RFoot" type="Bone2D" parent="Skeleton2D/Hips/RUpperThigh/RLowerThigh"]
-position = Vector2(328.686, -9.17479)
-rotation = -1.35755
-scale = Vector2(0.999994, 0.999994)
+position = Vector2(327.697, -16.7178)
+rotation = -1.18094
+scale = Vector2(1, 1)
 rest = Transform2D(0.380057, -0.924963, 0.924963, 0.380057, 327.697, -16.7178)
 
 [node name="IKTargets" type="Node2D" parent="."]
+visible = false
 
 [node name="LFootTarget" type="Node2D" parent="IKTargets"]
+position = Vector2(455, -121)
 
 [node name="RFootTarget" type="Node2D" parent="IKTargets"]
+position = Vector2(700, 122)
 
 [node name="RHandTarget" type="Node2D" parent="IKTargets"]
+position = Vector2(2736, 483)
+rotation = 0.0500265
 
 [node name="LHandTarget" type="Node2D" parent="IKTargets"]
+position = Vector2(-185, -171)
+rotation = -0.0930163
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 reset_on_save = false
@@ -4118,3 +4025,8 @@ libraries = {
 }
 autoplay = "run"
 speed_scale = 0.998
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+tree_root = SubResource("AnimationNodeStateMachine_qgfdq")
+anim_player = NodePath("../AnimationPlayer")
+parameters/run/blend_position = -0.96814
