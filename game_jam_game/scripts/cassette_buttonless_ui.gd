@@ -725,44 +725,45 @@ func switch_to_track(track_number: int):
 				start_timer()
 			return
 
-		var old_track = current_track
+               var old_track = current_track
 
-		# Ensure outgoing track data is stored
-		if old_track >= 1 and old_track <= 4:
-				timer_per_track[old_track] = timer_per_track.get(old_track, default_track_time)
-				health_per_track[old_track] = health_per_track.get(old_track, max_health)
+               # Ensure outgoing track data is stored
+               if old_track >= 1 and old_track <= 4:
+                               timer_per_track[old_track] = timer_per_track.get(old_track, default_track_time)
+                               if player and player.has_method("get_health"):
+                                               health_per_track[old_track] = player.get_health()
+                               else:
+                                               health_per_track[old_track] = health_per_track.get(old_track, max_health)
 
-		# Switch to new track
-		current_track = track_number
+               # Switch to new track
+               current_track = track_number
 
-		# Initialize dictionaries for new track if needed
-		if not timer_per_track.has(current_track):
-				timer_per_track[current_track] = default_track_time
-		if not health_per_track.has(current_track):
-				health_per_track[current_track] = max_health
+               # Initialize dictionaries for new track if needed
+               if not timer_per_track.has(current_track):
+                               timer_per_track[current_track] = default_track_time
+               if not health_per_track.has(current_track):
+                               health_per_track[current_track] = max_health
 
-		# Reset enemy positions for new track
-		_reset_enemy_positions()
+               # Reset enemy positions for new track
+               _reset_enemy_positions()
 
-		# Connect to the new active player's health system
-		_connect_to_active_player()
+               # Notify the player manager before connecting to the new player
+               track_changed.emit(current_track)
+               if player_manager and player_manager.has_method("switch_to_track"):
+                               player_manager.switch_to_track(current_track - 1)  # Convert from 1-4 to 0-3
 
-		# Update displays
-		_update_hearts_display()
-		_update_timer_display()
-		_update_progress_bar()
+               # Connect to the new active player's health system
+               _connect_to_active_player()
 
-		# Start timer if it wasn't running
-		if not is_timer_running and timer_per_track[current_track] > 0:
-				is_timer_running = true
-				print("Started timer for track ", current_track)
+               # Update displays
+               _update_hearts_display()
+               _update_timer_display()
+               _update_progress_bar()
 
-		# Emit signal to notify the player manager about track change
-		track_changed.emit(current_track)
-
-		# Also directly notify the player manager if we have a reference
-		if player_manager and player_manager.has_method("switch_to_track"):
-				player_manager.switch_to_track(current_track - 1)  # Convert from 1-4 to 0-3
+               # Start timer if it wasn't running
+               if not is_timer_running and timer_per_track[current_track] > 0:
+                               is_timer_running = true
+                               print("Started timer for track ", current_track)
 
 func _reset_enemy_positions():
 	"""Reset all enemy positions to their starting positions when switching tracks"""
@@ -801,24 +802,25 @@ func _search_and_reset_enemies(node: Node):
 
 func _connect_to_active_player():
 	"""Connect to the currently active player's health system"""
-	if player_manager and player_manager.has_method("get_active_player"):
-		var active_player = player_manager.get_active_player()
-		if active_player and active_player.has_signal("health_changed"):
-			# Disconnect from previous player if connected
-			if player and player.has_signal("health_changed"):
-				if player.health_changed.is_connected(_on_player_health_changed):
-					player.health_changed.disconnect(_on_player_health_changed)
-			
-			# Connect to new active player
-			active_player.health_changed.connect(_on_player_health_changed)
-			player = active_player
-			
-			# Sync UI health with player's current health
-			if active_player.has_method("get_health"):
-				var hp = active_player.get_health()
-				health_per_track[current_track] = hp
-				_update_hearts_display()
-				print("UI synced with active player health: ", hp)
+               if player_manager and player_manager.has_method("get_active_player"):
+                       var active_player = player_manager.get_active_player()
+                       if active_player and active_player.has_signal("health_changed"):
+                               # Disconnect from previous player if connected
+                               if player and player.has_signal("health_changed"):
+                                       if player.health_changed.is_connected(_on_player_health_changed):
+                                               player.health_changed.disconnect(_on_player_health_changed)
+
+                               # Connect to new active player
+                               active_player.health_changed.connect(_on_player_health_changed)
+                               player = active_player
+
+                               # Sync player's health with stored track health
+                               var hp = health_per_track.get(current_track, max_health)
+                               if active_player.has_method("set_health"):
+                                       active_player.set_health(hp)
+                               health_per_track[current_track] = hp
+                               _update_hearts_display()
+                               print("UI synced with active player health: ", hp)
 
 func _on_player_health_changed(new_health: int):
 		"""Handle when the active player's health changes"""
