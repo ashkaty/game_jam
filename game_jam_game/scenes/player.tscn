@@ -8611,10 +8611,10 @@ _data = {
 }
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pf23h"]
-size = Vector2(111, 253)
+size = Vector2(268.5, 1240.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dt7fs"]
-size = Vector2(120, 260)
+size = Vector2(255, 1266)
 
 [node name="CharacterBody2D" type="CharacterBody2D"]
 script = ExtResource("1_dqkch")
@@ -8833,11 +8833,12 @@ modification_stack = SubResource("SkeletonModificationStack2D_wqd30")
 [node name="Hips" type="Bone2D" parent="Skeleton2D"]
 position = Vector2(622, -784)
 rotation = -1.7404
-scale = Vector2(1, 1)
+scale = Vector2(0.999998, 0.999998)
 rest = Transform2D(-0.168794, -0.985651, 0.985651, -0.168794, 622, -784)
 
 [node name="Torso" type="Bone2D" parent="Skeleton2D/Hips"]
 position = Vector2(162.801, 26.8653)
+scale = Vector2(0.999997, 0.999997)
 rest = Transform2D(1, 0, 0, 1, 162.801, 26.8653)
 
 [node name="Jacket_Back" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
@@ -8854,6 +8855,8 @@ rest = Transform2D(1, 0, 0, 1, 4.57583, 79.9191)
 
 [node name="Head" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
 position = Vector2(188.705, 5.93751)
+rotation = 0.00105789
+scale = Vector2(0.999997, 0.999997)
 rest = Transform2D(1, 0, 0, 1, 188.705, 5.93751)
 
 [node name="LEye" type="Bone2D" parent="Skeleton2D/Hips/Torso/Head"]
@@ -8879,77 +8882,87 @@ rotation = 1.93309
 rest = Transform2D(-0.354416, 0.935088, -0.935088, -0.354416, 66.9972, 17.5607)
 
 [node name="RShoulder" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
-position = Vector2(87.9854, 66.81)
+position = Vector2(87.9861, 66.8103)
+rotation = 0.0278502
+scale = Vector2(0.999997, 0.999997)
 rest = Transform2D(1, 0, 0, 1, 87.9854, 66.81)
 
 [node name="RArm" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder"]
-position = Vector2(-25.2832, 29.1506)
-rotation = 2.01651
+position = Vector2(-25.2833, 29.1512)
+rotation = 1.43438
 rest = Transform2D(-0.431099, 0.902305, -0.902305, -0.431099, -25.2832, 29.1506)
 
 [node name="RForearm" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm"]
-position = Vector2(113.596, 63.4354)
-rotation = -1.868
+position = Vector2(113.604, 63.4353)
+rotation = -1.64734
 rest = Transform2D(-0.292843, -0.956161, 0.956161, -0.292843, 113.596, 63.4354)
 
 [node name="RHand" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm/RForearm"]
 position = Vector2(220.457, -19.3542)
+rotation = -0.019675
 rest = Transform2D(1, 0, 0, 1, 220.457, -19.3542)
 
 [node name="Guitar" type="Bone2D" parent="Skeleton2D/Hips/Torso/RShoulder/RArm/RForearm/RHand"]
 position = Vector2(-11.0987, -90.2542)
 rotation = -1.93881
+scale = Vector2(1, 1)
 rest = Transform2D(-0.359766, -0.933043, 0.933043, -0.359766, -11.0987, -90.2542)
 
 [node name="LShoulder" type="Bone2D" parent="Skeleton2D/Hips/Torso"]
 position = Vector2(100.708, -131.894)
-rotation = -2.37219
+rotation = -2.47949
 rest = Transform2D(-0.718326, -0.695707, 0.695707, -0.718326, 100.708, -131.894)
 
 [node name="LArm" type="Bone2D" parent="Skeleton2D/Hips/Torso/LShoulder"]
-position = Vector2(31.4038, 5.17697)
+position = Vector2(31.4036, 5.17743)
+rotation = 0.230659
 rest = Transform2D(1, 0, 0, 1, 31.4038, 5.17697)
 
 [node name="LForearm" type="Bone2D" parent="Skeleton2D/Hips/Torso/LShoulder/LArm"]
-position = Vector2(163.106, 1.12717)
-rotation = -1.53936
+position = Vector2(163.107, 1.12723)
+rotation = -1.68566
 rest = Transform2D(0.0314262, -0.999506, 0.999506, 0.0314262, 163.106, 1.12717)
 
 [node name="LHand" type="Bone2D" parent="Skeleton2D/Hips/Torso/LShoulder/LArm/LForearm"]
 position = Vector2(176.908, -24.0308)
-rotation = -0.336181
+rotation = -0.33618
 scale = Vector2(1, 1)
 rest = Transform2D(0.944022, -0.329884, 0.329884, 0.944022, 176.908, -24.0308)
 
 [node name="LUpperThigh" type="Bone2D" parent="Skeleton2D/Hips"]
-position = Vector2(-34.1934, -37.3069)
-rotation = -2.46462
-scale = Vector2(1, 1)
+position = Vector2(-34.193, -37.3079)
+rotation = -2.40926
+scale = Vector2(0.999998, 0.999998)
 rest = Transform2D(-0.779474, -0.626435, 0.626435, -0.779474, -34.1934, -37.3069)
 
 [node name="LLowerThigh" type="Bone2D" parent="Skeleton2D/Hips/LUpperThigh"]
-position = Vector2(238.718, -89.2277)
+position = Vector2(238.717, -89.2279)
+rotation = -0.149067
+scale = Vector2(0.999995, 0.999995)
 rest = Transform2D(1, 0, 0, 1, 238.718, -89.2277)
 
 [node name="LFoot" type="Bone2D" parent="Skeleton2D/Hips/LUpperThigh/LLowerThigh"]
 position = Vector2(309.143, -65.45)
 rotation = -0.996427
+scale = Vector2(0.999999, 0.999999)
 rest = Transform2D(0.543305, -0.839535, 0.839535, 0.543305, 309.143, -65.45)
 
 [node name="RUpperThigh" type="Bone2D" parent="Skeleton2D/Hips"]
-position = Vector2(-47.0699, 85.2785)
-rotation = 2.99787
-scale = Vector2(1, 1)
+position = Vector2(-47.0685, 85.2762)
+rotation = -2.93225
+scale = Vector2(0.999995, 0.999995)
 rest = Transform2D(-0.98969, 0.143228, -0.143228, -0.98969, -47.0699, 85.2785)
 
 [node name="RLowerThigh" type="Bone2D" parent="Skeleton2D/Hips/RUpperThigh"]
-position = Vector2(284.568, -5.55924)
-rotation = 0.573052
+position = Vector2(284.57, -5.55933)
+rotation = 0.0314394
+scale = Vector2(0.999996, 0.999996)
 rest = Transform2D(0.84025, 0.542199, -0.542199, 0.84025, 284.568, -5.55924)
 
 [node name="RFoot" type="Bone2D" parent="Skeleton2D/Hips/RUpperThigh/RLowerThigh"]
 position = Vector2(327.697, -16.7178)
 rotation = -1.18094
+scale = Vector2(0.999997, 0.999997)
 rest = Transform2D(0.380057, -0.924963, 0.924963, 0.380057, 327.697, -16.7178)
 
 [node name="IKTargets" type="Node2D" parent="."]
@@ -8971,7 +8984,7 @@ autoplay = "run"
 speed_scale = 0.998
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(4.5, -129.5)
+position = Vector2(564, -653)
 shape = SubResource("RectangleShape2D_pf23h")
 
 [node name="HurtBox" type="Area2D" parent="."]
@@ -8980,7 +8993,7 @@ collision_mask = 4
 script = ExtResource("5_a8ls1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
-position = Vector2(4.5, -129.5)
+position = Vector2(566, -653)
 shape = SubResource("RectangleShape2D_dt7fs")
 
 [node name="state_machine" type="Node" parent="." node_paths=PackedStringArray("starting_state")]
@@ -8995,7 +9008,7 @@ move_state = NodePath("../move")
 attack_state = NodePath("../ground_attack")
 crouch_state = NodePath("../crouch")
 dash_state = NodePath("../dash")
-animation_name = "idle"
+animation_name = "Idle"
 
 [node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "land_state", "move_state", "idle_state", "air_attack_state", "dash_state")]
 script = ExtResource("8_4r5pv")
@@ -9040,6 +9053,8 @@ dash_state = NodePath("../dash")
 max_speed = 1600.0
 acceleration = 6400.0
 deceleration = 12800.0
+direction_change_multiplier = 1.5
+animation_name = "run"
 
 [node name="land" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state")]
 script = ExtResource("11_a38lo")

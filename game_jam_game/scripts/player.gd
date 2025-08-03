@@ -11,7 +11,8 @@ signal loop_started
  
 @onready var animations: AnimationPlayer = $AnimationPlayer
 @onready var sprite: Node2D = $Polygons
-@onready var skeleton: Node2D = $Skeleton2D
+@onready var skeleton: Skeleton2D = $Skeleton2D
+@onready var hips_bone: Bone2D	= $Skeleton2D/Hips
 @onready var sword: Node2D = get_node_or_null("Sword")
 @onready var camera: Camera2D = $Camera2D
 
@@ -241,13 +242,21 @@ func update_sword_position() -> void:
 
 
 func set_facing_left(is_left: bool) -> void:
+	# Early-out if we’re already facing that way
 	if facing_left == is_left:
 		return
-	var center := skeleton.global_position
+
+	var center: Vector2 = hips_bone.global_position
+
 	facing_left = is_left
-	scale.x = -1 if is_left else 1
-	var new_center := skeleton.global_position
+	scale.x		= -1 if is_left else 1
+
+	var new_center: Vector2 = hips_bone.global_position
+
 	global_position += center - new_center
+
+	if sword:
+		update_sword_position()
 
 
 func is_facing_left() -> bool:

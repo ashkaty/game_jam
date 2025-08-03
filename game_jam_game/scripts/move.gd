@@ -90,18 +90,17 @@ func process_physics(delta: float) -> State:
 		# Apply stronger braking force when changing directions
 		var effective_acceleration = acceleration
 		if is_changing_direction:
-			effective_acceleration = acceleration * direction_change_multiplier
-		
-		# Accelerate toward the desired speed
-		parent.velocity.x = move_toward(parent.velocity.x, target_speed, effective_acceleration * delta)
-		parent.set_facing_left(parent.velocity.x < 0)
-	else:
-		# No input → slow the character down smoothly with increased deceleration
-		parent.velocity.x = move_toward(parent.velocity.x, 0.0, deceleration * delta)
-
-	parent.move_and_slide()
+			effective_acceleration = acceleration 
+			parent.velocity.x = move_toward(parent.velocity.x, target_speed, effective_acceleration * delta)
+		else:
+ # No input → slow the character down smoothly with increased deceleration
+			parent.velocity.x = move_toward(parent.velocity.x, 0.0, deceleration * delta)
+			parent.move_and_slide()
 
 	# Check for buffered jump that can now be executed
+			parent.set_facing_left(parent.velocity.x < 0)
+			parent.move_and_slide()
+	
 	if parent.has_valid_jump_buffer() and parent.can_jump():
 		# print("Executing buffered jump from move state!")
 		var buffered_hold_time = parent.consume_jump_buffer()
