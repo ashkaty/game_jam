@@ -8,6 +8,7 @@ var is_replaying: bool = false
 var track_replay_index: int = 0
 
 signal loop_started
+signal health_changed(new_health: int)
  
 @onready var animations: AnimatedSprite2D = $AnimatedSprite2D
 @onready var sword: Node2D = $AnimatedSprite2D/Sword
@@ -54,6 +55,13 @@ var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 # Health system variables
 @export var max_health: int = 3  # Player starts with 3 hearts
 var current_health: int = 3
+
+func get_health() -> int:
+        return current_health
+
+func set_health(value: int) -> void:
+        current_health = clamp(value, 0, max_health)
+        health_changed.emit(current_health)
 
 # Ghost mode system - when player dies, becomes a ghost until timer ends
 var is_ghost_mode: bool = false
@@ -126,8 +134,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			print("Debug: Manually exited ghost mode")
 		else:
 			print("Debug: Simulating player death for testing...")
-			current_health = 0
-			die()
+                        set_health(0)
+                        die()
 		
 	# Track when input buttons are first pressed for hold time calculation
 	for action in input_actions:
@@ -681,8 +689,8 @@ func take_damage(damage_amount: int) -> void:
 	if current_health <= 0:
 		return  # Player is already dead
 	
-	current_health = max(0, current_health - damage_amount)
-	print("Player took ", damage_amount, " damage! Health: ", current_health, "/", max_health)
+        set_health(current_health - damage_amount)
+        print("Player took ", damage_amount, " damage! Health: ", current_health, "/", max_health)
 	
 	# Start invincibility frames
 	start_invincibility()
@@ -764,7 +772,7 @@ func set_ghost_mode(ghost: bool) -> void:
 			hurtbox.collision_mask = 4   # Detect hitboxes on layer 3
 		
 		# Reset health when exiting ghost mode (for next track)
-		current_health = max_health
+                set_health(max_health)
 		
 		print("Ghost mode deactivated - player restored to normal state")
 
