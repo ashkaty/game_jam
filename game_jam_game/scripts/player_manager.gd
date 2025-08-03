@@ -68,20 +68,20 @@ func _on_loop_started(looping_track_idx: int) -> void:
 # 
 # Enable input on the chosen track, disable on the others
 func activate_track(idx: int) -> void:
-        # Check if we're already on this track to prevent unnecessary work
-        if active_track_idx == idx:
-                return
+	# Check if we're already on this track to prevent unnecessary work
+	if active_track_idx == idx:
+		return
 
-        for i in range(tracks.size()):
-                var is_active := i == idx
-                tracks[i].set_process_input(is_active)
-                tracks[i].visible = i <= idx  # keep current and prior tracks visible
+	for i in range(tracks.size()):
+		var is_active := i == idx
+		tracks[i].set_process_input(is_active)
+		tracks[i].visible = i <= idx  # keep current and prior tracks visible
 
-                # Handle ghost mode transitions
-                if tracks[i].has_method("set_ghost_mode"):
-                        tracks[i].set_ghost_mode(i < idx)
+		# Handle ghost mode transitions
+		if tracks[i].has_method("set_ghost_mode"):
+			tracks[i].set_ghost_mode(i < idx)
 
-        active_track_idx = idx
+	active_track_idx = idx
 
 	
 	# Move the main camera to follow the active player

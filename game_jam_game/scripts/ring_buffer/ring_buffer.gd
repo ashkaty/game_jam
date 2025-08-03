@@ -20,12 +20,12 @@ func _init(buffer_size:int) -> void:
 # -- Buffer Methods -- #
 
 func push(value:Variant) -> void:
-        buffer[head] = value
-        head = (head + 1) % buffer_size
-        if length < buffer_size:
-                length += 1
-        else:
-                tail = (tail + 1) % buffer_size
+		buffer[head] = value
+		head = (head + 1) % buffer_size
+		if length < buffer_size:
+				length += 1
+		else:
+				tail = (tail + 1) % buffer_size
 
 func clear() -> void:
 	head = 0

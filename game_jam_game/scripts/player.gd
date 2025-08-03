@@ -141,37 +141,38 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 
-        if is_replaying:
-                if track1.length == 0:
-                        return
-                var tick = track1.get_at(track_replay_index)
-                self.position = tick.position
-                self.velocity = tick.velocity
-                self.input_just_pressed = tick.input
-                track_replay_index = (track_replay_index + 1) % track1.length
-                return
-        else:
-                track1.push({
-                                "input" : input_just_pressed,
-                                "seconds" : total_time,
-                                "health" : current_health,  # Use actual current health
-                                "position": self.position,
-                                "velocity": self.velocity
-                })
-                if track1.is_full() and not loop_triggered:
-                        loop_triggered = true
-                        emit_signal("loop_started")
-
-	# Update invincibility timer and flashing effect
-	update_invincibility(delta)
+	if is_replaying:
+		if track1.length == 0:
+			return
+		var tick = track1.get_at(track_replay_index)
+		self.position = tick.position
+		self.velocity = tick.velocity
+		self.input_just_pressed = tick.input
+		track_replay_index = (track_replay_index + 1) % track1.length
+		return
+	else:
+		track1.push({
+			"input" : input_just_pressed,
+			"seconds" : total_time,
+			"health" : current_health,  # Use actual current health
+			"position": self.position,
+			"velocity": self.velocity
+				})
 	
-	# If in ghost mode, limit what systems update
-	if is_ghost_mode:
-		# Still apply gravity and basic physics so ghost doesn't float
-		if not is_on_floor():
-			velocity.y += get_gravity().y * delta
-		move_and_slide()
-		return  # Skip most other game logic
+	if track1.is_full() and not loop_triggered:
+		loop_triggered = true
+		emit_signal("loop_started")
+
+		# Update invincibility timer and flashing effect
+		update_invincibility(delta)
+	
+		# If in ghost mode, limit what systems update
+		if is_ghost_mode:
+			# Still apply gravity and basic physics so ghost doesn't float
+			if not is_on_floor():
+				velocity.y += get_gravity().y * delta
+				move_and_slide()
+				return  # Skip most other game logic
 	
 	# Update jump cooldown timer
 	if jump_cooldown_timer > 0.0:
@@ -180,14 +181,11 @@ func _physics_process(delta: float) -> void:
 			can_jump_again = true
 			# print("Jump cooldown expired - can jump again")
 		
-	
-	
 	# Update jump buffer timer
 	update_input_buffers(delta)
 	
 	# Update coyote time BEFORE state machine processing
 	update_coyote_time(delta)
-	
 	
 	state_machine.process_physics(delta)
 
@@ -709,14 +707,14 @@ func die() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func set_ghost_mode(ghost: bool) -> void:
-        """Set the player's ghost mode state"""
-        is_ghost_mode = ghost
-        is_replaying = ghost
-        if is_replaying:
-                track_replay_index = 0
-        else:
-                loop_triggered = false
-	
+	"""Set the player's ghost mode state"""
+	is_ghost_mode = ghost
+	is_replaying = ghost
+	if is_replaying:
+		track_replay_index = 0
+	else:
+		loop_triggered = false
+			
 	if is_ghost_mode:
 		print("Player entering ghost mode...")
 		# Make player appear as a ghost with visual indicator
