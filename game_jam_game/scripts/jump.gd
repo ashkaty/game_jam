@@ -10,10 +10,10 @@ extends State
 
 # ── Jump variants ───────────────────────────────────────────────
 @export var short_hop_force: float			= 250.0		# initial impulse (increased for faster jumping)
-@export var long_hop_force: float			= 400.0		# extra impulse if held (increased for faster jumping)
+@export var long_hop_force: float			= 260.0		# extra impulse if held (reduced for shorter long jumps)
 @export var long_hop_threshold: float		= 0.09		# Very short threshold for smooth upgrade
 @export var short_gravity_scale: float		= 600.0		# reduced gravity for faster jumps
-@export var long_gravity_scale: float		= 1200.0		# reduced gravity for faster jumps
+@export var long_gravity_scale: float		= 650.0		# only slightly reduced gravity for minimal height difference
 @export var allow_long_jump_on_repeat: bool = false	# Whether repeated jumps can become long jumps
 
 # ── Air camera panning (same as fall state) ────────────────────
@@ -169,8 +169,9 @@ func process_physics(delta: float) -> State:
 		var should_upgrade = can_upgrade_to_long and (_was_fresh_press or allow_long_jump_on_repeat)
 		
 		if should_upgrade:
-			# Set full long jump velocity instead of adding boost
-			parent.velocity.y = -long_hop_force
+			# Add a small boost instead of completely resetting velocity
+			var velocity_boost = long_hop_force - short_hop_force  # Only 10 units difference
+			parent.velocity.y -= velocity_boost  # Add the small boost to current velocity
 			_is_long = true
 			# print("Upgraded to long jump (fresh press: ", _was_fresh_press, ")")
 	

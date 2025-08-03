@@ -9,8 +9,8 @@ radius = 10.7958
 height = 21.9376
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_physics"]
-radius = 10.7958
-height = 21.9376
+radius = 8.0
+height = 18.0
 
 [sub_resource type="Animation" id="Animation_0btni"]
 length = 0.001
@@ -58,7 +58,7 @@ texture = ExtResource("1_gionw")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-23, -212)
-scale = Vector2(9.07759, 19.3275)
+scale = Vector2(7.0, 15.0)
 shape = SubResource("CapsuleShape2D_physics")
 
 [node name="HurtBox" type="Area2D" parent="."]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://5utxsmxaf4j5"]
+[gd_scene load_steps=9 format=3 uid="uid://5utxsmxaf4j5"]
 
 [ext_resource type="Texture2D" uid="uid://0hlcavja38jn" path="res://assets/sprites/Cassette Buttonless.png" id="1_cassette_buttonless"]
 [ext_resource type="Texture2D" uid="uid://y4ombgtpnee" path="res://assets/sprites/Red Button.png" id="2_red_button"]
@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://d25vf5hr3eaf1" path="res://assets/sprites/Green Button.png" id="5_green_button"]
 [ext_resource type="AudioStream" uid="uid://dbto86yjvukop" path="res://assets/audio/old-radio-button-click-97549.mp3" id="7_73q0x"]
 [ext_resource type="Script" uid="uid://d2borc3v3jjc2" path="res://scripts/cassette_buttonless_ui.gd" id="7_script"]
+[ext_resource type="Texture2D" uid="uid://bqnpjlmlaqimc" path="res://assets/sprites/Heart Asset 2.png" id="8_0s6uv"]
 
 [node name="CassetteButtonlessUI" type="Control"]
 layout_mode = 3
@@ -96,3 +97,41 @@ step = 1.0
 value = 100.0
 rounded = true
 show_percentage = false
+
+[node name="HeartsContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 142.0
+offset_top = 90.0
+offset_right = 921.0
+offset_bottom = 249.0
+alignment = 1
+
+[node name="Container" type="Container" parent="HeartsContainer"]
+layout_mode = 2
+
+[node name="Heart1" type="Sprite2D" parent="HeartsContainer/Container"]
+position = Vector2(204, 65)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("8_0s6uv")
+region_enabled = true
+region_rect = Rect2(383.607, 285.745, 338.688, 308.677)
+
+[node name="Container2" type="Container" parent="HeartsContainer"]
+layout_mode = 2
+
+[node name="Heart2" type="Sprite2D" parent="HeartsContainer/Container2"]
+position = Vector2(-7.5, 67)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("8_0s6uv")
+region_enabled = true
+region_rect = Rect2(383.607, 285.745, 338.688, 308.677)
+
+[node name="Container3" type="Container" parent="HeartsContainer"]
+layout_mode = 2
+
+[node name="Heart3" type="Sprite2D" parent="HeartsContainer/Container3"]
+position = Vector2(-217.5, 64)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("8_0s6uv")
+region_enabled = true
+region_rect = Rect2(383.607, 285.745, 338.688, 308.677)

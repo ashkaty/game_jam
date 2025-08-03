@@ -95,6 +95,21 @@ func process_input(_event: InputEvent) -> State:
 		parent.end_current_action()
 		return jump_state
 	
+	# Allow movement input to cancel dash early and transition to move/idle
+	var input_axis = Input.get_axis("move_left", "move_right")
+	if input_axis == 0:
+		# No movement input - transition to appropriate state
+		if parent.is_on_floor():
+			return idle_state
+		else:
+			return fall_state
+	elif (input_axis > 0 and dash_direction < 0) or (input_axis < 0 and dash_direction > 0):
+		# Input is in opposite direction of dash - cancel dash and start moving
+		if parent.is_on_floor():
+			return move_state
+		else:
+			return fall_state
+	
 	# Allow attack during dash
 	if parent.is_action_just_pressed_once('attack'):
 		return air_attack_state
