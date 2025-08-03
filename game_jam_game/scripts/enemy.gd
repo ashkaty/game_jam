@@ -178,6 +178,10 @@ func _ready():
 	# Build the decision tree
 	_build_decision_tree()
 
+func reset_to_spawn() -> void:
+		global_position = patrol_start_position
+		velocity = Vector2.ZERO
+
 # Recursive function to find player
 func _find_player_recursive(node: Node) -> CharacterBody2D:
 	# Check if this node is the player by name

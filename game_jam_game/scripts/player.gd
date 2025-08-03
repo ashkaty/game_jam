@@ -17,7 +17,7 @@ signal health_changed(new_health: int)
 @onready var state_machine: Node = $state_machine
 var last_flip_h: bool = false
 var original_sword_position: Vector2
-
+var spawn_position: Vector2
 var total_time = 0.0
 
 
@@ -119,6 +119,12 @@ func _ready() -> void:
 func set_total_time(time: float) -> void:
 	total_time = time
 
+func reset_to_spawn() -> void:
+		global_position = spawn_position
+		velocity = Vector2.ZERO
+		track1.clear()
+		track_replay_index = 0
+		is_replaying = false
 
 func _unhandled_input(event: InputEvent) -> void:
 	

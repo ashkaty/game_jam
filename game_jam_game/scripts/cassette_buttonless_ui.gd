@@ -612,9 +612,13 @@ func _auto_progress_to_next_track():
 	
 	# If we've completed all tracks (1-4), stop the timer system
 	if next_track > 4:
-		is_timer_running = false
-		print("All tracks completed! Timer system stopped.")
-		return
+			is_timer_running = false
+			print("All tracks completed! Timer system stopped.")
+			if player_manager and player_manager.has_method("reset_all_players"):
+					player_manager.reset_all_players()
+			reset_all_track_timers()
+			switch_to_track(1)
+			return
 	
 	# Move to next track
 	print("Auto-progressing from track ", current_track, " to track ", next_track)

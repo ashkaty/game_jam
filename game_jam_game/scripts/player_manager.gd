@@ -181,6 +181,12 @@ func _on_track_timer_finished(track_number: int) -> void:
 	if track_number == 1:
 		print("[PlayerManager] Track 1 finished - any ghost players will be restored when switching to track 2")
 
+func reset_all_players() -> void:
+		for p in tracks:
+				if p and p.has_method("reset_to_spawn"):
+						p.reset_to_spawn()
+		activate_track(0)
+
 # Handle cassette events following the requested pattern
 func _on_cassette_event(event_type: String) -> void:
 	print("[PlayerManager] Received cassette event: ", event_type)
