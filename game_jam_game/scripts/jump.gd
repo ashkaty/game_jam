@@ -6,6 +6,7 @@ extends State
 @export var idle_state: State
 @export var air_attack_state: State
 @export var dash_state: State
+# @export var animation_name: String = "jump"
 
 
 # ── Jump variants ───────────────────────────────────────────────
@@ -204,7 +205,7 @@ func process_physics(delta: float) -> State:
 			effective_air_accel = current_air_accel * air_direction_change_multiplier
 		
 		parent.velocity.x = move_toward(parent.velocity.x, target, effective_air_accel * delta)
-		parent.animations.flip_h = axis < 0
+		parent.set_facing_left(axis < 0)
 	else:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, air_friction * delta)
 
@@ -217,13 +218,8 @@ func process_physics(delta: float) -> State:
 	# Only check during the early part of the jump for authentic feel
 	var time_since_jump_start = parent.total_time - jump_start_time
 	
-	if time_since_jump_start <= parent.head_bonk_grace_period and parent.velocity.y < 0:
-		if parent.check_and_handle_head_bonk():
-			# Head bonk occurred - enable enhanced air control and transition to fall state
-			head_bonk_enhanced_control = true
-			head_bonk_control_timer = head_bonk_control_duration
-			print("Enhanced air control activated after head bonk!")
-			return fall_state
+	#if time_since_jump_start <= parent.head_bonk_grace_period and parent.velocity.y < 0:
+		
 
 	# State transitions
 	if parent.velocity.y > 0:

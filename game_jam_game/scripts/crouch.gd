@@ -11,6 +11,8 @@ extends State
 @export var camera_transition_speed: float = 4.0  # Slower, smoother camera transition
 @export var camera_pan_delay: float = 0.05  # Shorter delay for more responsive feel
 @export var sword_offset_y: float = 30.0  # How much to move sword down when crouching
+@export var enter_crouch_speed_mult: float = 1.0
+@export var crouch_speed_mult: float = 1.0
 
 # ----------------------------------------------------------------------
 
@@ -21,9 +23,10 @@ var crouch_timer: float = 0.0
 var camera_tween: Tween  # For smooth camera transitions
 
 func enter() -> void:
-	parent.animations.play("crouch")
+	parent.animations.play("enter_crouch", -1, enter_crouch_speed_mult)
+	parent.animations.queue("crouch")
+	parent.animations.speed_scale = crouch_speed_mult
 	crouch_timer = 0.0  # Reset timer when entering crouch
-	
 	# Store original camera offset and set target
 	if parent.camera:
 		original_camera_offset = parent.camera.offset
@@ -39,7 +42,8 @@ func enter() -> void:
 		parent.sword.position = original_sword_position + Vector2(0, sword_offset_y)
 
 func exit() -> void:
-	# Smoothly reset camera offset when exiting crouch
+	parent.animations.speed_scale = 1.0
+	parent.animations.play("enter_crouch", -1, -enter_crouch_speed_mult, true)
 	if parent.camera and camera_tween:
 		camera_tween.kill()
 		camera_tween = parent.create_tween()
@@ -114,7 +118,7 @@ func process_physics(delta: float) -> State:
 			effective_acceleration = crouch_acceleration * 1.8  # Strong braking for precise crouch movement
 		
 		parent.velocity.x = move_toward(parent.velocity.x, input_axis * crouch_move_speed, effective_acceleration * delta)
-		parent.animations.flip_h = input_axis < 0
+		parent.set_facing_left(input_axis < 0)
 	else:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, crouch_deceleration * delta)
 	

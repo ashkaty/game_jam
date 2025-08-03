@@ -1,13 +1,10 @@
-[gd_scene load_steps=12 format=4 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=9 format=4 uid="uid://cwbv2y4y74b4t"]
 
-[ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
-[ext_resource type="Script" uid="uid://dybehstmvi6ea" path="res://scripts/player.gd" id="2_u5sy4"]
 [ext_resource type="Texture2D" uid="uid://dpb0kysm7pg57" path="res://assets/sprites/grid.jpg" id="4_lbhrr"]
 [ext_resource type="Texture2D" uid="uid://q44iosxd057y" path="res://assets/sprites/world_tileset.png" id="5_iywne"]
+[ext_resource type="PackedScene" uid="uid://b4baaffqm4i8r" path="res://scenes/player.tscn" id="5_u5sy4"]
 [ext_resource type="Script" uid="uid://mex3itl4qovj" path="res://scripts/game_manager.gd" id="7_game"]
-[ext_resource type="Script" uid="uid://dkrqctvyafve4" path="res://scripts/damage_particle_manager.gd" id="8_damage_particle_manager"]
-[ext_resource type="PackedScene" uid="uid://5utxsmxaf4j5" path="res://scenes/cassette_buttonless_ui.tscn" id="8_gee14"]
-[ext_resource type="PackedScene" uid="uid://dmn11pyh7fi6f" path="res://scenes/enemy.tscn" id="9_0tnpc"]
+[ext_resource type="Script" path="res://scripts/damage_particle_manager.gd" id="8_damage_particle_manager"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2o6t"]
 distance = 256.0
@@ -145,60 +142,37 @@ sources/1 = SubResource("TileSetAtlasSource_p57ef")
 [node name="Game" type="Node2D"]
 script = ExtResource("7_game")
 
-[node name="DamageParticleManager" type="Node" parent="."]
+[node name="Level" type="Node2D" parent="."]
+
+[node name="DamageParticleManager" type="Node" parent="Level"]
 script = ExtResource("8_damage_particle_manager")
 
-[node name="Enemy" parent="." instance=ExtResource("9_0tnpc")]
-position = Vector2(400, -240)
+[node name="WorldBorder" type="StaticBody2D" parent="Level"]
 
-[node name="WorldBorder" type="StaticBody2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldBorder"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Level/WorldBorder"]
 position = Vector2(4, 249)
 shape = SubResource("WorldBoundaryShape2D_e2o6t")
 
-[node name="Player" parent="." instance=ExtResource("1_uwrxv")]
-unique_name_in_owner = true
-position = Vector2(-1000, -7)
-script = ExtResource("2_u5sy4")
-
-[node name="Camera2D" type="Camera2D" parent="Player"]
-position = Vector2(35, -158)
-offset = Vector2(0, -573.325)
-zoom = Vector2(0.36, 0.36)
-position_smoothing_enabled = true
-
-[node name="Background" type="StaticBody2D" parent="."]
+[node name="Background" type="StaticBody2D" parent="Level"]
 z_index = -4
 
-[node name="BackgroundAsset1" type="Sprite2D" parent="Background"]
+[node name="BackgroundAsset1" type="Sprite2D" parent="Level/Background"]
 position = Vector2(-946, -1375)
 scale = Vector2(9.45049, 7.85677)
 texture = ExtResource("4_lbhrr")
 
-[node name="BackgroundAsset2" type="Sprite2D" parent="Background"]
+[node name="BackgroundAsset2" type="Sprite2D" parent="Level/Background"]
 position = Vector2(5092.67, -1390)
 scale = Vector2(9.06773, 7.85)
 texture = ExtResource("4_lbhrr")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="TileMapLayer" type="TileMapLayer" parent="Level"]
 physics_interpolation_mode = 1
 scale = Vector2(17.555, 17.555)
 tile_map_data = PackedByteArray("AAD9/wAAAQAAAAAAAAD+/wAAAQAAAAAAAAD//wAAAQAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAQAAAAAAAAACAAAAAQAAAAAAAAADAAAAAQAAAAAAAAAEAP7/AQAAAAAAAAAFAP7/AQAAAAAAAAAGAP7/AQAAAAAAAAAHAP7/AQAAAAAAAAAIAP7/AQAAAAAAAAAJAP7/AQAAAAAAAAAKAP7/AQAAAAAAAAALAP7/AQAAAAAAAAAMAP7/AQAAAAAAAAANAP7/AQAAAAAAAAAOAP7/AQAAAAAAAAAPAP7/AQAAAAAAAAAQAP7/AQAAAAAAAAARAP7/AQAAAAAAAAAGAPz/AQAAAAAAAAAHAPz/AQAAAAAAAAAIAPz/AQAAAAAAAAAOAPz/AQAAAAAAAAAPAPz/AQAAAAAAAAAQAPz/AQAAAAAAAAAKAPr/AQAAAAAAAAALAPr/AQAAAAAAAAAMAPr/AQAAAAAAAAAEAAAAAQAAAAAAAAAFAAAAAQAAAAAAAAAGAAAAAQAAAAAAAAAHAAAAAQAAAAAAAAAIAAAAAQAAAAAAAAAJAAAAAQAAAAAAAAAKAAAAAQAAAAAAAAALAAAAAQAAAAAAAAAMAAAAAQAAAAAAAAANAAAAAQAAAAAAAAAOAAAAAQAAAAAAAAAPAAAAAQAAAAAAAAAQAAAAAQAAAAAAAAARAAAAAQAAAAAAAAASAAAAAQAAAAAAAAATAAAAAQAAAAAAAAAUAAAAAQAAAAAAAAD8/wAAAQAAAAAAAAD7/wAAAQAAAAAAAAD6/wAAAQAAAAAAAAD5/wAAAQAAAAAAAAD4/wAAAQAAAAAAAAD3/wAAAQAAAAAAAAD2/wAAAQAAAAAAAAD1/wAAAQAAAAAAAAD0/wAAAQAAAAAAAADz/wAAAQAAAAAAAADy/wAAAQAAAAAAAAAVAAAAAQAAAAAAAAAWAAAAAQAAAAAAAAAXAAAAAQAAAAAAAAAYAAAAAQAAAAAAAAAZAAAAAQAAAAAAAAAaAAAAAQAAAAAAAAAbAAAAAQAAAAAAAAAcAAAAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_u5sy4")
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="CharacterBody2D" parent="Level" instance=ExtResource("5_u5sy4")]
 
-[node name="CassetteButtonlessUI" parent="UI" instance=ExtResource("8_gee14")]
-anchors_preset = -1
-anchor_left = 0.077
-anchor_top = -0.676
-anchor_right = 0.915
-anchor_bottom = 0.0
-offset_left = -83.16
-offset_top = 428.72
-offset_right = 10938.8
-offset_bottom = 7000.0
-grow_vertical = 1
-scale = Vector2(0.3, 0.3)
-pivot_offset = Vector2(3, -800)
+[node name="Camera2D" type="Camera2D" parent="Level/CharacterBody2D"]
+zoom = Vector2(0.2, 0.2)
