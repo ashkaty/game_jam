@@ -5,6 +5,7 @@ class_name Player
 @onready var track1: RingBuffer = RingBuffer.create_by_seconds(15, Engine.get_physics_ticks_per_second())
 var is_replaying: bool = false
 var track_replay_index: int = 0
+var loop_triggered: bool = false
 
 signal loop_started
 signal health_changed(new_health: int)
@@ -140,27 +141,26 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 
-	if is_replaying:
-		if track1.length == 0:
-			return
-		var tick = track1.get_at(track_replay_index)
-		self.position = tick.position
-		self.velocity = tick.velocity
-		self.input_just_pressed = tick.input
-		track_replay_index = (track_replay_index + 1) % track1.length
-		return
-	else:
-		track1.push({
-				"input" : input_just_pressed,
-				"seconds" : total_time,
-				"health" : current_health,  # Use actual current health
-				"position": self.position,
-				"velocity": self.velocity
-		})
-		if track1.is_full():
-			track_replay_index = 0
-			is_replaying = true
-			emit_signal("loop_started")
+        if is_replaying:
+                if track1.length == 0:
+                        return
+                var tick = track1.get_at(track_replay_index)
+                self.position = tick.position
+                self.velocity = tick.velocity
+                self.input_just_pressed = tick.input
+                track_replay_index = (track_replay_index + 1) % track1.length
+                return
+        else:
+                track1.push({
+                                "input" : input_just_pressed,
+                                "seconds" : total_time,
+                                "health" : current_health,  # Use actual current health
+                                "position": self.position,
+                                "velocity": self.velocity
+                })
+                if track1.is_full() and not loop_triggered:
+                        loop_triggered = true
+                        emit_signal("loop_started")
 
 	# Update invincibility timer and flashing effect
 	update_invincibility(delta)
@@ -709,8 +709,13 @@ func die() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func set_ghost_mode(ghost: bool) -> void:
-	"""Set the player's ghost mode state"""
-	is_ghost_mode = ghost
+        """Set the player's ghost mode state"""
+        is_ghost_mode = ghost
+        is_replaying = ghost
+        if is_replaying:
+                track_replay_index = 0
+        else:
+                loop_triggered = false
 	
 	if is_ghost_mode:
 		print("Player entering ghost mode...")
