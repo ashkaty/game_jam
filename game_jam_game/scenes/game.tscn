@@ -1,10 +1,10 @@
 [gd_scene load_steps=9 format=4 uid="uid://cwbv2y4y74b4t"]
 
+[ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="Texture2D" uid="uid://dpb0kysm7pg57" path="res://assets/sprites/grid.jpg" id="4_lbhrr"]
 [ext_resource type="Texture2D" uid="uid://q44iosxd057y" path="res://assets/sprites/world_tileset.png" id="5_iywne"]
-[ext_resource type="PackedScene" uid="uid://b4baaffqm4i8r" path="res://scenes/player.tscn" id="5_u5sy4"]
 [ext_resource type="Script" uid="uid://mex3itl4qovj" path="res://scripts/game_manager.gd" id="7_game"]
-[ext_resource type="Script" path="res://scripts/damage_particle_manager.gd" id="8_damage_particle_manager"]
+[ext_resource type="Script" uid="uid://dkrqctvyafve4" path="res://scripts/damage_particle_manager.gd" id="8_damage_particle_manager"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2o6t"]
 distance = 256.0
@@ -172,7 +172,7 @@ scale = Vector2(17.555, 17.555)
 tile_map_data = PackedByteArray("AAD9/wAAAQAAAAAAAAD+/wAAAQAAAAAAAAD//wAAAQAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAQAAAAAAAAACAAAAAQAAAAAAAAADAAAAAQAAAAAAAAAEAP7/AQAAAAAAAAAFAP7/AQAAAAAAAAAGAP7/AQAAAAAAAAAHAP7/AQAAAAAAAAAIAP7/AQAAAAAAAAAJAP7/AQAAAAAAAAAKAP7/AQAAAAAAAAALAP7/AQAAAAAAAAAMAP7/AQAAAAAAAAANAP7/AQAAAAAAAAAOAP7/AQAAAAAAAAAPAP7/AQAAAAAAAAAQAP7/AQAAAAAAAAARAP7/AQAAAAAAAAAGAPz/AQAAAAAAAAAHAPz/AQAAAAAAAAAIAPz/AQAAAAAAAAAOAPz/AQAAAAAAAAAPAPz/AQAAAAAAAAAQAPz/AQAAAAAAAAAKAPr/AQAAAAAAAAALAPr/AQAAAAAAAAAMAPr/AQAAAAAAAAAEAAAAAQAAAAAAAAAFAAAAAQAAAAAAAAAGAAAAAQAAAAAAAAAHAAAAAQAAAAAAAAAIAAAAAQAAAAAAAAAJAAAAAQAAAAAAAAAKAAAAAQAAAAAAAAALAAAAAQAAAAAAAAAMAAAAAQAAAAAAAAANAAAAAQAAAAAAAAAOAAAAAQAAAAAAAAAPAAAAAQAAAAAAAAAQAAAAAQAAAAAAAAARAAAAAQAAAAAAAAASAAAAAQAAAAAAAAATAAAAAQAAAAAAAAAUAAAAAQAAAAAAAAD8/wAAAQAAAAAAAAD7/wAAAQAAAAAAAAD6/wAAAQAAAAAAAAD5/wAAAQAAAAAAAAD4/wAAAQAAAAAAAAD3/wAAAQAAAAAAAAD2/wAAAQAAAAAAAAD1/wAAAQAAAAAAAAD0/wAAAQAAAAAAAADz/wAAAQAAAAAAAADy/wAAAQAAAAAAAAAVAAAAAQAAAAAAAAAWAAAAAQAAAAAAAAAXAAAAAQAAAAAAAAAYAAAAAQAAAAAAAAAZAAAAAQAAAAAAAAAaAAAAAQAAAAAAAAAbAAAAAQAAAAAAAAAcAAAAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_u5sy4")
 
-[node name="CharacterBody2D" parent="Level" instance=ExtResource("5_u5sy4")]
+[node name="CharacterBody2D" parent="Level" instance=ExtResource("1_uwrxv")]
 
 [node name="Camera2D" type="Camera2D" parent="Level/CharacterBody2D"]
 zoom = Vector2(0.2, 0.2)
