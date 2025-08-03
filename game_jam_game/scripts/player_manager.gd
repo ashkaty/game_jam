@@ -1,17 +1,71 @@
+extends Node2D
 class_name PlayerManager
 
-extends Node2D
-
-	# The Player scene to instance per track
+# The Player scene to instance per track
 @export var track_scene: PackedScene
 @export var track_count: int = 4
 
-	# Holds the instantiated Player tracks
+# Holds the instantiated Player tracks
 var tracks: Array[Player] = []
+
 # Index of the currently active track
 var active_track_idx: int = 0
 
+# Reference to the UI
+var cassette_ui: Node = null
+
+# Reference to the camera
+@onready var main_camera: Camera2D = $Camera2D
+
 func _ready() -> void:
+	# Instantiate and set up each track
+	for i in range(track_count):
+		var player = track_scene.instantiate() as Player
+		player.name = "Track%d" % i
+		
+		# Position all players at the same location since only one will be visible at a time
+		player.position = Vector2.ZERO
+		add_child(player)
+		# Listen for when the player's ring buffer starts looping
+		player.connect("loop_started", Callable(self, "_on_loop_started").bind(i))
+		tracks.append(player)
+		# Disable input on all until we activate one
+		player.set_process_input(false)
+		
+		# Initially hide all players except the first one
+		player.visible = (i == 0)
+		
+		# Disable individual player cameras since we'll use the main camera
+		if player.has_node("Camera2D"):
+			player.get_node("Camera2D").enabled = false
+
+	# Activate the first track by default
+	active_track_idx = 0
+	activate_track(active_track_idx)
+	
+	# Find and connect to the UI
+	_find_and_connect_ui()
+
+# Intercept unhandled input and forward only to the active track
+func _unhandled_input(event: InputEvent) -> void:
+	tracks[active_track_idx]._unhandled_input(event)
+
+# Called when a track's ring buffer becomes full and starts replaying
+func _on_loop_started(looping_track_idx: int) -> void:
+	# Only switch if it's from the active track
+	if looping_track_idx != active_track_idx:
+		return
+	# Compute next track index (wraps around)
+	var next_idx = (active_track_idx + 1) % tracks.size()
+	activate_track(next_idx)
+
+	# need the button for idx to be pressed down
+	 
+
+
+# Enable input on the chosen track, disable on the others
+
+func _ready2() -> void:
 	# Instantiate and set up each track
 	for i in range(track_count):
 		var player = track_scene.instantiate() as Player
@@ -30,11 +84,11 @@ func _ready() -> void:
 	activate_track(active_track_idx)
 
 # Intercept unhandled input and forward only to the active track
-func _unhandled_input(event: InputEvent) -> void:
+func _unhandled_input2(event: InputEvent) -> void:
 	tracks[active_track_idx]._unhandled_input(event)
 
 # Called when a track’s ring buffer becomes full and starts replaying
-func _on_loop_started(looping_track_idx: int) -> void:
+func _on_loop_started2(looping_track_idx: int) -> void:
 	# Only switch if it’s from the active track
 	if looping_track_idx != active_track_idx:
 		return
@@ -44,7 +98,125 @@ func _on_loop_started(looping_track_idx: int) -> void:
 
 # Enable input on the chosen track, disable on the others
 func activate_track(idx: int) -> void:
+	# Check if we're already on this track to prevent unnecessary work
+	if active_track_idx == idx:
+		return
+		
 	for i in range(tracks.size()):
-		tracks[i].set_process_input(i == idx)
+		var is_active = (i == idx)
+		tracks[i].set_process_input(is_active)
+		tracks[i].visible = is_active  # Show only the active player
+		
+		# Handle ghost mode transitions
+		if is_active:
+			# When activating a track, exit ghost mode if the player was a ghost
+			if tracks[i].has_method("set_ghost_mode"):
+				tracks[i].set_ghost_mode(false)
+				print("[PlayerManager] Restored player from ghost mode on track %d" % i)
+	
 	active_track_idx = idx
+	
+	# Move the main camera to follow the active player
+	if main_camera and idx < tracks.size():
+		var active_player = tracks[idx]
+		# Use a tween for smooth camera transition
+		var tween = create_tween()
+		tween.tween_property(main_camera, "global_position", active_player.global_position, 0.3)
+		tween.tween_callback(_update_camera_follow)
+	
 	print("[PlayerManager] Switched to track %d" % idx)
+	
+	# Update the UI to show the correct track button state (but don't call switch_to_track to avoid loops)
+	if cassette_ui and cassette_ui.has_method("get_current_track"):
+		var ui_track = cassette_ui.get_current_track()
+		var expected_ui_track = idx + 1  # Convert to UI numbering (1-4)
+		if ui_track != expected_ui_track:
+			# Only update UI if it's out of sync
+			cassette_ui.current_track = expected_ui_track
+			cassette_ui._update_timer_display()
+			cassette_ui._update_progress_bar()
+
+# Find and connect to the UI
+func _find_and_connect_ui() -> void:
+	# Try to find the UI in the scene tree
+	var ui_node = get_node_or_null("../UI/CassetteButtonlessUI")
+	if not ui_node:
+		ui_node = get_node_or_null("UI/CassetteButtonlessUI") 
+	if not ui_node:
+		# Search the entire scene tree for the UI
+		ui_node = _search_for_ui(get_tree().current_scene)
+	
+	if ui_node:
+		cassette_ui = ui_node
+		print("[PlayerManager] Found UI: ", cassette_ui.name)
+		
+		# Connect to UI track switching signals if they exist
+		if cassette_ui.has_signal("track_changed"):
+			cassette_ui.connect("track_changed", Callable(self, "_on_ui_track_changed"))
+		
+		# Connect to track timer finished signal to handle ghost mode restoration
+		if cassette_ui.has_signal("track_timer_finished"):
+			cassette_ui.connect("track_timer_finished", Callable(self, "_on_track_timer_finished"))
+		
+		# Override the UI's track switching to also switch player visibility
+		_setup_ui_track_switching()
+	else:
+		print("[PlayerManager] Warning: Could not find CassetteButtonlessUI")
+
+func _search_for_ui(node: Node) -> Node:
+	if node.name == "CassetteButtonlessUI":
+		return node
+	
+	for child in node.get_children():
+		var result = _search_for_ui(child)
+		if result:
+			return result
+	return null
+
+# Set up UI track switching to also switch players
+func _setup_ui_track_switching() -> void:
+	if not cassette_ui:
+		return
+	
+	# Override the UI's input handling to also switch player tracks
+	if cassette_ui.has_method("_input"):
+		# We'll connect to key presses directly since the UI already handles them
+		pass
+
+# Handle UI track changes
+func _on_ui_track_changed(track_number: int) -> void:
+	# Convert from UI track numbering (1-4) to our array indexing (0-3)
+	var player_idx = track_number - 1
+	if player_idx >= 0 and player_idx < tracks.size():
+		activate_track(player_idx)
+
+# Handle track timer finished events - used for ghost mode restoration
+func _on_track_timer_finished(track_number: int) -> void:
+	print("[PlayerManager] Track ", track_number, " timer finished!")
+	
+	# When track 1 timer finishes, the system will auto-progress to track 2
+	# This is handled by the cassette UI, but we can add any special logic here
+	# The activate_track function will automatically restore players from ghost mode
+	if track_number == 1:
+		print("[PlayerManager] Track 1 finished - any ghost players will be restored when switching to track 2")
+
+
+
+# Public method to get the active track
+func get_active_track_index() -> int:
+	return active_track_idx
+
+# Public method to get the active player
+func get_active_player() -> Player:
+	if active_track_idx < tracks.size():
+		return tracks[active_track_idx]
+	return null
+
+# Update camera to follow the active player continuously
+func _update_camera_follow() -> void:
+	if main_camera and active_track_idx < tracks.size():
+		main_camera.global_position = tracks[active_track_idx].global_position
+
+# Process function to keep camera following the active player
+func _process(_delta: float) -> void:
+	_update_camera_follow()

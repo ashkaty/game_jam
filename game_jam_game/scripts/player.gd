@@ -55,6 +55,10 @@ var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 @export var max_health: int = 3  # Player starts with 3 hearts
 var current_health: int = 3
 
+# Ghost mode system - when player dies, becomes a ghost until timer ends
+var is_ghost_mode: bool = false
+@export var ghost_transparency: float = 0.7  # How transparent the ghost appears (0.7 = dimmer but visible)
+@export var ghost_color_tint: Color = Color(0.6, 0.6, 1.0, 0.7)  # Slightly blue tint with reduced alpha
 
 # Invincibility frames system
 @export var invincibility_duration: float = 1.5  # Duration of invincibility after taking damage
@@ -114,6 +118,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		is_replaying = false
 		track1.clear()
 		track_replay_index = 0
+	
+	# Debug: Test ghost mode with G key
+	if event.is_action_pressed("ui_accept"):  # Space key
+		if is_ghost_mode:
+			set_ghost_mode(false)
+			print("Debug: Manually exited ghost mode")
+		else:
+			print("Debug: Simulating player death for testing...")
+			current_health = 0
+			die()
 		
 	# Track when input buttons are first pressed for hold time calculation
 	for action in input_actions:
@@ -141,7 +155,7 @@ func _physics_process(delta: float) -> void:
 		track1.push({
 		"input" : input_just_pressed,
 		"seconds" : total_time,
-		"health" : 3,
+		"health" : current_health,  # Use actual current health
 		"position": self.position,
 		"velocity": self.velocity
 	})
@@ -153,6 +167,14 @@ func _physics_process(delta: float) -> void:
 	
 	# Update invincibility timer and flashing effect
 	update_invincibility(delta)
+	
+	# If in ghost mode, limit what systems update
+	if is_ghost_mode:
+		# Still apply gravity and basic physics so ghost doesn't float
+		if not is_on_floor():
+			velocity.y += get_gravity().y * delta
+		move_and_slide()
+		return  # Skip most other game logic
 	
 	# Update jump cooldown timer
 	if jump_cooldown_timer > 0.0:
@@ -190,6 +212,12 @@ func _process(delta: float) -> void:
 	
 # Input polling system - call this every frame to capture inputs
 func poll_inputs() -> void:
+	
+	# Don't poll inputs in ghost mode
+	if is_ghost_mode:
+		input_just_pressed.clear()
+		input_consumed.clear()
+		return
 	
 	if is_replaying:
 		return
@@ -372,8 +400,8 @@ func update_invincibility(delta: float) -> void:
 		var flash_time = fmod(invincibility_timer, flash_interval * 2.0)
 		flash_visible = flash_time < flash_interval
 		
-		# Apply visibility based on flash state
-		if animations:
+		# Apply visibility based on flash state (only if not in ghost mode)
+		if animations and not is_ghost_mode:
 			animations.modulate.a = 0.4 if flash_visible else 0.8
 		
 		# End invincibility when timer expires
@@ -393,9 +421,12 @@ func end_invincibility() -> void:
 	invincibility_timer = 0.0
 	flash_visible = true
 	
-	# Restore normal sprite appearance
+	# Restore normal sprite appearance (but respect ghost mode)
 	if animations:
-		animations.modulate.a = 1.0
+		if is_ghost_mode:
+			animations.modulate = ghost_color_tint  # Restore ghost appearance
+		else:
+			animations.modulate = Color(1.0, 1.0, 1.0, 1.0)  # Restore normal appearance
 	
 	print("Invincibility ended")
 
@@ -637,6 +668,11 @@ func flash_sprite():
 # Health System Functions
 func take_damage(damage_amount: int) -> void:
 	"""Called when player takes damage - reduces health and updates UI"""
+	# Check if player is in ghost mode - ghosts can't take damage
+	if is_ghost_mode:
+		print("Player is in ghost mode! Damage ignored.")
+		return
+		
 	# Check if player is invincible
 	if is_invincible:
 		print("Player is invincible! Damage ignored.")
@@ -663,14 +699,80 @@ func take_damage(damage_amount: int) -> void:
 
 func die() -> void:
 	"""Called when player health reaches 0"""
-	print("Player died! Restarting game...")
+	print("Player died! Entering ghost mode until timer ends...")
 	
-	# Add a brief delay before restarting to let death effects play
-	await get_tree().create_timer(1.0).timeout
-	
-	# Restart the current scene
-	get_tree().reload_current_scene()
+	# Instead of restarting the game, enter ghost mode
+	set_ghost_mode(true)
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# GHOST MODE SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func set_ghost_mode(ghost: bool) -> void:
+	"""Set the player's ghost mode state"""
+	is_ghost_mode = ghost
+	
+	if is_ghost_mode:
+		print("Player entering ghost mode...")
+		# Make player appear as a ghost with visual indicator
+		if animations:
+			animations.modulate = ghost_color_tint  # Apply blue tint and transparency
+		
+		# Ghost collision setup:
+		# - collision_layer = 0: Ghost doesn't exist on any layer (enemies can't target)
+		# - collision_mask = 1: Ghost can still collide with tileset for physics
+		collision_layer = 0  # Don't exist on any layer - enemies can't target
+		collision_mask = 1   # Still collide with ground/platforms for physics
+		
+		# Disable combat abilities - ghost can't deal damage
+		if sword:
+			sword.visible = false
+			# Also disable any hitboxes in the sword
+			var hitbox = sword.get_node_or_null("Sprite2D/HitBox")
+			if hitbox:
+				hitbox.set_collision_layer_value(3, false)  # Disable hitbox layer
+		
+		# Disable hurtbox so ghost can't take damage from collisions
+		var hurtbox = get_node_or_null("HurtBox")
+		if hurtbox:
+			hurtbox.collision_layer = 0
+			hurtbox.collision_mask = 0  # Don't detect any hitboxes
+		
+		print("Ghost mode activated - player is transparent, can't be targeted, and can't deal/take damage")
+	else:
+		print("Player exiting ghost mode...")
+		# Restore normal appearance and interactions
+		if animations:
+			animations.modulate = Color(1.0, 1.0, 1.0, 1.0)  # Restore full color and opacity
+		
+		# Restore normal collisions (based on player.tscn values)
+		collision_layer = 2  # Normal player collision layer
+		collision_mask = 1   # Normal player collision mask for tileset interaction
+		
+		# Re-enable combat abilities
+		if sword:
+			sword.visible = true
+			# Re-enable hitboxes in the sword
+			var hitbox = sword.get_node_or_null("Sprite2D/HitBox")
+			if hitbox:
+				hitbox.set_collision_layer_value(3, true)  # Re-enable hitbox layer
+		
+		# Re-enable hurtbox for normal damage detection
+		var hurtbox = get_node_or_null("HurtBox")
+		if hurtbox:
+			hurtbox.collision_layer = 0  # HurtBox doesn't need to exist on any layer
+			hurtbox.collision_mask = 4   # Detect hitboxes on layer 3
+		
+		# Reset health when exiting ghost mode (for next track)
+		current_health = max_health
+		
+		print("Ghost mode deactivated - player restored to normal state")
+
+func is_in_ghost_mode() -> bool:
+	"""Check if player is currently in ghost mode"""
+	return is_ghost_mode
+
+# ═══════════════════════════════════════════════════════════════════════════════
 	
 	# You can add more death effects here:
 	# - Play death animation
