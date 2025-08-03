@@ -39,9 +39,9 @@ func _ready() -> void:
 		if player.has_node("Camera2D"):
 			player.get_node("Camera2D").enabled = false
 
-		# Activate the first track by default
-		#active_track_idx = 0
-		activate_track(0)
+	# Activate the first track by default
+	#active_track_idx = 0
+	activate_track(0)
 	
 	# Find and connect to the UI
 	_find_and_connect_ui()
@@ -72,19 +72,19 @@ func activate_track(idx: int) -> void:
 	if active_track_idx == idx:
 		return
 		
-		for i in range(tracks.size()):
-			var is_active = i == idx
-			#tracks[i].set_process_input(is_active)
-				
-			tracks[i].visible = i <= idx  # Keep completed tracks visible
-		
-			# Handle ghost mode transitions
-			if is_active and tracks[i].has_method("set_ghost_mode"):
-				# When activating a track, exit ghost mode if the player was a ghost
-				tracks[i].set_ghost_mode(false)
-				#if tracks[i].has_method("set_ghost_mode"):
-				#	tracks[i].set_ghost_mode(false)
-				#	print("[PlayerManager] Restored player from ghost mode on track %d" % i)
+	for i in range(tracks.size()):
+		var is_active = i == idx
+		#tracks[i].set_process_input(is_active)
+			
+		tracks[i].visible = i <= idx  # Keep completed tracks visible
+	
+		# Handle ghost mode transitions
+		if is_active and tracks[i].has_method("set_ghost_mode"):
+			# When activating a track, exit ghost mode if the player was a ghost
+			tracks[i].set_ghost_mode(false)
+			#if tracks[i].has_method("set_ghost_mode"):
+			#	tracks[i].set_ghost_mode(false)
+			#	print("[PlayerManager] Restored player from ghost mode on track %d" % i)
 	
 	active_track_idx = idx
 	
