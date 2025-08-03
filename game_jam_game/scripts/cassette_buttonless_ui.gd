@@ -190,6 +190,7 @@ func _ready():
 		_initialize_hearts()
 	
 	# Start the countdown timer for track 1
+	current_track = 0
 	switch_to_track(1)
 	
 	# Drop red button by default when game starts
@@ -716,11 +717,13 @@ func switch_to_track(track_number: int):
 				return
 
 		if current_track == track_number:
-				_update_timer_display()
-				_update_progress_bar()
-				if not is_timer_running and timer_per_track[current_track] > 0:
-					start_timer()
-				return
+			_connect_to_active_player()
+			_update_hearts_display()
+			_update_timer_display()
+			_update_progress_bar()
+			if not is_timer_running and timer_per_track[current_track] > 0:
+				start_timer()
+			return
 
 		var old_track = current_track
 
