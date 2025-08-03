@@ -178,11 +178,13 @@ func _ready():
 		timer_progress_bar.value = 0.0  # Start at 0 (no progress yet)
 		print("Progress bar initialized: max=", timer_progress_bar.max_value, ", min=", timer_progress_bar.min_value)
 	
-		# Initialize track timers
-		_initialize_timer_per_track()
+                # Initialize track timers
+                _initialize_timer_per_track()
+                # Start the timer immediately so track 1 begins counting down
+                start_timer()
 
-		# Initialize health dictionaries
-		_initialize_health_per_track()
+                # Initialize health dictionaries
+                _initialize_health_per_track()
 
 		# Initialize hearts system
 		_initialize_hearts()
