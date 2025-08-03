@@ -5,6 +5,14 @@ class_name PlayerManager
 @export var track_scene: PackedScene
 @export var track_count: int = 4
 
+# Colors for each track (1: red, 2: yellow, 3: blue, 4: green)
+var track_colors: Array[Color] = [
+		Color(1, 0, 0), # Track 1 - red
+		Color(1, 1, 0), # Track 2 - yellow
+		Color(0, 0, 1), # Track 3 - blue
+		Color(0, 1, 0)  # Track 4 - green
+]
+
 # Reference to the UI (can be set in editor or found at runtime)
 @export var cassette_ui: CassetteButtonlessUI
 
@@ -22,9 +30,10 @@ func _ready() -> void:
 	for i in range(track_count):
 		var player = track_scene.instantiate() as Player
 		player.name = "Track%d" % i
-
 		# Position all players at the same location since only one will be visible at a time
 		player.position = Vector2.ZERO
+		# Tint the player based on its track color
+		player.modulate = track_colors[i % track_colors.size()]
 		add_child(player)
 		# Listen for when the player's ring buffer starts looping
 		player.connect("loop_started", Callable(self, "_on_loop_started").bind(i))
