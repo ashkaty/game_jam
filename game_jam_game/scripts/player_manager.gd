@@ -1,67 +1,50 @@
-extends Node
+class_name PlayerManager
 
-## SETTINGS ##
-@export var track_scene		: PackedScene		# Packed scene that contains a Track node with a Player inside.
-@export var num_tracks		: int = 4
-@export var recording_secs	: int = 15		# Length of one cassette loop.
+extends Node2D
 
+	# The Player scene to instance per track
+@export var track_scene: PackedScene
+@export var track_count: int = 4
 
-## RUNTIME ##
-var tracks				: Array[Node] = []
-var active_index		: int = 0
-var switching_locked	: bool = false		# Flip this when no overwrite is permitted.
+	# Holds the instantiated Player tracks
+var tracks: Array[Player] = []
+# Index of the currently active track
+var active_track_idx: int = 0
 
-### ----------------------------------------------------------------
-func start_level() -> void:
-	# Create & configure all tracks.
-	for i in range(num_tracks):
-		var t := track_scene.instantiate()
-		add_child(t)
-		t.init_track(i, recording_secs)
-		tracks.append(t)
-		# ensure player is in track
-	
-	_set_active_track(0)
+func _ready() -> void:
+	# Instantiate and set up each track
+	for i in range(track_count):
+		var player = track_scene.instantiate() as Player
+		player.name = "Track%d" % i
+		
+		player.position = Vector2( i * 32, 0 )  # 32-pixel horizontal offset per track
+		add_child(player)
+		# Listen for when the player’s ring buffer starts looping
+		player.connect("loop_started", Callable(self, "_on_loop_started").bind(i))
+		tracks.append(player)
+		# Disable input on all until we activate one
+		player.set_process_input(false)
 
-### ----------------------------------------------------------------
-# INPUT “HUB” #######################################################
+	# Activate the first track by default
+	active_track_idx = 0
+	activate_track(active_track_idx)
 
-func _input(event: InputEvent) -> void:
-	if not event.is_pressed():
+# Intercept unhandled input and forward only to the active track
+func _unhandled_input(event: InputEvent) -> void:
+	tracks[active_track_idx]._unhandled_input(event)
+
+# Called when a track’s ring buffer becomes full and starts replaying
+func _on_loop_started(looping_track_idx: int) -> void:
+	# Only switch if it’s from the active track
+	if looping_track_idx != active_track_idx:
 		return
-	
-	# ---- Handle track-switch keys first --------------------------
-	if event.is_action_pressed("switch_next"):
-		_switch_to((active_index + 1) % tracks.size())
-		event.consume()
-		return
-	elif event.is_action_pressed("switch_prev"):
-		_switch_to((active_index - 1 + tracks.size()) % tracks.size())
-		event.consume()
-		return
-	elif event.is_action_pressed("switch_1"):
-		_switch_to(0);	event.consume();	return
-	elif event.is_action_pressed("switch_2"):
-		_switch_to(1);	event.consume();	return
-	elif event.is_action_pressed("switch_3"):
-		_switch_to(2);	event.consume();	return
-	elif event.is_action_pressed("switch_4"):
-		_switch_to(3);	event.consume();	return
-	
-	# ---- Any other input goes to the active track ----------------
-	if tracks.size() > 0:
-		tracks[active_index].receive_input(event)
+	# Compute next track index (wraps around)
+	var next_idx = (active_track_idx + 1) % tracks.size()
+	activate_track(next_idx)
 
-### ----------------------------------------------------------------
-func _switch_to(new_idx: int) -> void:
-	if switching_locked or new_idx == active_index:
-		return
-	
-	tracks[active_index].set_ghost_mode(true)
-	active_index = clamp(new_idx, 0, tracks.size() - 1)
-	tracks[active_index].set_ghost_mode(false)
-
-func _set_active_track(idx: int) -> void:
-	active_index = idx
+# Enable input on the chosen track, disable on the others
+func activate_track(idx: int) -> void:
 	for i in range(tracks.size()):
-		tracks[i].set_ghost_mode(i != idx)
+		tracks[i].set_process_input(i == idx)
+	active_track_idx = idx
+	print("[PlayerManager] Switched to track %d" % idx)

@@ -259,7 +259,7 @@ func process_physics(delta: float) -> State:
 	
 	# Check for head bonk during fall (rare but possible)
 	# This can happen if player hits ceiling while falling upward from a bounce or something
-	if parent.velocity.y < 0 and parent.check_and_handle_head_bonk():
+	if parent.velocity.y < 0:
 		# print("Head bonk during fall state!")
 		pass  # Head bonk handling is done in the check function
 
