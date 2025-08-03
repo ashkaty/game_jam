@@ -23,11 +23,10 @@ var crouch_timer: float = 0.0
 var camera_tween: Tween  # For smooth camera transitions
 
 func enter() -> void:
-        parent.animations.play("enter_crouch", -1, enter_crouch_speed_mult)
-        parent.animations.queue("crouch")
-        parent.animations.speed_scale = crouch_speed_mult
-        crouch_timer = 0.0  # Reset timer when entering crouch
-	
+	parent.animations.play("enter_crouch", -1, enter_crouch_speed_mult)
+	parent.animations.queue("crouch")
+	parent.animations.speed_scale = crouch_speed_mult
+	crouch_timer = 0.0  # Reset timer when entering crouch
 	# Store original camera offset and set target
 	if parent.camera:
 		original_camera_offset = parent.camera.offset
@@ -43,11 +42,10 @@ func enter() -> void:
 		parent.sword.position = original_sword_position + Vector2(0, sword_offset_y)
 
 func exit() -> void:
-        parent.animations.speed_scale = 1.0
-        parent.animations.play("enter_crouch", -1, -enter_crouch_speed_mult, true)
-        # Smoothly reset camera offset when exiting crouch
-        if parent.camera and camera_tween:
-                camera_tween.kill()
+	parent.animations.speed_scale = 1.0
+	parent.animations.play("enter_crouch", -1, -enter_crouch_speed_mult, true)
+	if parent.camera and camera_tween:
+		camera_tween.kill()
 		camera_tween = parent.create_tween()
 		camera_tween.set_ease(Tween.EASE_OUT)
 		camera_tween.set_trans(Tween.TRANS_QUART)
@@ -58,8 +56,8 @@ func exit() -> void:
 	# Reset sword position when exiting crouch
 	if parent.sword:
 		# Instead of restoring stored position, reset to base position and let player update logic handle direction
-                parent.sword.position.y = original_sword_position.y  # Reset Y position only
-                parent.update_sword_position()  # Let the player handle X position based on current facing direction
+		parent.sword.position.y = original_sword_position.y  # Reset Y position only
+		parent.update_sword_position()  # Let the player handle X position based on current facing direction
 
 
 func process_input(_event: InputEvent) -> State:
@@ -120,7 +118,7 @@ func process_physics(delta: float) -> State:
 			effective_acceleration = crouch_acceleration * 1.8  # Strong braking for precise crouch movement
 		
 		parent.velocity.x = move_toward(parent.velocity.x, input_axis * crouch_move_speed, effective_acceleration * delta)
-                parent.set_facing_left(input_axis < 0)
+		parent.set_facing_left(input_axis < 0)
 	else:
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, crouch_deceleration * delta)
 	

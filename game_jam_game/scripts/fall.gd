@@ -7,7 +7,7 @@ extends State
 @export var air_attack_state: State
 @export var crouch_state: State
 @export var dash_state: State
-@export var animation_name: String = "falling"
+# @export var animation_name: String = "falling"
 
 # ---- Tunables --------------------------------------------------------
 @export var fall_gravity_scale: float = 20.0  # Changed from 3000.0 to current fast fall value
@@ -244,7 +244,7 @@ func process_physics(delta: float) -> State:
 			effective_air_accel = current_air_accel * air_direction_change_multiplier
 		
 		parent.velocity.x = move_toward(parent.velocity.x, target, effective_air_accel * delta)
-                parent.set_facing_left(axis < 0)
+		parent.set_facing_left(axis < 0)
 	else:
 		# No input - apply stronger friction to make player fall straight down quickly
 		var no_input_friction = air_friction * 3.0  # Much stronger friction when no input

@@ -4,7 +4,7 @@ extends Node2D
 
 	# The Player scene to instance per track
 @export var track_scene: PackedScene
-@export var track_count: int = 4
+@export var track_count: int = 1
 
 	# Holds the instantiated Player tracks
 var tracks: Array[Player] = []

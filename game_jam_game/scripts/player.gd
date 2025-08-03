@@ -91,10 +91,10 @@ func _ready() -> void:
 	# Initialize the state machine, passing a reference of the player to the states,
 	# that way they can move and react accordingly
 	state_machine.init(self)
-        # store the sword position and direction
-        last_flip_h = facing_left
-        if sword:
-                original_sword_position = sword.position
+		# store the sword position and direction
+	last_flip_h = facing_left
+	if sword:
+		original_sword_position = sword.position
 	# Initialize coyote time state
 	was_on_floor = is_on_floor()
 	coyote_timer = coyote_time_duration if was_on_floor else 0.0
@@ -184,11 +184,10 @@ func _process(delta: float) -> void:
 	state_machine.process_frame(delta)
 	
 
-        if facing_left != last_flip_h:
-                if sword:
-                        update_sword_position()
-
-                last_flip_h = facing_left
+	if facing_left != last_flip_h:
+		if sword:
+			update_sword_position()
+		last_flip_h = facing_left
 
 
 	
@@ -229,24 +228,24 @@ func is_action_pressed_polling(action: String) -> bool:
 	return Input.is_action_pressed(action)
 
 func update_sword_position() -> void:
-        if not sword:
-                return
-        # Flip the sword's x position based on facing direction
-        if facing_left:
-                sword.scale.x = -1
-                sword.position.x = -abs(sword.position.x)
-        else:
-                sword.scale.x = 1
-                sword.position.x = abs(sword.position.x)
+		if not sword:
+				return
+		# Flip the sword's x position based on facing direction
+		if facing_left:
+				sword.scale.x = -1
+				sword.position.x = -abs(sword.position.x)
+		else:
+				sword.scale.x = 1
+				sword.position.x = abs(sword.position.x)
 
 
 func set_facing_left(is_left: bool) -> void:
-        facing_left = is_left
-        scale.x = -1 if is_left else 1
+		facing_left = is_left
+		scale.x = -1 if is_left else 1
 
 
 func is_facing_left() -> bool:
-        return facing_left
+		return facing_left
 
 
 
@@ -386,8 +385,8 @@ func update_invincibility(delta: float) -> void:
 		flash_visible = flash_time < flash_interval
 		
 		# Apply visibility based on flash state
-                if sprite:
-                        sprite.modulate.a = 0.4 if flash_visible else 0.8
+		if sprite:
+			sprite.modulate.a = 0.4 if flash_visible else 0.8
 		
 		# End invincibility when timer expires
 		if invincibility_timer <= 0.0:
@@ -407,8 +406,8 @@ func end_invincibility() -> void:
 	flash_visible = true
 	
 	# Restore normal sprite appearance
-        if sprite:
-                sprite.modulate.a = 1.0
+	if sprite:
+		sprite.modulate.a = 1.0
 	
 	print("Invincibility ended")
 
@@ -633,14 +632,14 @@ func _perform_camera_shake(target_camera: Camera2D, shake_strength: float, durat
 
 # Visual feedback for head bonk
 func flash_sprite():
-        if sprite:
-                var original_modulate = sprite.modulate
-                sprite.modulate = Color.YELLOW
-                var tween = create_tween()
-                tween.tween_property(sprite, "modulate", original_modulate, 0.2)
-                shake_camera_for_damage(15)
+		if sprite:
+				var original_modulate = sprite.modulate
+				sprite.modulate = Color.YELLOW
+				var tween = create_tween()
+				tween.tween_property(sprite, "modulate", original_modulate, 0.2)
+				shake_camera_for_damage(15)
 
-        return
+		return
 
 # Health System Functions
 func take_damage(damage_amount: int) -> void:

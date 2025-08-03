@@ -13,7 +13,7 @@ extends State
 @export var deceleration: float = 800.0            # Units per second² when no directional input (increased for quicker stops)
 @export var direction_change_multiplier: float = 2.0  # Extra braking force when changing directions
 @export var idle_transition_vel: float = 50.0
-@export var animation_name: String = "run"
+# @export var animation_name: String = "run"
 # ------------------------------------------------------------------------------
 
 
@@ -94,7 +94,7 @@ func process_physics(delta: float) -> State:
 		
 		# Accelerate toward the desired speed
 		parent.velocity.x = move_toward(parent.velocity.x, target_speed, effective_acceleration * delta)
-                parent.set_facing_left(parent.velocity.x < 0)
+		parent.set_facing_left(parent.velocity.x < 0)
 	else:
 		# No input → slow the character down smoothly with increased deceleration
 		parent.velocity.x = move_toward(parent.velocity.x, 0.0, deceleration * delta)

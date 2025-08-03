@@ -19,7 +19,7 @@ extends State
 @export var avoidance_check_distance: float = 64.0  # How far ahead to check for collisions
 @export var avoidance_offset: float = 32.0  # How much to move up/down to avoid collision
 @export var max_avoidance_attempts: int = 3  # Maximum number of avoidance attempts
-@export var animation_name: String = "nauruto_run"
+# @export var animation_name: String = "nauruto_run"
 
 # Dash state tracking
 var dash_timer: float = 0.0
@@ -41,9 +41,8 @@ func enter() -> void:
 	# Trigger motion blur for dash
 	if parent.has_method("trigger_motion_blur_burst"):
 		parent.trigger_motion_blur_burst(0.6, 0.15)
-	
-        # Set dash direction based on which way player is facing
-        dash_direction = -1 if parent.is_facing_left() else 1
+		# Set dash direction based on which way player is facing
+		dash_direction = -1 if parent.is_facing_left() else 1
 	
 	# Reset dash timer and crouch slowdown flag
 	dash_timer = dash_duration
@@ -60,9 +59,9 @@ func enter() -> void:
 	if parent.sword:
 		original_sword_position = parent.sword.position
 	
-        # Start cooldown
-        can_dash = false
-        dash_cooldown_timer = dash_cooldown
+		# Start cooldown
+		can_dash = false
+		dash_cooldown_timer = dash_cooldown
 
 func exit() -> void:
 	print("Exiting dash state")

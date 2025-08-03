@@ -172,7 +172,7 @@ scale = Vector2(9.06773, 7.85)
 texture = ExtResource("4_lbhrr")
 
 [node name="CharacterBody2D" parent="Level/Background" instance=ExtResource("5_u5sy4")]
-position = Vector2(-1935, -132)
+position = Vector2(-2301, 27)
 
 [node name="TileMapLayer" type="TileMapLayer" parent="Level"]
 physics_interpolation_mode = 1

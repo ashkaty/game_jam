@@ -8989,22 +8989,16 @@ starting_state = NodePath("idle")
 
 [node name="idle" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "jump_state", "move_state", "attack_state", "crouch_state", "dash_state")]
 script = ExtResource("7_fulsm")
+animation_name = "idle"
 fall_state = NodePath("../fall")
 jump_state = NodePath("../jump")
 move_state = NodePath("../move")
 attack_state = NodePath("../ground_attack")
 crouch_state = NodePath("../crouch")
 dash_state = NodePath("../dash")
-animation_name = "idle"
 
 [node name="jump" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "land_state", "move_state", "idle_state", "air_attack_state", "dash_state")]
 script = ExtResource("8_4r5pv")
-fall_state = NodePath("../fall")
-land_state = NodePath("../land")
-move_state = NodePath("../move")
-idle_state = NodePath("../idle")
-air_attack_state = NodePath("../air_attack")
-dash_state = NodePath("../dash")
 short_hop_force = 1500.0
 long_hop_force = 2500.0
 short_gravity_scale = 5.0
@@ -9013,9 +9007,20 @@ air_accel = 2000.0
 air_friction = 0.0
 max_air_speed = 1600.0
 animation_name = "jump"
+fall_state = NodePath("../fall")
+land_state = NodePath("../land")
+move_state = NodePath("../move")
+idle_state = NodePath("../idle")
+air_attack_state = NodePath("../air_attack")
+dash_state = NodePath("../dash")
 
 [node name="fall" type="Node" parent="state_machine" node_paths=PackedStringArray("land_state", "move_state", "idle_state", "jump_state", "air_attack_state", "crouch_state", "dash_state")]
 script = ExtResource("9_60mlk")
+fall_gravity_scale = 8.0
+air_accel = 2000.0
+air_friction = 0.0
+max_air_speed = 1600.0
+animation_name = "fall"
 land_state = NodePath("../land")
 move_state = NodePath("../move")
 idle_state = NodePath("../idle")
@@ -9023,23 +9028,18 @@ jump_state = NodePath("../jump")
 air_attack_state = NodePath("../air_attack")
 crouch_state = NodePath("../crouch")
 dash_state = NodePath("../dash")
-fall_gravity_scale = 8.0
-air_accel = 2000.0
-air_friction = 0.0
-max_air_speed = 1600.0
-animation_name = "fall"
 
 [node name="move" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "jump_state", "attack_state", "crouch_state", "dash_state")]
 script = ExtResource("10_i4ail")
+max_speed = 1600.0
+acceleration = 6400.0
+deceleration = 12800.0
 fall_state = NodePath("../fall")
 idle_state = NodePath("../idle")
 jump_state = NodePath("../jump")
 attack_state = NodePath("../ground_attack")
 crouch_state = NodePath("../crouch")
 dash_state = NodePath("../dash")
-max_speed = 1600.0
-acceleration = 6400.0
-deceleration = 12800.0
 
 [node name="land" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state")]
 script = ExtResource("11_a38lo")
@@ -9050,20 +9050,20 @@ metadata/_custom_type_script = "uid://be2h8sxopel4k"
 
 [node name="ground_attack" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state", "jump_state")]
 script = ExtResource("12_4ni07")
+deceleration = 50.0
+animation_name = "swing"
 idle_state = NodePath("../idle")
 move_state = NodePath("../move")
 fall_state = NodePath("../fall")
 jump_state = NodePath("../jump")
-deceleration = 50.0
-animation_name = "swing"
 metadata/_custom_type_script = "uid://be2h8sxopel4k"
 
 [node name="air_attack" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "move_state")]
 script = ExtResource("13_l71n6")
+animation_name = "swing"
 fall_state = NodePath("../fall")
 idle_state = NodePath("../idle")
 move_state = NodePath("../move")
-animation_name = "swing"
 
 [node name="crouch" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state", "ground_attack_state", "dash_state")]
 script = ExtResource("14_ke2ow")

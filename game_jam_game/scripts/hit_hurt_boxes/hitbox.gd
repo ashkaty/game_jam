@@ -19,47 +19,49 @@ func _ready() -> void:
 
 # Get the current knockback multiplier based on the active attack
 func get_current_knockback_multiplier() -> float:
-        var player = get_tree().get_first_node_in_group("player")
-        if player and player.animations and player.animations.is_playing():
-                var current_animation = player.animations.current_animation
-
-                match current_animation:
-                        "up_attack":
-                                return upward_attack_knockback_multiplier
-                        "down_attack":
-                                return downward_attack_knockback_multiplier
-                        "base_attack", "air attack":
-                                return regular_attack_knockback_multiplier
-                        _:
-                                return knockback_multiplier
-
-        return knockback_multiplier
+	# Try to get the sword's animation player to see what attack is playing
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		var sword_anim = player.get_node_or_null("AnimatedSprite2D/Sword/AnimationPlayer")
+		if sword_anim and sword_anim.is_playing():
+			var current_animation = sword_anim.current_animation
+			
+			match current_animation:
+				"up_ward_swing":
+					return upward_attack_knockback_multiplier
+				"down_ward_swing":
+					return downward_attack_knockback_multiplier
+				"swing":
+					return regular_attack_knockback_multiplier
+				_:
+					return knockback_multiplier
+	return 0.0
 
 # Get the directional modifier for knockback based on attack type
 func get_knockback_direction_modifier() -> Vector2:
-        var player = get_tree().get_first_node_in_group("player")
-        if player and player.animations and player.animations.is_playing():
-                var current_animation = player.animations.current_animation
-                var player_facing_left = player.is_facing_left()
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.animations and player.animations.is_playing():
+		var current_animation = player.animations.current_animation
+		var player_facing_left = player.is_facing_left()
 
-                match current_animation:
-                        "up_attack":
-                                if player_facing_left:
-                                        return Vector2(-0.5, -1.8)
-                                else:
-                                        return Vector2(0.5, -1.8)
-                        "down_attack":
-                                if player_facing_left:
-                                        return Vector2(-0.5, 1.5)
-                                else:
-                                        return Vector2(0.5, 1.5)
-                        "base_attack", "air attack":
-                                if player_facing_left:
-                                        return Vector2(-1.0, -0.6)
-                                else:
-                                        return Vector2(1.0, -0.6)
+		match current_animation:
+			"up_attack":
+				if player_facing_left:
+					return Vector2(-0.5, -1.8)
+				else:
+					return Vector2(0.5, -1.8)
+			"down_attack":
+				if player_facing_left:
+					return Vector2(-0.5, 1.5)
+				else:
+					return Vector2(0.5, 1.5)
+			"base_attack", "air attack":
+				if player_facing_left:
+					return Vector2(-1.0, -0.6)
+				else:
+					return Vector2(1.0, -0.6)
 
-        return Vector2(1.0, 0.0)
+	return Vector2(1.0, 0.0)
 
 # Get the complete knockback vector (direction + force) for the current attack
 func get_knockback_vector() -> Vector2:
@@ -69,10 +71,10 @@ func get_knockback_vector() -> Vector2:
 
 # Get the current attack type as a string for debugging
 func get_current_attack_type() -> String:
-        var player = get_tree().get_first_node_in_group("player")
-        if player and player.animations and player.animations.is_playing():
-                return player.animations.current_animation
-        return "none"
+		var player = get_tree().get_first_node_in_group("player")
+		if player and player.animations and player.animations.is_playing():
+				return player.animations.current_animation
+		return "none"
 
 # Get debug info about the current attack
 func get_attack_debug_info() -> Dictionary:

@@ -9060,10 +9060,10 @@ metadata/_custom_type_script = "uid://be2h8sxopel4k"
 
 [node name="air_attack" type="Node" parent="state_machine" node_paths=PackedStringArray("fall_state", "idle_state", "move_state")]
 script = ExtResource("13_l71n6")
+animation_name = "swing"
 fall_state = NodePath("../fall")
 idle_state = NodePath("../idle")
 move_state = NodePath("../move")
-animation_name = "swing"
 
 [node name="crouch" type="Node" parent="state_machine" node_paths=PackedStringArray("idle_state", "move_state", "fall_state", "ground_attack_state", "dash_state")]
 script = ExtResource("14_ke2ow")
