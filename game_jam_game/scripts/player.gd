@@ -9,6 +9,7 @@ var loop_triggered: bool = false
 
 signal loop_started
 signal health_changed(new_health: int)
+signal died
  
 @onready var animations: AnimatedSprite2D = $AnimatedSprite2D
 @onready var sword: Node2D = $AnimatedSprite2D/Sword
@@ -701,6 +702,7 @@ func die() -> void:
 	
 	# Instead of restarting the game, enter ghost mode
 	set_ghost_mode(true)
+        emit_signal("died")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GHOST MODE SYSTEM

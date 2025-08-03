@@ -9,6 +9,7 @@ extends Node
 var tracks				: Array[Track] = []
 var active_index		: int = 0
 var switching_locked	: bool = false		# Flip this when no overwrite is permitted.
+var ghost_flags                 : Array[bool] = []
 
 ### ----------------------------------------------------------------
 func start_level() -> void:
@@ -17,6 +18,11 @@ func start_level() -> void:
 		var t := track_scene._init()
 		add_child(t)
 		tracks.append(t)
+                ghost_flags.append(false)
+
+                var p := t.get_player()
+                if p and p.has_signal("died"):
+                        p.connect("died", Callable(self, "_on_player_died").bind(i))
 	
 	_set_active_track(0)
 
@@ -55,11 +61,16 @@ func _switch_to(new_idx: int) -> void:
 	if switching_locked or new_idx == active_index:
 		return
 	
-	tracks[active_index].set_ghost_mode(true)
+        tracks[active_index].set_ghost_mode(ghost_flags[active_index])
 	active_index = clamp(new_idx, 0, tracks.size() - 1)
 	tracks[active_index].set_ghost_mode(false)
 
 func _set_active_track(idx: int) -> void:
 	active_index = idx
 	for i in range(tracks.size()):
-		tracks[i].set_ghost_mode(i != idx)
+                tracks[i].set_ghost_mode(ghost_flags[i] and i != idx)
+
+func _on_player_died(idx: int) -> void:
+        if idx >= 0 and idx < ghost_flags.size():
+                ghost_flags[idx] = true
+
