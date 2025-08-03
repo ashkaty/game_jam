@@ -18,30 +18,30 @@ var active_track_idx: int = 0
 @onready var main_camera: Camera2D = $Camera2D
 
 func _ready() -> void:
-	# Instantiate and set up each track
-	for i in range(track_count):
-		var player = track_scene.instantiate() as Player
-		player.name = "Track%d" % i
-		
-		# Position all players at the same location since only one will be visible at a time
-		player.position = Vector2.ZERO
-		add_child(player)
-		# Listen for when the player's ring buffer starts looping
-		player.connect("loop_started", Callable(self, "_on_loop_started").bind(i))
-		tracks.append(player)
-		# Disable input on all until we activate one
-		player.set_process_input(false)
-		
-		# Initially hide all players except the first one
-		player.visible = (i == 0)
-		
-		# Disable individual player cameras since we'll use the main camera
-		if player.has_node("Camera2D"):
-			player.get_node("Camera2D").enabled = false
+        # Instantiate and set up each track
+        for i in range(track_count):
+                var player = track_scene.instantiate() as Player
+                player.name = "Track%d" % i
 
-	# Activate the first track by default
-	active_track_idx = 0
-	activate_track(active_track_idx)
+                # Position all players at the same location since only one will be visible at a time
+                player.position = Vector2.ZERO
+                add_child(player)
+                # Listen for when the player's ring buffer starts looping
+                player.connect("loop_started", Callable(self, "_on_loop_started").bind(i))
+                tracks.append(player)
+                # Disable input on all until we activate one
+                player.set_process_input(false)
+
+                # Start all players hidden until their track is activated
+                player.visible = false
+
+                # Disable individual player cameras since we'll use the main camera
+                if player.has_node("Camera2D"):
+                        player.get_node("Camera2D").enabled = false
+
+        # Activate the first track by default
+        active_track_idx = -1
+        activate_track(0)
 	
 	# Find and connect to the UI
 	_find_and_connect_ui()
@@ -56,12 +56,9 @@ func _on_loop_started(looping_track_idx: int) -> void:
 	if looping_track_idx != active_track_idx:
 		return
 	# Compute next track index (wraps around)
-	var next_idx = (active_track_idx + 1) % tracks.size()
-	activate_track(next_idx)
-
-	# need the button for idx to be pressed down
-	 
-
+        var next_idx = (active_track_idx + 1) % tracks.size()
+        # Switch control to the next track while keeping previous tracks visible
+        activate_track(next_idx)
 
 # Enable input on the chosen track, disable on the others
 
@@ -102,10 +99,10 @@ func activate_track(idx: int) -> void:
 	if active_track_idx == idx:
 		return
 		
-	for i in range(tracks.size()):
-		var is_active = (i == idx)
-		tracks[i].set_process_input(is_active)
-		tracks[i].visible = is_active  # Show only the active player
+        for i in range(tracks.size()):
+                var is_active = (i == idx)
+                tracks[i].set_process_input(is_active)
+                tracks[i].visible = i <= idx  # Keep completed tracks visible
 		
 		# Handle ghost mode transitions
 		if is_active:
