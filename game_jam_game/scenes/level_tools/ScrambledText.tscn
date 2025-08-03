@@ -9,7 +9,8 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("1_vbc32")
-duration = 6.0
+text = "The music ain't allowed in Music City anymore"
+duration = 3.525
 font = ExtResource("2_4llcq")
 font_size = 128
 

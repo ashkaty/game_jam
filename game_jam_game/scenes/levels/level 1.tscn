@@ -178,10 +178,15 @@ tile_set = SubResource("TileSet_4t15b")
 position = Vector2(2211, -951)
 next_level = ExtResource("6_2md8r")
 
-[node name="scrambled_text" parent="." instance=ExtResource("7_m3yqx")]
-offset_left = 633.0
-offset_top = -561.0
-offset_right = 846.0
-offset_bottom = -512.0
-size_flags_stretch_ratio = 5.12
-theme_override_font_sizes/font_size = 53
+[node name="Top text" parent="." instance=ExtResource("7_m3yqx")]
+offset_left = 60.0
+offset_top = -550.0
+offset_right = 100.0
+offset_bottom = -510.0
+
+[node name="Bottom text" parent="." instance=ExtResource("7_m3yqx")]
+offset_left = 154.0
+offset_top = -453.0
+offset_right = 194.0
+offset_bottom = -413.0
+text = "... Are you just going to sit back and take it?"
