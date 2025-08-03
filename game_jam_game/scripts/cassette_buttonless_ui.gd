@@ -714,6 +714,10 @@ func switch_to_track(track_number: int):
 				return
 
 		if current_track == track_number:
+				_update_timer_display()
+				_update_progress_bar()
+				if not is_timer_running and timer_per_track[current_track] > 0:
+					start_timer()
 				return
 
 		var old_track = current_track
