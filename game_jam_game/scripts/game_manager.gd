@@ -29,3 +29,12 @@ func _on_timer_finished():
 	# - Stop player movement
 	# - Calculate final score
 	# - etc.
+var current_level: Node = null
+
+func load_level(path: String):
+	if current_level:
+		current_level.queue_free()
+
+	var level_scene = load(path)
+	current_level = level_scene.instantiate()
+	$LevelContainer.add_child(current_level)

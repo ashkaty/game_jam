@@ -7,6 +7,7 @@ extends CharacterBody2D
 var is_replaying: bool = false
 var track_replay_index: int = 0
 
+signal loop_started
  
 @onready var animations: AnimatedSprite2D = $AnimatedSprite2D
 @onready var sword: Node2D = $AnimatedSprite2D/Sword
@@ -16,6 +17,7 @@ var track_replay_index: int = 0
 var last_flip_h: bool = false
 var original_sword_position: Vector2
 
+var total_time = 0.0
 
 
 # Input polling system - ensures inputs are only processed once per frame
@@ -25,13 +27,7 @@ var input_actions: Array[String] = [
 	"jump", "attack", "crouch", "dash", "move_left", "move_right", "up"
 ]
 
-# Motion blur effect variables
-@export var motion_blur_enabled: bool = true
-@export var motion_blur_threshold: float = 300.0  # Minimum velocity to start blur
-@export var motion_blur_max_velocity: float = 1500.0  # Velocity for maximum blur
-@export var motion_blur_max_intensity: float = 0.4  # Maximum blur intensity (0.0 to 1.0)
-@export var motion_blur_smoothing: float = 0.1  # How quickly blur changes (lower = smoother)
-var current_blur_intensity: float = 0.0
+
 
 # Coyote time variables
 @export var coyote_time_duration: float = 0.25  # Time window for coyote jump
@@ -53,13 +49,12 @@ var input_buffer_hold_times: Dictionary = {}  # Stores how long inputs were held
 var input_hold_start_times: Dictionary = {}  # Track when input buttons were first pressed
 var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 
-# Head bonk mechanic variables
-@export var head_bonk_speed_boost: float = 300.0  # Horizontal speed added when hitting head
+
 
 # Health system variables
 @export var max_health: int = 3  # Player starts with 3 hearts
 var current_health: int = 3
-var ui_reference: Control = null  # Reference to the UI for health updates
+
 
 # Invincibility frames system
 @export var invincibility_duration: float = 1.5  # Duration of invincibility after taking damage
@@ -67,12 +62,9 @@ var ui_reference: Control = null  # Reference to the UI for health updates
 var invincibility_timer: float = 0.0
 var is_invincible: bool = false
 var flash_visible: bool = true  # Track visibility state for flashing effect
-@export var head_bonk_grace_period: float = 0.1   # Time after jump start to allow head bonk
-@export var head_bonk_vertical_impulse: float = 50.0  # Small downward push after bonk
-@export var head_bonk_minimum_upward_velocity: float = -100.0  # Must be moving up fast enough
-var last_head_bonk_time: float = 0.0
-var head_bonk_cooldown: float = 0.3  # Prevent multiple bonks in quick succession
-var total_time: float = 0.0  # Track total game time
+
+
+
 
 # Fast fall damage mechanic variables
 @export var fast_fall_damage_multiplier: float = 1.5  # Damage multiplier when fast falling
@@ -91,8 +83,7 @@ var current_action_cancelable: bool = false    # Whether the current action can 
 var current_action_type: String = ""           # Type of current action for specific cancel rules
 var animation_cancel_enabled: bool = false     # Whether animation-based cancellation is currently enabled
 
-# Signal for head bonk events (can be connected to by UI, particles, etc.)
-signal head_bonk_occurred(boost_amount: float, direction: int)
+
 
 func _ready() -> void:
 	# Initialize the state machine, passing a reference of the player to the states,
@@ -113,8 +104,8 @@ func _ready() -> void:
 	# Input buffer system is initialized automatically via Dictionary declarations
 	# No manual initialization needed for the generalized buffer system
 	
-	# Add player to a group so the UI can find it
-	add_to_group("player")
+func set_total_time(time: float) -> void:
+	total_time = time
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -157,8 +148,8 @@ func _physics_process(delta: float) -> void:
 		if track1.is_full():
 			track_replay_index = 0
 			is_replaying = true
-	# Update total time for head bonk tracking
-	total_time += delta
+			emit_signal("loop_started")
+
 	
 	# Update invincibility timer and flashing effect
 	update_invincibility(delta)
@@ -181,17 +172,15 @@ func _physics_process(delta: float) -> void:
 	
 	state_machine.process_physics(delta)
 
-
+func buffer_jump():
+	buffer_input("jump")
 func _process(delta: float) -> void:
 	# Poll inputs first to ensure they're captured for this frame
 	poll_inputs()
 	
 	state_machine.process_frame(delta)
 	
-	# Update motion blur based on velocity
-	if motion_blur_enabled:
-		update_motion_blur(delta)
-	
+
 	if animations.flip_h != last_flip_h:
 		update_sword_position()
 
@@ -246,88 +235,16 @@ func update_sword_position() -> void:
 		sword.scale.x = 1
 		sword.position.x = abs(sword.position.x)
 
-func update_motion_blur(delta: float) -> void:
-	"""Update motion blur effect based on player velocity"""
-	if not animations:
-		return
-	
-	# Calculate total velocity magnitude
-	var velocity_magnitude = velocity.length()
-	
-	# Calculate target blur intensity based on velocity
-	var target_intensity = 0.0
-	if velocity_magnitude > motion_blur_threshold:
-		var velocity_ratio = (velocity_magnitude - motion_blur_threshold) / (motion_blur_max_velocity - motion_blur_threshold)
-		velocity_ratio = clamp(velocity_ratio, 0.0, 1.0)
-		target_intensity = velocity_ratio * motion_blur_max_intensity
-	
-	# Enhance blur for fast falling (when crouching and falling fast)
-	if is_action_pressed_polling("crouch") and velocity.y > 800.0:
-		target_intensity = min(target_intensity * 1.5, motion_blur_max_intensity)
-	
-	# Smoothly interpolate current blur towards target
-	current_blur_intensity = lerp(current_blur_intensity, target_intensity, motion_blur_smoothing)
-	
-	# Apply blur effect through material modulation and slight scale effects
-	if current_blur_intensity > 0.01:
-		# Create motion blur through subtle visual effects
-		var blur_factor = current_blur_intensity
-		
-		# Subtle scale effect for speed sensation (horizontal stretch for horizontal movement)
-		var horizontal_velocity_ratio = abs(velocity.x) / velocity_magnitude if velocity_magnitude > 0 else 0
-		var vertical_velocity_ratio = abs(velocity.y) / velocity_magnitude if velocity_magnitude > 0 else 0
-		
-		var scale_x = 1.0 + (blur_factor * horizontal_velocity_ratio * 0.08)  # Horizontal stretch
-		var scale_y = 1.0 + (blur_factor * vertical_velocity_ratio * 0.04)  # Slight vertical stretch
-		animations.scale = Vector2(scale_x, scale_y)
-		
-		# Slight transparency effect for motion blur illusion, but respect invincibility flashing
-		var motion_blur_alpha = 1.0 - (blur_factor * 0.15)  # Subtle transparency
-		
-		# If invincible, use the invincibility alpha value instead
-		if is_invincible:
-			motion_blur_alpha = animations.modulate.a  # Keep current invincibility alpha
-		else:
-			animations.modulate.a = motion_blur_alpha
-		
-		# Add slight color shift for high-speed effect
-		var speed_tint = 1.0 - (blur_factor * 0.1)
-		animations.modulate.b = speed_tint  # Slight blue reduction for warm speed tint
-		
-	else:
-		# Reset effects when not moving fast, but respect invincibility
-		animations.scale = Vector2(1.0, 1.0)
-		if not is_invincible:
-			animations.modulate = Color.WHITE
 
-func trigger_motion_blur_burst(intensity: float = 0.8, duration: float = 0.2) -> void:
-	"""Trigger a temporary motion blur effect for special actions like dashes or impacts"""
-	if not animations or not motion_blur_enabled:
-		return
-	
-	var burst_tween = create_tween()
-	burst_tween.set_parallel(true)
-	
-	# Temporary intense blur effect
-	var burst_scale = Vector2(1.0 + intensity * 0.15, 1.0 + intensity * 0.05)
-	var burst_alpha = 1.0 - intensity * 0.3
-	
-	# Apply burst effect
-	burst_tween.tween_property(animations, "scale", burst_scale, duration * 0.3)
-	burst_tween.tween_property(animations, "modulate:a", burst_alpha, duration * 0.3)
-	
-	# Return to normal
-	burst_tween.tween_property(animations, "scale", Vector2(1.0, 1.0), duration * 0.7)
-	burst_tween.tween_property(animations, "modulate:a", 1.0, duration * 0.7)
+
 
 func update_coyote_time(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
 	
 	if currently_on_floor:
 		# Add motion blur effect for high-speed landings
-		if not was_on_floor and abs(velocity.y) > motion_blur_threshold:
+		if not was_on_floor :
 			var impact_intensity = clamp(abs(velocity.y) / 1200.0, 0.2, 0.8)
-			trigger_motion_blur_burst(impact_intensity, 0.3)
 		
 		# Reset timer and availability when on ground
 		coyote_timer = coyote_time_duration
@@ -370,10 +287,6 @@ func can_coyote_jump() -> bool:
 		
 	return can_jump
 
-# Called by jump state to mark that player jumped off ground
-func mark_jumped_off_ground():
-	jumped_off_ground = true
-	print("Player jumped off ground - coyote time disabled")
 
 # Check if player can perform a normal ground jump
 func can_ground_jump() -> bool:
@@ -407,11 +320,12 @@ func buffer_input(action: String):
 		# Calculate how long the input has been held when buffering
 		var hold_start = input_hold_start_times.get(action, current_time)
 		input_buffer_hold_times[action] = current_time - hold_start
-		
-		# print(action.capitalize(), " buffered! Timer: ", input_buffers[action], " Hold time: ", input_buffer_hold_times[action], " at time: ", current_time)
-	else:
-		# print(action.capitalize(), " buffer refresh on cooldown, ignoring input")
-		pass  # Do nothing when buffer refresh is on cooldown
+
+func has_valid_dash_buffer() -> bool:
+	return has_valid_input_buffer("dash")
+
+func has_valid_jump_buffer() -> bool:
+	return has_valid_input_buffer("jump")
 
 # Check if there's a buffered input that should be executed
 func has_valid_input_buffer(action: String) -> bool:
@@ -428,9 +342,14 @@ func get_current_input_hold_time(action: String) -> float:
 		return total_time - hold_start
 	return 0.0
 
-# Legacy helper for jump hold time (for backward compatibility)
 func get_current_jump_hold_time() -> float:
 	return get_current_input_hold_time("jump")
+
+func mark_jumped_off_ground():
+	jumped_off_ground = true
+
+func consume_jump_buffer():
+	return consume_input_buffer("jump")
 
 # Consume an input buffer (call this when a buffered input is executed)
 func consume_input_buffer(action: String):
@@ -494,67 +413,7 @@ func get_invincibility_status() -> Dictionary:
 		"total_duration": invincibility_duration
 	}
 
-# Legacy jump buffer functions for compatibility
-func buffer_jump():
-	buffer_input("jump")
 
-# Check if there's a buffered jump that should be executed
-func has_valid_jump_buffer() -> bool:
-	return has_valid_input_buffer("jump")
-
-# Get the hold time of the buffered jump
-func get_buffered_jump_hold_time() -> float:
-	return get_buffered_input_hold_time("jump")
-
-# Consume the jump buffer (call this when a buffered jump is executed)
-func consume_jump_buffer():
-	return consume_input_buffer("jump")
-
-# Convenience methods for buffering common actions
-func buffer_attack():
-	buffer_input("attack")
-
-func buffer_dash():
-	buffer_input("dash")
-
-func buffer_crouch():
-	buffer_input("crouch")
-
-func has_valid_attack_buffer() -> bool:
-	return has_valid_input_buffer("attack")
-
-func has_valid_dash_buffer() -> bool:
-	return has_valid_input_buffer("dash")
-
-func has_valid_crouch_buffer() -> bool:
-	return has_valid_input_buffer("crouch")
-
-func consume_attack_buffer():
-	return consume_input_buffer("attack")
-
-func consume_dash_buffer():
-	return consume_input_buffer("dash")
-
-func consume_crouch_buffer():
-	return consume_input_buffer("crouch")
-
-# Clear all input buffers (useful for state resets or special conditions)
-func clear_all_input_buffers():
-	input_buffers.clear()
-	input_buffer_hold_times.clear()
-	last_buffer_times.clear()
-	print("All input buffers cleared")
-
-# Clear a specific input buffer
-func clear_input_buffer(action: String):
-	input_buffers.erase(action)
-	input_buffer_hold_times.erase(action)
-	last_buffer_times.erase(action)
-	print(action.capitalize(), " buffer cleared")
-
-# Debug function to see currently buffered inputs
-func get_buffered_inputs() -> Array:
-	return input_buffers.keys()
 
 # Debug function to print all current buffers
 func print_buffer_status():
@@ -681,7 +540,7 @@ func apply_knockback(knockback_force: Vector2):
 		
 		# Add motion blur burst effect
 		var blur_intensity = clamp(knockback_magnitude / 400.0, 0.2, 0.8)
-		trigger_motion_blur_burst(blur_intensity, 0.3)
+
 	
 	print("Player received knockback: ", knockback_force, " | New velocity: ", velocity, " | On floor: ", is_on_floor())
 
@@ -704,53 +563,9 @@ func get_fast_fall_damage_multiplier() -> float:
 	print("Fast fall damage! Speed: ", velocity.y, " | Multiplier: ", damage_multiplier)
 	return damage_multiplier
 
-# Head bonk mechanic functions
-func check_and_handle_head_bonk() -> bool:
-	# Check if we hit the ceiling while moving upward with sufficient speed
-	if is_on_ceiling() and velocity.y < head_bonk_minimum_upward_velocity:
-		var time_since_last_bonk = total_time - last_head_bonk_time
-		
-		# Only allow head bonk if enough time has passed since last one
-		if time_since_last_bonk > head_bonk_cooldown:
-			perform_head_bonk()
-			last_head_bonk_time = total_time
-			return true
-	return false
 
-func perform_head_bonk():
-	print("HEAD BONK! Speed boost activated!")
-	
-	# Store original velocity for calculations
-	var original_upward_speed = abs(velocity.y)
-	
-	# Stop upward velocity and add slight downward impulse (like in Minecraft)
-	velocity.y = head_bonk_vertical_impulse
-	
-	# Apply horizontal speed boost in the direction the player is facing
-	var direction = -1 if animations.flip_h else 1
-	
-	# Scale the boost based on how fast we were moving upward (more dramatic bonk = more speed)
-	var speed_multiplier = clamp(original_upward_speed / 200.0, 0.5, 2.0)
-	var actual_boost = head_bonk_speed_boost * speed_multiplier
-	
-	# Add the boost to current velocity (don't replace it entirely)
-	# But cap it at a reasonable maximum to prevent infinite acceleration
-	var new_x_velocity = velocity.x + (direction * actual_boost)
-	var max_bonk_speed = head_bonk_speed_boost * 2.5  # Allow up to 2.5x the boost as max speed
-	velocity.x = clamp(new_x_velocity, -max_bonk_speed, max_bonk_speed)
-	
-	print("Head bonk boost: ", actual_boost, " | Direction: ", direction, " | New velocity: ", velocity)
-	
-	# Visual feedback: briefly flash the sprite
-	flash_sprite()
-	
-	# Add motion blur burst effect for head bonk
-	trigger_motion_blur_burst(0.6, 0.3)
-	
-	# Emit signal for any listeners (particles, UI feedback, etc.)
-	head_bonk_occurred.emit(actual_boost, direction)
-	
-	return
+
+
 
 # Camera shake function for damage feedback
 func shake_camera_for_damage(damage_amount: int):
@@ -772,9 +587,8 @@ func shake_camera_for_damage(damage_amount: int):
 	
 	print("Camera shake for ", damage_amount, " damage - strength: ", shake_strength, ", duration: ", shake_duration)
 	
-	# Add motion blur burst effect based on damage amount
-	var blur_intensity = clamp(damage_ratio * 0.5, 0.1, 0.7)
-	trigger_motion_blur_burst(blur_intensity, 0.25)
+
+
 	
 	# Shake both cameras if they exist
 	for target_camera in [game_camera, player_camera]:
@@ -837,8 +651,7 @@ func take_damage(damage_amount: int) -> void:
 	# Start invincibility frames
 	start_invincibility()
 	
-	# Update UI to reflect health change
-	update_health_ui()
+
 	
 	# Trigger camera shake for damage feedback
 	shake_camera_for_damage(damage_amount * 10)  # Scale up for better feedback
@@ -847,27 +660,6 @@ func take_damage(damage_amount: int) -> void:
 	if current_health <= 0:
 		die()
 
-func heal(heal_amount: int) -> void:
-	"""Heal the player by the specified amount"""
-	if current_health >= max_health:
-		return  # Already at full health
-	
-	current_health = min(max_health, current_health + heal_amount)
-	print("Player healed for ", heal_amount, "! Health: ", current_health, "/", max_health)
-	
-	# Update UI to reflect health change
-	update_health_ui()
-
-func update_health_ui() -> void:
-	"""Update the UI to show current health"""
-	if ui_reference and ui_reference.has_method("update_hearts"):
-		ui_reference.update_hearts(current_health)
-
-func set_ui_reference(ui: Control) -> void:
-	"""Set the reference to the UI for health updates"""
-	ui_reference = ui
-	# Initialize UI with current health
-	update_health_ui()
 
 func die() -> void:
 	"""Called when player health reaches 0"""
@@ -878,7 +670,7 @@ func die() -> void:
 	
 	# Restart the current scene
 	get_tree().reload_current_scene()
-	update_health_ui()
+
 	
 	# You can add more death effects here:
 	# - Play death animation

@@ -1,8 +1,7 @@
-
-[gd_scene load_steps=29 format=3 uid="uid://b15t68w17acxb"]
-
+[gd_scene load_steps=30 format=3 uid="uid://b15t68w17acxb"]
 
 [ext_resource type="Texture2D" uid="uid://hh6utf025oib" path="res://assets/sprites/example_sprites.png" id="1_3vyb7"]
+[ext_resource type="Script" uid="uid://dybehstmvi6ea" path="res://scripts/player.gd" id="1_oprun"]
 [ext_resource type="PackedScene" uid="uid://bl8edr7x4e5q5" path="res://scenes/sword.tscn" id="2_smehm"]
 [ext_resource type="Script" uid="uid://cn0s1dtv4io2x" path="res://scripts/state_machine/state_machine.gd" id="2_tuyoq"]
 [ext_resource type="Script" uid="uid://b5roij4ewfoq0" path="res://scripts/idle.gd" id="3_fjrip"]
@@ -137,6 +136,7 @@ size = Vector2(120, 260)
 z_index = -1
 collision_layer = 2
 floor_snap_length = 8.1
+script = ExtResource("1_oprun")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(54, -149)
