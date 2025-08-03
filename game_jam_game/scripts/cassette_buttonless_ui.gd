@@ -1,7 +1,7 @@
 extends Control
 class_name CassetteButtonlessUI
 
-# Button References - adjusted to match actual scene structure
+# Button References
 @onready var background: Sprite2D = $Background
 @onready var red_button: Sprite2D = $RedButton
 @onready var yellow_button: Sprite2D = $YellowButton
@@ -23,6 +23,10 @@ class_name CassetteButtonlessUI
 
 # Player reference
 var player: Node = null
+
+# Player manager reference  
+var player_manager: Node = null
+var active_track: int = 1
 
 # UI state
 var is_visible: bool = true
@@ -55,14 +59,14 @@ const SLIDE_TRANS_TYPE = Tween.TRANS_BACK
 const BUTTON_ANIM_DURATION: float = 0.3
 
 # Timer variables
-var countdown_time: float = 60.0  # 1 minute in seconds
-var time_remaining: float = 60.0
+var countdown_time: float = 15.0  # 15 seconds
+var time_remaining: float = 15.0
 var is_timer_running: bool = false
 
 # Multi-track timer system
 var track_timers: Dictionary = {}  # Stores time remaining for each track
 var current_track: int = 1  # Currently active track (1-4)
-var default_track_time: float = 60.0  # Default time for new tracks
+var default_track_time: float = 15.0  # Default time for new tracks (15 seconds)
 
 # Health system
 var player_health: int = 3
@@ -73,6 +77,7 @@ signal ui_toggled(visible: bool)
 signal timer_finished()
 signal track_timer_finished(track_number: int)
 signal health_changed(new_health: int)
+signal track_changed(track_number: int)
 
 func _initialize_hearts():
 	"""Initialize the hearts display system"""
@@ -104,14 +109,6 @@ func take_damage(amount: int = 1):
 		
 		if player_health <= 0:
 			print("Player died!")
-
-func heal(amount: int = 1):
-	"""Player heals, increasing health"""
-	if player_health < max_health:
-		player_health = min(max_health, player_health + amount)
-		_update_hearts_display()
-		health_changed.emit(player_health)
-		print("Player healed ", amount, " health. Health: ", player_health, "/", max_health)
 
 func get_health() -> int:
 	"""Get current player health"""
@@ -160,6 +157,9 @@ func _ready():
 	
 	# Find player
 	_find_player()
+	
+	# Find player manager
+	_find_player_manager()
 	
 	# Initialize progress bar settings
 	if timer_progress_bar:
@@ -228,12 +228,7 @@ func _input(event):
 					button_click_audio.play()
 				switch_to_track(4)
 				_set_only_button_dropped("green")
-			KEY_H:
-				# Test heal (H key)
-				heal(1)
-			KEY_J:
-				# Test damage (J key)  
-				take_damage(1)
+
 
 func _animate_button_press(button_index: int):
 	var buttons = [red_button, yellow_button, blue_button, green_button]
@@ -456,6 +451,72 @@ func _search_for_player(node: Node) -> Node:
 	
 	return null
 
+func _find_player_manager():
+	# Try to find the player manager in the scene tree
+	player_manager = get_tree().get_first_node_in_group("player_manager")
+	
+	if not player_manager:
+		# Search for PlayerManager node in the scene tree
+		var root = get_tree().current_scene
+		player_manager = _search_for_player_manager(root)
+	
+	if not player_manager:
+		# Try looking for it as a parent or sibling node
+		var parent_node = get_parent()
+		while parent_node:
+			if parent_node.name == "PlayerManager":
+				player_manager = parent_node
+				break
+			parent_node = parent_node.get_parent()
+	
+	if player_manager:
+		print("CassetteButtonlessUI: Found player manager - ", player_manager.name)
+		
+		# Connect to player manager signals if available
+		if player_manager.has_signal("track_changed"):
+			player_manager.connect("track_changed", Callable(self, "_on_player_manager_track_changed"))
+	else:
+		print("CassetteButtonlessUI: Player manager not found")
+
+func _search_for_player_manager(node: Node) -> Node:
+	if node.name == "PlayerManager":
+		return node
+	
+	for child in node.get_children():
+		var result = _search_for_player_manager(child)
+		if result:
+			return result
+	
+	return null
+
+# Handle track changes from the player manager
+func _on_player_manager_track_changed(track_number: int):
+	# Convert from player manager track numbering (0-3) to UI numbering (1-4)
+	var ui_track = track_number + 1
+	if ui_track != current_track:
+		switch_to_track(ui_track)
+
+# Update the UI to reflect the current track without triggering track switching
+func update_track_display_only(track_number: int):
+	"""Update only the visual display without triggering track switching logic"""
+	if track_number < 1 or track_number > 4:
+		return
+	
+	current_track = track_number
+	_update_timer_display()
+	_update_progress_bar()
+	
+	# Update button visuals
+	match track_number:
+		1:
+			_set_only_button_dropped("red")
+		2:
+			_set_only_button_dropped("yellow")
+		3:
+			_set_only_button_dropped("blue")
+		4:
+			_set_only_button_dropped("green")
+
 func toggle_visibility():
 	is_visible = !is_visible
 	_animate_slide()
@@ -515,12 +576,18 @@ func _process(delta):
 			_update_timer_display()
 			_update_progress_bar()
 			
-			# Save the completed track time
-			track_timers[current_track] = 0.0
+			# Store which track just finished before any track switching
+			var finished_track = current_track
 			
-			print("Track ", current_track, " timer finished!")
+			# Save the completed track time
+			track_timers[finished_track] = 0.0
+			
+			print("Track ", finished_track, " timer finished!")
 			timer_finished.emit()
-			track_timer_finished.emit(current_track)
+			track_timer_finished.emit(finished_track)
+			
+			# Stop the timer before switching tracks
+			is_timer_running = false
 			
 			# Auto-progress to next track
 			_auto_progress_to_next_track()
@@ -626,9 +693,46 @@ func _initialize_track_timers():
 	print("Track timers initialized: ", track_timers)
 
 func switch_to_track(track_number: int):
+	#"""Switch to a different track, saving current progress and loading new track's progress"""
+	if track_number < 1 or track_number > 4:
+		print("Invalid track number: ", track_number)
+		return
+	
+	# Check if we're already on this track to prevent infinite loops
+	if current_track == track_number:
+		return
+	
+	# Save current track's timer state
+	if current_track >= 1 and current_track <= 4:
+		track_timers[current_track] = time_remaining
+		print("Saved track ", current_track, " time: ", track_timers[current_track])
+	
+	
+	# Reset health for new track
+	player_health = max_health
+
+	_update_hearts_display()
+
+	health_changed.emit(player_health)
+
+	print("Health reset to full for track ", current_track)
+	
+	# Reset enemy positions for new track
+	_reset_enemy_positions()
+	
+	# Connect to the new active player's health system
+	_connect_to_active_player()
+	
+	# Load new track's timer state
+	time_remaining = track_timers[current_track]
+
 	"""Switch to a different track, saving current progress and loading new track's progress"""
 	if track_number < 1 or track_number > 4:
 		print("Invalid track number: ", track_number)
+		return
+	
+	# Check if we're already on this track to prevent infinite loops
+	if current_track == track_number:
 		return
 	
 	# Save current track's timer state
@@ -642,7 +746,7 @@ func switch_to_track(track_number: int):
 	
 	# Load new track's timer state
 	time_remaining = track_timers[current_track]
-	print("Switched from track ", old_track, " to track ", current_track, " - loaded time: ", time_remaining)
+	#print("Switched from track ", old_track, " to track ", current_track, " - loaded time: ", time_remaining)
 	
 	# Update display
 	_update_timer_display()
@@ -652,6 +756,75 @@ func switch_to_track(track_number: int):
 	if not is_timer_running and time_remaining > 0:
 		is_timer_running = true
 		print("Started timer for track ", current_track)
+	
+	# Emit signal to notify the player manager about track change
+	track_changed.emit(current_track)
+	
+	# Also directly notify the player manager if we have a reference
+	if player_manager and player_manager.has_method("switch_to_track"):
+		player_manager.switch_to_track(current_track - 1)  # Convert from 1-4 to 0-3
+
+func _reset_enemy_positions():
+	"""Reset all enemy positions to their starting positions when switching tracks"""
+	# Try to find all enemies in the scene
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	
+	for enemy in enemies:
+		if enemy.has_method("reset_position"):
+			enemy.reset_position()
+			print("Reset enemy position: ", enemy.name)
+		elif enemy.has_method("reset_to_spawn"):
+			enemy.reset_to_spawn()
+			print("Reset enemy to spawn: ", enemy.name)
+	
+	# If no enemies found in group, try searching the scene tree
+	if enemies.is_empty():
+		var root = get_tree().current_scene
+		_search_and_reset_enemies(root)
+	
+	print("Enemy positions reset for track ", current_track)
+
+func _search_and_reset_enemies(node: Node):
+	"""Recursively search for enemy nodes and reset their positions"""
+	# Check if this node is an enemy (you may need to adjust these conditions)
+	if node.name.to_lower().contains("enemy") or node.has_method("reset_position"):
+		if node.has_method("reset_position"):
+			node.reset_position()
+			print("Found and reset enemy: ", node.name)
+		elif node.has_method("reset_to_spawn"):
+			node.reset_to_spawn()
+			print("Found and reset enemy to spawn: ", node.name)
+	
+	# Search children
+	for child in node.get_children():
+		_search_and_reset_enemies(child)
+
+func _connect_to_active_player():
+	"""Connect to the currently active player's health system"""
+	if player_manager and player_manager.has_method("get_active_player"):
+		var active_player = player_manager.get_active_player()
+		if active_player and active_player.has_signal("health_changed"):
+			# Disconnect from previous player if connected
+			if player and player.has_signal("health_changed"):
+				if player.health_changed.is_connected(_on_player_health_changed):
+					player.health_changed.disconnect(_on_player_health_changed)
+			
+			# Connect to new active player
+			active_player.health_changed.connect(_on_player_health_changed)
+			player = active_player
+			
+			# Sync UI health with player's current health
+			if active_player.has_method("get_health"):
+				player_health = active_player.get_health()
+				_update_hearts_display()
+				print("UI synced with active player health: ", player_health)
+
+func _on_player_health_changed(new_health: int):
+	"""Handle when the active player's health changes"""
+	player_health = clamp(new_health, 0, max_health)
+	_update_hearts_display()
+	health_changed.emit(player_health)
+	print("UI: Player health changed to ", player_health, "/", max_health)
 
 func get_current_track() -> int:
 	"""Get the currently active track number"""
