@@ -578,17 +578,20 @@ func start_timer():
 		print("Error: TimerLabel not found! Cannot start timer.")
 
 func _process(delta):
-	"""Update timer each frame"""
-	if is_timer_running:
-		timer_per_track[current_track] -= delta
-		_update_timer_display()
-		_update_progress_bar()
+        """Update timer each frame"""
+        if is_timer_running:
+                # Ensure the current track has a timer entry to avoid out-of-bounds errors
+                var time_left := timer_per_track.get(current_track, default_track_time)
+                time_left -= delta
+                timer_per_track[current_track] = time_left
+                _update_timer_display()
+                _update_progress_bar()
 
-		# Check if current track timer has finished
-		if timer_per_track[current_track] <= 0.0:
-			timer_per_track[current_track] = 0.0
-			_update_timer_display()
-			_update_progress_bar()
+                # Check if current track timer has finished
+                if timer_per_track[current_track] <= 0.0:
+                        timer_per_track[current_track] = 0.0
+                        _update_timer_display()
+                        _update_progress_bar()
 
 			# Store which track just finished before any track switching
 			var finished_track = current_track
