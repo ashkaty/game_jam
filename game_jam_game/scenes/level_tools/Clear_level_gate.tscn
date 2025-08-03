@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://cwx82i6utmfir"]
+
+[ext_resource type="Script" uid="uid://or5mghxig0io" path="res://scripts/clear_level_gate.gd" id="1_amp1n"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1s4hl"]
+size = Vector2(17, 1985)
+
+[node name="clear_level" type="StaticBody2D"]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_amp1n")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(10.5, 12.5)
+shape = SubResource("RectangleShape2D_1s4hl")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_top = -1000.0
+offset_right = 20.0
+offset_bottom = 1000.0
+
+[node name="ClearLevelGate" type="Node" parent="."]

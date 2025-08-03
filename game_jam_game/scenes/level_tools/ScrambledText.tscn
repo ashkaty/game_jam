@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://cb62xk1707e3g"]
+
+[ext_resource type="Script" uid="uid://6xreddg7kqxb" path="res://scripts/scrambled_text.gd" id="1_vbc32"]
+[ext_resource type="FontFile" uid="uid://2xooklkyoude" path="res://assets/fonts/Jersey15-Regular.ttf" id="2_4llcq"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_vbc32")
+duration = 6.0
+font = ExtResource("2_4llcq")
+font_size = 128
+
+[node name="Label" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0

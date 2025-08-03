@@ -1,14 +1,14 @@
 [gd_scene load_steps=3 format=3 uid="uid://br33kkd2frrg0"]
 
-[ext_resource type="Script" uid="uid://boofg4sqcfubf" path="res://scripts/gate.gd" id="1_mxoq1"]
+[ext_resource type="Script" uid="uid://boofg4sqcfubf" path="res://scripts/gate.gd" id="1_6g6hc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_xfvdi"]
 size = Vector2(18, 6026)
 
-[node name="StaticBody2D" type="StaticBody2D"]
+[node name="laser" type="StaticBody2D"]
 collision_layer = 3
 collision_mask = 3
-script = ExtResource("1_mxoq1")
+script = ExtResource("1_6g6hc")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(26, -669)
@@ -18,3 +18,4 @@ shape = SubResource("RectangleShape2D_xfvdi")
 offset_top = -5000.0
 offset_right = 40.0
 offset_bottom = 5000.0
+metadata/_edit_use_anchors_ = true
