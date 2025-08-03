@@ -125,16 +125,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		is_replaying = false
 		track1.clear()
 		track_replay_index = 0
-	
-	# Debug: Test ghost mode with G key
-	if event.is_action_pressed("ui_accept"):  # Space key
-		if is_ghost_mode:
-			set_ghost_mode(false)
-			print("Debug: Manually exited ghost mode")
-		else:
-			print("Debug: Simulating player death for testing...")
-			set_health(0)
-			die()
 		
 	# Track when input buttons are first pressed for hold time calculation
 	for action in input_actions:
@@ -678,6 +668,9 @@ func take_damage(damage_amount: int) -> void:
 	# Check if player is in ghost mode - ghosts can't take damage
 	if is_ghost_mode:
 		print("Player is in ghost mode! Damage ignored.")
+		if track1.length > 0:
+			is_replaying = true
+			track_replay_index = 0
 		return
 		
 	# Check if player is invincible

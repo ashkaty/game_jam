@@ -34,8 +34,11 @@ func clear() -> void:
 		buffer[i] = null
 
 func get_index() -> Variant:
+	#var returnValue: Variant = buffer[tail]
+	#tail = tail + 1 if tail < buffer_size else 0
+	#return returnValue
 	var returnValue: Variant = buffer[tail]
-	tail = tail + 1 if tail < buffer_size else 0
+	tail = (tail + 1) % buffer_size  # Use modulo for proper wrapping
 	return returnValue
 
 func get_latest(offset:int = 0) -> Variant:

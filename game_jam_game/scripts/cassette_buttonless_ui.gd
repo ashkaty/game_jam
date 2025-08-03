@@ -754,6 +754,7 @@ func switch_to_track(track_number: int):
 
 		# the player manager before connecting to the new player
 		track_changed.emit(current_track)
+		
 		if player_manager and player_manager.has_method("switch_to_track"):
 			player_manager.switch_to_track(current_track - 1)  # Convert from 1-4 to 0-3
 

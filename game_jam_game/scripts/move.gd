@@ -58,7 +58,7 @@ func process_frame(delta: float) -> State:
 			return dash_state
 		else:
 			# print("Dash on cooldown! Buffering dash input...")
-			parent.buffer_dash()
+			parent.buffer_input("dash")
 	
 	# Check for buffered inputs that can now be executed
 	if parent.has_valid_dash_buffer() and dash_state and dash_state.is_dash_available():
