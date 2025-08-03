@@ -125,7 +125,7 @@ func process_frame(delta: float) -> State:
 			return dash_state
 		else:
 			print("Air dash on cooldown! Buffering dash input...")
-			parent.buffer_dash()
+			parent.buffer_input("dash")
 	
 	# Check for buffered inputs that can now be executed
 	if parent.has_valid_dash_buffer() and dash_state and dash_state.is_dash_available():
@@ -181,7 +181,7 @@ func process_physics(delta: float) -> State:
 	
 	# Update wall sliding state tracking (COMMENTED OUT - Wall sliding disabled)
 	# is_currently_wall_sliding = is_wall_sliding
-	var is_wall_sliding = false  # Always false since wall sliding is disabled
+	#var is_wall_sliding = false  # Always false since wall sliding is disabled
 	
 	# Apply appropriate gravity and terminal velocity based on state
 	var gravity_scale: float

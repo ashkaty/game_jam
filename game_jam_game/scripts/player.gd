@@ -1,13 +1,14 @@
-class_name Player
-
 extends CharacterBody2D
+class_name Player
 
 # -- Set up ring buffer -- #
 @onready var track1: RingBuffer = RingBuffer.create_by_seconds(15, Engine.get_physics_ticks_per_second())
 var is_replaying: bool = false
 var track_replay_index: int = 0
+var loop_triggered: bool = false
 
 signal loop_started
+signal health_changed(new_health: int)
  
 @onready var animations: AnimatedSprite2D = $AnimatedSprite2D
 @onready var sword: Node2D = $AnimatedSprite2D/Sword
@@ -54,6 +55,13 @@ var last_buffer_times: Dictionary = {}  # Track when each buffer was last set
 # Health system variables
 @export var max_health: int = 3  # Player starts with 3 hearts
 var current_health: int = 3
+
+func get_health() -> int:
+		return current_health
+
+func set_health(value: int) -> void:
+		current_health = clamp(value, 0, max_health)
+		health_changed.emit(current_health)
 
 # Ghost mode system - when player dies, becomes a ghost until timer ends
 var is_ghost_mode: bool = false
@@ -118,16 +126,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		is_replaying = false
 		track1.clear()
 		track_replay_index = 0
-	
-	# Debug: Test ghost mode with G key
-	if event.is_action_pressed("ui_accept"):  # Space key
-		if is_ghost_mode:
-			set_ghost_mode(false)
-			print("Debug: Manually exited ghost mode")
-		else:
-			print("Debug: Simulating player death for testing...")
-			current_health = 0
-			die()
 		
 	# Track when input buttons are first pressed for hold time calculation
 	for action in input_actions:
@@ -142,7 +140,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	state_machine.process_input(event)
 
 func _physics_process(delta: float) -> void:
-	
+
 	if is_replaying:
 		if track1.length == 0:
 			return
@@ -150,31 +148,31 @@ func _physics_process(delta: float) -> void:
 		self.position = tick.position
 		self.velocity = tick.velocity
 		self.input_just_pressed = tick.input
-		track_replay_index = (track_replay_index+ 1) % track1.length
+		track_replay_index = (track_replay_index + 1) % track1.length
+		return
 	else:
 		track1.push({
-		"input" : input_just_pressed,
-		"seconds" : total_time,
-		"health" : current_health,  # Use actual current health
-		"position": self.position,
-		"velocity": self.velocity
-	})
-		if track1.is_full():
-			track_replay_index = 0
-			is_replaying = true
-			emit_signal("loop_started")
+			"input" : input_just_pressed,
+			"seconds" : total_time,
+			"health" : current_health,  # Use actual current health
+			"position": self.position,
+			"velocity": self.velocity
+				})
+	
+	if track1.is_full() and not loop_triggered:
+		loop_triggered = true
+		emit_signal("loop_started")
 
+		# Update invincibility timer and flashing effect
+		update_invincibility(delta)
 	
-	# Update invincibility timer and flashing effect
-	update_invincibility(delta)
-	
-	# If in ghost mode, limit what systems update
-	if is_ghost_mode:
-		# Still apply gravity and basic physics so ghost doesn't float
-		if not is_on_floor():
-			velocity.y += get_gravity().y * delta
-		move_and_slide()
-		return  # Skip most other game logic
+		# If in ghost mode, limit what systems update
+		if is_ghost_mode:
+			# Still apply gravity and basic physics so ghost doesn't float
+			if not is_on_floor():
+				velocity.y += get_gravity().y * delta
+				move_and_slide()
+				return  # Skip most other game logic
 	
 	# Update jump cooldown timer
 	if jump_cooldown_timer > 0.0:
@@ -183,14 +181,11 @@ func _physics_process(delta: float) -> void:
 			can_jump_again = true
 			# print("Jump cooldown expired - can jump again")
 		
-	
-	
 	# Update jump buffer timer
 	update_input_buffers(delta)
 	
 	# Update coyote time BEFORE state machine processing
 	update_coyote_time(delta)
-	
 	
 	state_machine.process_physics(delta)
 
@@ -199,7 +194,9 @@ func buffer_jump():
 func _process(delta: float) -> void:
 	# Poll inputs first to ensure they're captured for this frame
 	poll_inputs()
-	
+	if is_replaying:
+		return
+
 	state_machine.process_frame(delta)
 	
 
@@ -208,8 +205,6 @@ func _process(delta: float) -> void:
 
 		last_flip_h = animations.flip_h
 
-
-	
 # Input polling system - call this every frame to capture inputs
 func poll_inputs() -> void:
 	
@@ -671,6 +666,9 @@ func take_damage(damage_amount: int) -> void:
 	# Check if player is in ghost mode - ghosts can't take damage
 	if is_ghost_mode:
 		print("Player is in ghost mode! Damage ignored.")
+		if track1.length > 0:
+			is_replaying = true
+			track_replay_index = 0
 		return
 		
 	# Check if player is invincible
@@ -681,8 +679,8 @@ func take_damage(damage_amount: int) -> void:
 	if current_health <= 0:
 		return  # Player is already dead
 	
-	current_health = max(0, current_health - damage_amount)
-	print("Player took ", damage_amount, " damage! Health: ", current_health, "/", max_health)
+		set_health(current_health - damage_amount)
+		print("Player took ", damage_amount, " damage! Health: ", current_health, "/", max_health)
 	
 	# Start invincibility frames
 	start_invincibility()
@@ -711,7 +709,12 @@ func die() -> void:
 func set_ghost_mode(ghost: bool) -> void:
 	"""Set the player's ghost mode state"""
 	is_ghost_mode = ghost
-	
+	is_replaying = ghost
+	if is_replaying:
+		track_replay_index = 0
+	else:
+		loop_triggered = false
+			
 	if is_ghost_mode:
 		print("Player entering ghost mode...")
 		# Make player appear as a ghost with visual indicator
@@ -764,18 +767,10 @@ func set_ghost_mode(ghost: bool) -> void:
 			hurtbox.collision_mask = 4   # Detect hitboxes on layer 3
 		
 		# Reset health when exiting ghost mode (for next track)
-		current_health = max_health
+		set_health(max_health)
 		
 		print("Ghost mode deactivated - player restored to normal state")
 
 func is_in_ghost_mode() -> bool:
 	"""Check if player is currently in ghost mode"""
 	return is_ghost_mode
-
-# ═══════════════════════════════════════════════════════════════════════════════
-	
-	# You can add more death effects here:
-	# - Play death animation
-	# - Reset player position
-	# - Show game over screen
-	# - Reload scene

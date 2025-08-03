@@ -48,6 +48,7 @@ func _input(event: InputEvent) -> void:
 	# ---- Any other input goes to the active track ----------------
 	if tracks.size() > 0:
 		tracks[active_index].receive_input(event)
+		event.consume()
 
 ### ----------------------------------------------------------------
 func _switch_to(new_idx: int) -> void:

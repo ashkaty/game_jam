@@ -5,14 +5,14 @@ class_name PlayerManager
 @export var track_scene: PackedScene
 @export var track_count: int = 4
 
+# Reference to the UI (can be set in editor or found at runtime)
+@export var cassette_ui: CassetteButtonlessUI
+
 # Holds the instantiated Player tracks
 var tracks: Array[Player] = []
 
 # Index of the currently active track
-var active_track_idx: int = 0
-
-# Reference to the UI
-var cassette_ui: Node = null
+var active_track_idx: int = -1
 
 # Reference to the camera
 @onready var main_camera: Camera2D = $Camera2D
@@ -22,7 +22,7 @@ func _ready() -> void:
 	for i in range(track_count):
 		var player = track_scene.instantiate() as Player
 		player.name = "Track%d" % i
-		
+
 		# Position all players at the same location since only one will be visible at a time
 		player.position = Vector2.ZERO
 		add_child(player)
@@ -31,24 +31,29 @@ func _ready() -> void:
 		tracks.append(player)
 		# Disable input on all until we activate one
 		player.set_process_input(false)
-		
-		# Initially hide all players except the first one
-		player.visible = (i == 0)
-		
+
+		# Start all players hidden until their track is activated
+		player.visible = false
+
 		# Disable individual player cameras since we'll use the main camera
 		if player.has_node("Camera2D"):
 			player.get_node("Camera2D").enabled = false
 
-	# Activate the first track by default
-	active_track_idx = 0
-	activate_track(active_track_idx)
+		# Activate the first track by default
+		#active_track_idx = 0
+		activate_track(0)
 	
 	# Find and connect to the UI
 	_find_and_connect_ui()
 
 # Intercept unhandled input and forward only to the active track
+#func _unhandled_input(event: InputEvent) -> void:
+#	tracks[active_track_idx]._unhandled_input(event)
+
 func _unhandled_input(event: InputEvent) -> void:
-	tracks[active_track_idx]._unhandled_input(event)
+	if active_track_idx >= 0 and active_track_idx < tracks.size():
+		tracks[active_track_idx]._unhandled_input(event)
+
 
 # Called when a track's ring buffer becomes full and starts replaying
 func _on_loop_started(looping_track_idx: int) -> void:
@@ -56,65 +61,28 @@ func _on_loop_started(looping_track_idx: int) -> void:
 	if looping_track_idx != active_track_idx:
 		return
 	# Compute next track index (wraps around)
-	var next_idx = (active_track_idx + 1) % tracks.size()
-	activate_track(next_idx)
+		var next_idx = (active_track_idx + 1) % tracks.size()
+		# Switch control to the next track while keeping previous tracks visible
+		activate_track(next_idx)
 
-	# need the button for idx to be pressed down
-	 
-
-
-# Enable input on the chosen track, disable on the others
-
-func _ready2() -> void:
-	# Instantiate and set up each track
-	for i in range(track_count):
-		var player = track_scene.instantiate() as Player
-		player.name = "Track%d" % i
-		
-		player.position = Vector2( i * 32, 0 )  # 32-pixel horizontal offset per track
-		add_child(player)
-		# Listen for when the player’s ring buffer starts looping
-		player.connect("loop_started", Callable(self, "_on_loop_started").bind(i))
-		tracks.append(player)
-		# Disable input on all until we activate one
-		player.set_process_input(false)
-
-	# Activate the first track by default
-	active_track_idx = 0
-	activate_track(active_track_idx)
-
-# Intercept unhandled input and forward only to the active track
-func _unhandled_input2(event: InputEvent) -> void:
-	tracks[active_track_idx]._unhandled_input(event)
-
-# Called when a track’s ring buffer becomes full and starts replaying
-func _on_loop_started2(looping_track_idx: int) -> void:
-	# Only switch if it’s from the active track
-	if looping_track_idx != active_track_idx:
-		return
-	# Compute next track index (wraps around)
-	var next_idx = (active_track_idx + 1) % tracks.size()
-	activate_track(next_idx)
-
+# 
 # Enable input on the chosen track, disable on the others
 func activate_track(idx: int) -> void:
 	# Check if we're already on this track to prevent unnecessary work
 	if active_track_idx == idx:
 		return
-		
+
 	for i in range(tracks.size()):
-		var is_active = (i == idx)
+		var is_active := i == idx
 		tracks[i].set_process_input(is_active)
-		tracks[i].visible = is_active  # Show only the active player
-		
+		tracks[i].visible = i <= idx  # keep current and prior tracks visible
+
 		# Handle ghost mode transitions
-		if is_active:
-			# When activating a track, exit ghost mode if the player was a ghost
-			if tracks[i].has_method("set_ghost_mode"):
-				tracks[i].set_ghost_mode(false)
-				print("[PlayerManager] Restored player from ghost mode on track %d" % i)
-	
+		if tracks[i].has_method("set_ghost_mode"):
+			tracks[i].set_ghost_mode(i < idx)
+
 	active_track_idx = idx
+
 	
 	# Move the main camera to follow the active player
 	if main_camera and idx < tracks.size():
@@ -158,6 +126,10 @@ func _find_and_connect_ui() -> void:
 		if cassette_ui.has_signal("track_timer_finished"):
 			cassette_ui.connect("track_timer_finished", Callable(self, "_on_track_timer_finished"))
 		
+		# Connect to cassette events following the requested pattern
+		if cassette_ui.has_signal("cassette_event"):
+			cassette_ui.connect("cassette_event", Callable(self, "_on_cassette_event"))
+		
 		# Override the UI's track switching to also switch player visibility
 		_setup_ui_track_switching()
 	else:
@@ -200,6 +172,57 @@ func _on_track_timer_finished(track_number: int) -> void:
 	if track_number == 1:
 		print("[PlayerManager] Track 1 finished - any ghost players will be restored when switching to track 2")
 
+# Handle cassette events following the requested pattern
+func _on_cassette_event(event_type: String) -> void:
+	print("[PlayerManager] Received cassette event: ", event_type)
+	
+	# Handle different cassette events
+	match event_type:
+		"play":
+			# Start/resume playback
+			_handle_play_event()
+		"stop":
+			_handle_stop_event()
+		"pause":
+			_handle_pause_event()
+		"rewind":
+			_handle_rewind_event()
+		"fast_forward":
+			_handle_fast_forward_event()
+		"damage":
+			# Handle damage event - make UI lose a heart
+			_handle_damage_event()
+		_:
+			print("[PlayerManager] Unknown cassette event: ", event_type)
+
+func _handle_play_event():
+	print("[PlayerManager] Handling play event")
+	# Add play logic here
+
+func _handle_stop_event():
+	print("[PlayerManager] Handling stop event")
+	# Add stop logic here
+
+func _handle_pause_event():
+	print("[PlayerManager] Handling pause event")
+	# Add pause logic here
+
+func _handle_rewind_event():
+	print("[PlayerManager] Handling rewind event")
+	# Add rewind logic here
+
+func _handle_fast_forward_event():
+	print("[PlayerManager] Handling fast forward event")
+	# Add fast forward logic here
+
+func _handle_damage_event():
+	print("[PlayerManager] Handling damage event - player took damage")
+	# Make the UI lose a heart following the requested pattern
+	if cassette_ui and cassette_ui.has_method("lose_heart"):
+		cassette_ui.lose_heart()
+	else:
+		print("[PlayerManager] Warning: UI doesn't have lose_heart method")
+
 
 
 # Public method to get the active track
@@ -220,3 +243,19 @@ func _update_camera_follow() -> void:
 # Process function to keep camera following the active player
 func _process(_delta: float) -> void:
 	_update_camera_follow()
+
+# Public method to trigger damage events following the requested pattern
+func take_damage():
+	"""Called when the player takes damage - emits damage signal to UI"""
+	if cassette_ui:
+		cassette_ui.trigger_cassette_action("damage")
+	else:
+		print("[PlayerManager] Warning: No UI reference for damage event")
+
+# Public method to trigger other cassette events
+func trigger_cassette_event(event_type: String):
+	"""Public method to trigger any cassette event"""
+	if cassette_ui:
+		cassette_ui.trigger_cassette_action(event_type)
+	else:
+		print("[PlayerManager] Warning: No UI reference for event: ", event_type)

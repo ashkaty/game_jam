@@ -1,5 +1,5 @@
-extends Control
 class_name CassetteButtonlessUI
+extends Control
 
 # Button References
 @onready var background: Sprite2D = $Background
@@ -60,16 +60,15 @@ const BUTTON_ANIM_DURATION: float = 0.3
 
 # Timer variables
 var countdown_time: float = 15.0  # 15 seconds
-var time_remaining: float = 15.0
 var is_timer_running: bool = false
 
 # Multi-track timer system
-var track_timers: Dictionary = {}  # Stores time remaining for each track
+var timer_per_track: Dictionary = {}  # Stores time remaining for each track
 var current_track: int = 1  # Currently active track (1-4)
 var default_track_time: float = 15.0  # Default time for new tracks (15 seconds)
 
 # Health system
-var player_health: int = 3
+var health_per_track: Dictionary = {}
 var max_health: int = 3
 var hearts: Array[Sprite2D] = []
 
@@ -78,56 +77,66 @@ signal timer_finished()
 signal track_timer_finished(track_number: int)
 signal health_changed(new_health: int)
 signal track_changed(track_number: int)
+signal cassette_event(event_type: String)
+
+# Function to emit cassette events following the requested pattern
+func trigger_cassette_action(action: String):
+	cassette_event.emit(action)
+	print("CassetteButtonlessUI: Triggered cassette event - ", action)
 
 func _initialize_hearts():
-	"""Initialize the hearts display system"""
-	hearts = [heart1, heart2, heart3]
-	player_health = max_health
-	_update_hearts_display()
-	print("Hearts system initialized with ", max_health, " hearts")
+		"""Initialize the hearts display system"""
+		hearts = [heart1, heart2, heart3]
+		if not health_per_track.has(current_track):
+				health_per_track[current_track] = max_health
+		_update_hearts_display()
+		print("Hearts system initialized with ", max_health, " hearts")
 
 func _update_hearts_display():
-	"""Update the visual display of hearts based on current health"""
-	for i in range(hearts.size()):
-		if hearts[i]:
-			if i < player_health:
-				# Full heart - normal appearance
-				hearts[i].modulate = Color(1, 1, 1, 1)  # Full opacity, normal color
-				hearts[i].visible = true
-			else:
-				# Empty heart - dimmed/hidden
-				hearts[i].modulate = Color(0.3, 0.3, 0.3, 0.5)  # Dark and translucent
-				hearts[i].visible = true
+		"""Update the visual display of hearts based on current health"""
+		var current_health = health_per_track.get(current_track, max_health)
+		for i in range(hearts.size()):
+				if hearts[i]:
+						if i < current_health:
+								# Full heart - normal appearance
+								hearts[i].modulate = Color(1, 1, 1, 1)  # Full opacity, normal color
+								hearts[i].visible = true
+						else:
+								# Empty heart - dimmed/hidden
+								hearts[i].modulate = Color(0.3, 0.3, 0.3, 0.5)  # Dark and translucent
+								hearts[i].visible = true
 
 func take_damage(amount: int = 1):
-	"""Player takes damage, reducing health"""
-	if player_health > 0:
-		player_health = max(0, player_health - amount)
-		_update_hearts_display()
-		health_changed.emit(player_health)
-		print("Player took ", amount, " damage. Health: ", player_health, "/", max_health)
-		
-		if player_health <= 0:
-			print("Player died!")
+		"""Player takes damage, reducing health"""
+		var current_health = health_per_track.get(current_track, max_health)
+		if current_health > 0:
+				current_health = max(0, current_health - amount)
+				health_per_track[current_track] = current_health
+				_update_hearts_display()
+				health_changed.emit(current_health)
+				print("Player took ", amount, " damage. Health: ", current_health, "/", max_health)
+
+				if current_health <= 0:
+						print("Player died!")
 
 func get_health() -> int:
-	"""Get current player health"""
-	return player_health
+		"""Get current player health"""
+		return health_per_track.get(current_track, max_health)
 
 func update_hearts(new_health: int) -> void:
-	"""Update hearts display from external health system (called by player)"""
-	player_health = clamp(new_health, 0, max_health)
-	_update_hearts_display()
-	health_changed.emit(player_health)
-	print("UI: Hearts updated to ", player_health, "/", max_health)
+		"""Update hearts display from external health system (called by player)"""
+		health_per_track[current_track] = clamp(new_health, 0, max_health)
+		_update_hearts_display()
+		health_changed.emit(health_per_track[current_track])
+		print("UI: Hearts updated to ", health_per_track[current_track], "/", max_health)
 
 func get_max_health() -> int:
 	"""Get maximum player health"""
 	return max_health
 
 func is_alive() -> bool:
-	"""Check if player is still alive"""
-	return player_health > 0
+		"""Check if player is still alive"""
+		return health_per_track.get(current_track, max_health) > 0
 
 func _ready():
 	# Store original positions for animation
@@ -169,13 +178,19 @@ func _ready():
 		timer_progress_bar.value = 0.0  # Start at 0 (no progress yet)
 		print("Progress bar initialized: max=", timer_progress_bar.max_value, ", min=", timer_progress_bar.min_value)
 	
-	# Initialize track timers
-	_initialize_track_timers()
-	
-	# Initialize hearts system
-	_initialize_hearts()
+		# Initialize track timers
+		_initialize_timer_per_track()
+		# Start the timer immediately so track 1 begins counting down
+		start_timer()
+
+		# Initialize health dictionaries
+		_initialize_health_per_track()
+
+		# Initialize hearts system
+		_initialize_hearts()
 	
 	# Start the countdown timer for track 1
+	current_track = 0
 	switch_to_track(1)
 	
 	# Drop red button by default when game starts
@@ -555,40 +570,39 @@ func _update_display():
 func start_timer():
 	"""Start the countdown timer for current track"""
 	if timer_label:
-		# Use the current track's time remaining
 		is_timer_running = true
 		_update_timer_display()
 		_update_progress_bar()
-		print("Timer started for track ", current_track, " - time remaining: ", time_remaining, " seconds")
+		print("Timer started for track ", current_track, " - time remaining: ", timer_per_track.get(current_track, default_track_time), " seconds")
 	else:
 		print("Error: TimerLabel not found! Cannot start timer.")
 
 func _process(delta):
 	"""Update timer each frame"""
 	if is_timer_running:
-		time_remaining -= delta
+		# Ensure the current track has a timer entry to avoid out-of-bounds errors
+		var time_left = timer_per_track.get(current_track, default_track_time)
+		time_left -= delta
+		timer_per_track[current_track] = time_left
 		_update_timer_display()
 		_update_progress_bar()
-		
+
 		# Check if current track timer has finished
-		if time_remaining <= 0.0:
-			time_remaining = 0.0
+		if timer_per_track[current_track] <= 0.0:
+			timer_per_track[current_track] = 0.0
 			_update_timer_display()
 			_update_progress_bar()
-			
+
 			# Store which track just finished before any track switching
 			var finished_track = current_track
-			
-			# Save the completed track time
-			track_timers[finished_track] = 0.0
-			
+
 			print("Track ", finished_track, " timer finished!")
-			timer_finished.emit()
+			timer_finished.emit("timer_finished")
 			track_timer_finished.emit(finished_track)
-			
+
 			# Stop the timer before switching tracks
 			is_timer_running = false
-			
+
 			# Auto-progress to next track
 			_auto_progress_to_next_track()
 
@@ -616,50 +630,52 @@ func _auto_progress_to_next_track():
 			_set_only_button_dropped("green")
 
 func _update_timer_display():
-	"""Update the timer label with current time"""
-	if not timer_label:
-		print("Warning: TimerLabel is null, cannot update display")
-		return
-	
-	# Convert to minutes and seconds
-	var minutes = int(time_remaining) / 60
-	var seconds = int(time_remaining) % 60
-	
-	# Format as MM:SS
-	var time_text = "%02d:%02d" % [minutes, seconds]
-	timer_label.text = time_text
-	
-	# Debug output every 10 seconds
-	if int(time_remaining) % 10 == 0 and time_remaining != 0:
-		print("Timer: ", time_text)
+		"""Update the timer label with current time"""
+		if not timer_label:
+				print("Warning: TimerLabel is null, cannot update display")
+				return
+
+		var time_left = timer_per_track.get(current_track, default_track_time)
+		# Convert to minutes and seconds
+		var minutes = int(time_left) / 60
+		var seconds = int(time_left) % 60
+
+		# Format as MM:SS
+		var time_text = "%02d:%02d" % [minutes, seconds]
+		timer_label.text = time_text
+
+		# Debug output every 10 seconds
+		if int(time_left) % 10 == 0 and time_left != 0:
+				print("Timer: ", time_text)
 
 func _update_progress_bar():
-	"""Update the progress bar with current time remaining"""
-	if not timer_progress_bar:
-		print("Warning: ProgressBar is null, cannot update display")
-		return
-	
-	# Ensure progress bar is configured correctly
-	timer_progress_bar.max_value = 100.0
-	timer_progress_bar.min_value = 0.0
-	timer_progress_bar.fill_mode = ProgressBar.FILL_BEGIN_TO_END
-	
-	# Calculate progress percentage (elapsed time / total time * 100)
-	# This will grow from 0 to 100 as time progresses
-	var elapsed_time = default_track_time - time_remaining
-	var progress_percentage = (elapsed_time / default_track_time) * 100.0
-	progress_percentage = max(0.0, min(100.0, progress_percentage))  # Clamp between 0-100
-	
-	timer_progress_bar.value = progress_percentage
+		"""Update the progress bar with current time remaining"""
+		if not timer_progress_bar:
+				print("Warning: ProgressBar is null, cannot update display")
+				return
+
+		# Ensure progress bar is configured correctly
+		timer_progress_bar.max_value = 100.0
+		timer_progress_bar.min_value = 0.0
+		timer_progress_bar.fill_mode = ProgressBar.FILL_BEGIN_TO_END
+
+		# Calculate progress percentage (elapsed time / total time * 100)
+		# This will grow from 0 to 100 as time progresses
+		var time_left = timer_per_track.get(current_track, default_track_time)
+		var elapsed_time = default_track_time - time_left
+		var progress_percentage = (elapsed_time / default_track_time) * 100.0
+		progress_percentage = max(0.0, min(100.0, progress_percentage))  # Clamp between 0-100
+
+		timer_progress_bar.value = progress_percentage
 	
 	# Debug output to verify progress bar is updating
-	#if int(time_remaining) % 5 == 0:  # Debug every 5 seconds
+		#if int(timer_per_track.get(current_track, 0)) % 5 == 0:  # Debug every 5 seconds
 		#print("Progress bar updated: ", progress_percentage, "% - Elapsed: ", elapsed_time, "/", default_track_time, " - Track ", current_track)
 		#print("Progress bar max_value: ", timer_progress_bar.max_value, ", current value: ", timer_progress_bar.value)
 
 func get_time_remaining() -> float:
-	"""Get the remaining time in seconds"""
-	return time_remaining
+		"""Get the remaining time in seconds"""
+		return timer_per_track.get(current_track, default_track_time)
 
 func is_timer_active() -> bool:
 	"""Check if the timer is currently running"""
@@ -670,99 +686,90 @@ func stop_timer():
 	is_timer_running = false
 
 func reset_timer():
-	"""Reset the current track timer to default track time"""
-	time_remaining = default_track_time
-	track_timers[current_track] = default_track_time
-	_update_timer_display()
-	_update_progress_bar()
-	print("Reset track ", current_track, " timer to: ", default_track_time)
+		"""Reset the current track timer to default track time"""
+		timer_per_track[current_track] = default_track_time
+		_update_timer_display()
+		_update_progress_bar()
+		print("Reset track ", current_track, " timer to: ", default_track_time)
 
 func set_countdown_time(new_time: float):
-	"""Set a new countdown time"""
-	countdown_time = new_time
-	if not is_timer_running:
-		time_remaining = countdown_time
+		"""Set a new countdown time"""
+		countdown_time = new_time
+		if not is_timer_running:
+				timer_per_track[current_track] = countdown_time
+				_update_timer_display()
+				_update_progress_bar()
+
+# Multi-track timer system functions
+func _initialize_timer_per_track():
+		"""Initialize all track timers with default time"""
+		for i in range(1, 5):  # Tracks 1-4
+				timer_per_track[i] = default_track_time
+		print("Track timers initialized: ", timer_per_track)
+
+func _initialize_health_per_track():
+		"""Initialize health values for all tracks"""
+		for i in range(1, 5):
+				health_per_track[i] = max_health
+		print("Health per track initialized: ", health_per_track)
+
+func switch_to_track(track_number: int):
+		"""Switch to a different track, saving current progress and loading new track's progress"""
+		if track_number < 1 or track_number > 4:
+				print("Invalid track number: ", track_number)
+				return
+
+		if current_track == track_number:
+			_connect_to_active_player()
+			_update_hearts_display()
+			_update_timer_display()
+			_update_progress_bar()
+			if not is_timer_running and timer_per_track[current_track] > 0:
+				start_timer()
+				return
+
+		var old_track = current_track
+			
+		# Ensure outgoing track data is stored
+		if old_track >= 1 and old_track <= 4:
+			timer_per_track[old_track] = timer_per_track.get(old_track, default_track_time)
+			
+		if player and player.has_method("get_health"):
+			health_per_track[old_track] = player.get_health()
+		else:
+			health_per_track[old_track] = health_per_track.get(old_track, max_health)
+
+		# Switch to new track
+		current_track = track_number
+
+		# Initialize dictionaries for new track if needed
+		if not timer_per_track.has(current_track):
+			timer_per_track[current_track] = default_track_time
+			
+		if not health_per_track.has(current_track):
+			health_per_track[current_track] = max_health
+
+		# enemy positions for new track
+		_reset_enemy_positions()
+
+		# the player manager before connecting to the new player
+		track_changed.emit(current_track)
+		
+		if player_manager and player_manager.has_method("switch_to_track"):
+			player_manager.switch_to_track(current_track - 1)  # Convert from 1-4 to 0-3
+
+		# Connect to the new active player's health system
+		_connect_to_active_player()
+
+		# Update displays
+		_update_hearts_display()
 		_update_timer_display()
 		_update_progress_bar()
 
-# Multi-track timer system functions
-func _initialize_track_timers():
-	"""Initialize all track timers with default time"""
-	for i in range(1, 5):  # Tracks 1-4
-		track_timers[i] = default_track_time
-	print("Track timers initialized: ", track_timers)
-
-func switch_to_track(track_number: int):
-	#"""Switch to a different track, saving current progress and loading new track's progress"""
-	if track_number < 1 or track_number > 4:
-		print("Invalid track number: ", track_number)
-		return
-	
-	# Check if we're already on this track to prevent infinite loops
-	if current_track == track_number:
-		return
-	
-	# Save current track's timer state
-	if current_track >= 1 and current_track <= 4:
-		track_timers[current_track] = time_remaining
-		print("Saved track ", current_track, " time: ", track_timers[current_track])
-	
-	
-	# Reset health for new track
-	player_health = max_health
-
-	_update_hearts_display()
-
-	health_changed.emit(player_health)
-
-	print("Health reset to full for track ", current_track)
-	
-	# Reset enemy positions for new track
-	_reset_enemy_positions()
-	
-	# Connect to the new active player's health system
-	_connect_to_active_player()
-	
-	# Load new track's timer state
-	time_remaining = track_timers[current_track]
-
-	"""Switch to a different track, saving current progress and loading new track's progress"""
-	if track_number < 1 or track_number > 4:
-		print("Invalid track number: ", track_number)
-		return
-	
-	# Check if we're already on this track to prevent infinite loops
-	if current_track == track_number:
-		return
-	
-	# Save current track's timer state
-	if current_track >= 1 and current_track <= 4:
-		track_timers[current_track] = time_remaining
-		print("Saved track ", current_track, " time: ", track_timers[current_track])
-	
-	# Switch to new track
-	var old_track = current_track
-	current_track = track_number
-	
-	# Load new track's timer state
-	time_remaining = track_timers[current_track]
-	#print("Switched from track ", old_track, " to track ", current_track, " - loaded time: ", time_remaining)
-	
-	# Update display
-	_update_timer_display()
-	_update_progress_bar()
-	
-	# Start timer if it wasn't running
-	if not is_timer_running and time_remaining > 0:
-		is_timer_running = true
-		print("Started timer for track ", current_track)
-	
-	# Emit signal to notify the player manager about track change
-	track_changed.emit(current_track)
-	
-	# Also directly notify the player manager if we have a reference
-	if player_manager and player_manager.has_method("switch_to_track"):
-		player_manager.switch_to_track(current_track - 1)  # Convert from 1-4 to 0-3
+		# Start timer if it wasn't running
+		if not is_timer_running and timer_per_track[current_track] > 0:
+			is_timer_running = true
+			print("Started timer for track ", current_track)
 
 func _reset_enemy_positions():
 	"""Reset all enemy positions to their starting positions when switching tracks"""
@@ -808,74 +815,67 @@ func _connect_to_active_player():
 			if player and player.has_signal("health_changed"):
 				if player.health_changed.is_connected(_on_player_health_changed):
 					player.health_changed.disconnect(_on_player_health_changed)
-			
+
 			# Connect to new active player
 			active_player.health_changed.connect(_on_player_health_changed)
 			player = active_player
+
+			# Sync player's health with stored track health
+			var hp = health_per_track.get(current_track, max_health)
+			if active_player.has_method("set_health"):
+				active_player.set_health(hp)
 			
-			# Sync UI health with player's current health
-			if active_player.has_method("get_health"):
-				player_health = active_player.get_health()
-				_update_hearts_display()
-				print("UI synced with active player health: ", player_health)
+			health_per_track[current_track] = hp
+			_update_hearts_display()
+			print("UI synced with active player health: ", hp)
 
 func _on_player_health_changed(new_health: int):
-	"""Handle when the active player's health changes"""
-	player_health = clamp(new_health, 0, max_health)
-	_update_hearts_display()
-	health_changed.emit(player_health)
-	print("UI: Player health changed to ", player_health, "/", max_health)
+		"""Handle when the active player's health changes"""
+		health_per_track[current_track] = clamp(new_health, 0, max_health)
+		_update_hearts_display()
+		health_changed.emit(health_per_track[current_track])
+		print("UI: Player health changed to ", health_per_track[current_track], "/", max_health)
 
 func get_current_track() -> int:
 	"""Get the currently active track number"""
 	return current_track
 
 func get_track_time_remaining(track_number: int) -> float:
-	"""Get the time remaining for a specific track"""
-	if track_number >= 1 and track_number <= 4:
-		if track_number == current_track:
-			return time_remaining
-		else:
-			return track_timers[track_number]
-	return 0.0
+		"""Get the time remaining for a specific track"""
+		if track_number >= 1 and track_number <= 4:
+				return timer_per_track.get(track_number, default_track_time)
+		return 0.0
 
 func set_track_time(track_number: int, new_time: float):
-	"""Set the time for a specific track"""
-	if track_number >= 1 and track_number <= 4:
-		if track_number == current_track:
-			time_remaining = new_time
-			_update_timer_display()
-			_update_progress_bar()
-		else:
-			track_timers[track_number] = new_time
-		print("Set track ", track_number, " time to: ", new_time)
+		"""Set the time for a specific track"""
+		if track_number >= 1 and track_number <= 4:
+				timer_per_track[track_number] = new_time
+				if track_number == current_track:
+						_update_timer_display()
+						_update_progress_bar()
+				print("Set track ", track_number, " time to: ", new_time)
 
 func reset_track_timer(track_number: int):
-	"""Reset a specific track timer to default time"""
-	if track_number >= 1 and track_number <= 4:
-		if track_number == current_track:
-			time_remaining = default_track_time
-			_update_timer_display()
-			_update_progress_bar()
-		else:
-			track_timers[track_number] = default_track_time
-		print("Reset track ", track_number, " timer to: ", default_track_time)
+		"""Reset a specific track timer to default time"""
+		if track_number >= 1 and track_number <= 4:
+				timer_per_track[track_number] = default_track_time
+				if track_number == current_track:
+						_update_timer_display()
+						_update_progress_bar()
+				print("Reset track ", track_number, " timer to: ", default_track_time)
 
 func reset_all_track_timers():
-	"""Reset all track timers to default time"""
-	for i in range(1, 5):
-		track_timers[i] = default_track_time
-	if current_track >= 1 and current_track <= 4:
-		time_remaining = default_track_time
+		"""Reset all track timers to default time"""
+		for i in range(1, 5):
+				timer_per_track[i] = default_track_time
 		_update_timer_display()
 		_update_progress_bar()
-	print("Reset all track timers to: ", default_track_time)
+		print("Reset all track timers to: ", default_track_time)
 
 func get_all_track_times() -> Dictionary:
-	"""Get a dictionary of all track times"""
-	var all_times = track_timers.duplicate()
-	all_times[current_track] = time_remaining  # Update current track with live time
-	return all_times
+		"""Get a dictionary of all track times"""
+		var all_times = timer_per_track.duplicate()
+		return all_times
 
 # Public methods for external scripts to control button animations
 func animate_red_button():
@@ -963,3 +963,28 @@ func force_return_green_button():
 func clear_all_buttons():
 	"""Clear all button states - return all to original positions"""
 	_return_all_buttons()
+
+# Health management functions following the requested pattern
+func lose_heart():
+	"""Remove one heart from UI following the signal pattern"""
+	var current_health = health_per_track.get(current_track, max_health)
+	if current_health > 0:
+		current_health -= 1
+		health_per_track[current_track] = current_health
+		_update_hearts_display()
+		health_changed.emit(current_health)
+		print("UI: Lost heart, health now: ", current_health, "/", max_health)
+
+func gain_heart():
+	"""Add one heart to UI"""
+	var current_health = health_per_track.get(current_track, max_health)
+	if current_health < max_health:
+		current_health += 1
+		health_per_track[current_track] = current_health
+		_update_hearts_display()
+		health_changed.emit(current_health)
+		print("UI: Gained heart, health now: ", current_health, "/", max_health)
+
+func get_current_health() -> int:
+	"""Get current health for the active track"""
+	return health_per_track.get(current_track, max_health)

@@ -20,12 +20,12 @@ func _init(buffer_size:int) -> void:
 # -- Buffer Methods -- #
 
 func push(value:Variant) -> void:
-	if length == buffer_size:
-		return
-	buffer[head] = value
-	head = (head + 1) % buffer_size
-	if length < buffer_size:
-		length += 1
+		buffer[head] = value
+		head = (head + 1) % buffer_size
+		if length < buffer_size:
+				length += 1
+		else:
+				tail = (tail + 1) % buffer_size
 
 func clear() -> void:
 	head = 0
@@ -34,8 +34,11 @@ func clear() -> void:
 		buffer[i] = null
 
 func get_index() -> Variant:
+	#var returnValue: Variant = buffer[tail]
+	#tail = tail + 1 if tail < buffer_size else 0
+	#return returnValue
 	var returnValue: Variant = buffer[tail]
-	tail = tail + 1 if tail < buffer_size else 0
+	tail = (tail + 1) % buffer_size  # Use modulo for proper wrapping
 	return returnValue
 
 func get_latest(offset:int = 0) -> Variant:

@@ -58,12 +58,12 @@ func process_frame(delta: float) -> State:
 			return dash_state
 		else:
 			# print("Dash on cooldown! Buffering dash input...")
-			parent.buffer_dash()
+			parent.buffer_input("dash")
 	
 	# Check for buffered inputs that can now be executed
 	if parent.has_valid_dash_buffer() and dash_state and dash_state.is_dash_available():
 		# print("Executing buffered dash!")
-		parent.consume_dash_buffer()
+		parent.consume_input_buffer("dash")
 		return dash_state
 	
 	return null
@@ -114,7 +114,7 @@ func process_physics(delta: float) -> State:
 	# Check for buffered dash that can now be executed
 	if parent.has_valid_dash_buffer() and dash_state and dash_state.is_dash_available():
 		# print("Executing buffered dash from move state!")
-		parent.consume_dash_buffer()
+		parent.consume_input_buffer("dash")
 		return dash_state
 
 	# State transitions ---------------------------------------------------------
