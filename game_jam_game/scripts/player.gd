@@ -1,5 +1,5 @@
-class_name Player
 extends CharacterBody2D
+class_name Player
 
 # -- Set up ring buffer -- #
 @onready var track1: RingBuffer = RingBuffer.create_by_seconds(15, Engine.get_physics_ticks_per_second())
@@ -131,10 +131,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		if is_ghost_mode:
 			set_ghost_mode(false)
 			print("Debug: Manually exited ghost mode")
-                else:
-                        print("Debug: Simulating player death for testing...")
-                        set_health(0)
-                        die()
+		else:
+			print("Debug: Simulating player death for testing...")
+			set_health(0)
+			die()
 		
 	# Track when input buttons are first pressed for hold time calculation
 	for action in input_actions:
