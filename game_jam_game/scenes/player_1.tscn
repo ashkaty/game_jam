@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://b4baaffqm4i8r"]
+[gd_scene load_steps=24 format=3 uid="uid://wdklh3g15chc"]
 
 [ext_resource type="Texture2D" uid="uid://cu6p1lcapdupf" path="res://assets/sprites/MC_Atlas.png" id="2_f7tsm"]
 [ext_resource type="Texture2D" uid="uid://cb33vb02h1qhp" path="res://assets/sprites/MC_Jacket.png" id="2_vod78"]

@@ -1,13 +1,11 @@
-[gd_scene load_steps=11 format=4 uid="uid://cwbv2y4y74b4t"]
+[gd_scene load_steps=10 format=4 uid="uid://cwbv2y4y74b4t"]
 
+[ext_resource type="Script" uid="uid://b5iuf6voae1u5" path="res://scenes/gate.gd" id="1_p57ef"]
 [ext_resource type="Texture2D" uid="uid://dpb0kysm7pg57" path="res://assets/sprites/grid.jpg" id="4_lbhrr"]
 [ext_resource type="Texture2D" uid="uid://q44iosxd057y" path="res://assets/sprites/world_tileset.png" id="5_iywne"]
-[ext_resource type="PackedScene" uid="uid://br33kkd2frrg0" path="res://scenes/gate.tscn" id="6_p57ef"]
 [ext_resource type="PackedScene" uid="uid://w6dobmosrjon" path="res://scenes/gate-button.tscn" id="6_u5sy4"]
 [ext_resource type="PackedScene" uid="uid://dvvyxv8mj7fho" path="res://scenes/player_manager.tscn" id="7_u5sy4"]
 [ext_resource type="Script" path="res://scripts/damage_particle_manager.gd" id="8_damage_particle_manager"]
-
-[sub_resource type="GDScript" id="GDScript_u5sy4"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2o6t"]
 distance = 256.0
@@ -143,7 +141,7 @@ physics_layer_0/collision_layer = 1
 sources/1 = SubResource("TileSetAtlasSource_p57ef")
 
 [node name="Game" type="Node2D"]
-script = SubResource("GDScript_u5sy4")
+script = ExtResource("1_p57ef")
 
 [node name="Level" type="Node2D" parent="."]
 
@@ -177,10 +175,6 @@ tile_set = SubResource("TileSet_u5sy4")
 
 [node name="PlayerManager" parent="Level" instance=ExtResource("7_u5sy4")]
 
-[node name="StaticBody2D" parent="Level" instance=ExtResource("6_p57ef")]
-position = Vector2(-1095, -162)
-color = "blue"
-
-[node name="button" parent="Level" instance=ExtResource("6_u5sy4")]
-position = Vector2(-884, -39)
-color = "blue"
+[node name="button" parent="." instance=ExtResource("6_u5sy4")]
+position = Vector2(-1231, -52)
+script = ExtResource("1_p57ef")
