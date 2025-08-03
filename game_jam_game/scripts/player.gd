@@ -131,10 +131,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		if is_ghost_mode:
 			set_ghost_mode(false)
 			print("Debug: Manually exited ghost mode")
-		else:
-			print("Debug: Simulating player death for testing...")
-						set_health(0)
-						die()
+                else:
+                        print("Debug: Simulating player death for testing...")
+                        set_health(0)
+                        die()
 		
 	# Track when input buttons are first pressed for hold time calculation
 	for action in input_actions:
