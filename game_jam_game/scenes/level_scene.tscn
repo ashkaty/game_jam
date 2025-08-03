@@ -1,0 +1,17 @@
+[gd_scene load_steps=6 format=3 uid="uid://dytpx1x221sru"]
+
+[ext_resource type="PackedScene" uid="uid://dvvyxv8mj7fho" path="res://scenes/player_manager.tscn" id="1_c8xsp"]
+[ext_resource type="Script" uid="uid://c5yxgu18nre3u" path="res://scripts/level_architecture/level_scene.gd" id="1_fkwfp"]
+[ext_resource type="Script" uid="uid://b731k62kmmpbx" path="res://scripts/player_manager.gd" id="2_fkwfp"]
+[ext_resource type="PackedScene" uid="uid://b15t68w17acxb" path="res://scenes/player.tscn" id="3_eohcs"]
+[ext_resource type="PackedScene" uid="uid://b48kf7mk5r846" path="res://scenes/track.tscn" id="4_2m3ut"]
+
+[node name="Level" type="Node2D"]
+script = ExtResource("1_fkwfp")
+
+[node name="PlayerManager" parent="." instance=ExtResource("1_c8xsp")]
+script = ExtResource("2_fkwfp")
+
+[node name="Track" parent="PlayerManager" instance=ExtResource("4_2m3ut")]
+
+[node name="CharacterBody2D" parent="PlayerManager/Track" instance=ExtResource("3_eohcs")]
